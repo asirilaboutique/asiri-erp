@@ -1,0 +1,32 @@
+{
+  "name": "ASIRI ERP",
+  "short_name": "ASIRI ERP",
+  "description": "Sistema de gestión completo para ASIRI La Boutique — ecommerce ropa de mujer, Chile.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#F8FAFB",
+  "theme_color": "#14B8A6",
+  "lang": "es-CL",
+  "icons": [
+    {
+      "src": "icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-maskable.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

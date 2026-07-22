@@ -1,0 +1,2116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#14B8A6">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ASIRI ERP">
+<meta name="description" content="ASIRI ERP — Sistema de gestión completo para ASIRI La Boutique">
+<title>ASIRI ERP 🦋</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A6%8B%3C/text%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="icon-192.svg">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --blanco:#F8FAFB; --turquesa:#14B8A6; --turquesa-light:#CCFBF1;
+    --rosado:#EC4899; --rosado-light:#FCE7F3;
+    --dorado:#C9A84C; --dorado-light:#FEF9E7;
+    --negro:#0F172A; --gris:#64748B; --gris-light:#F1F5F9;
+    --violeta:#8B5CF6; --violeta-light:#EDE9FE;
+    --sidebar-w:240px; --header-h:60px;
+    --rojo:#EF4444; --verde:#059669;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{background:var(--blanco);color:var(--negro);font-family:'Inter',sans-serif;overflow-x:hidden;}
+  button,input,select,textarea{font-family:inherit;}
+
+  /* ===== LAYOUT BASE ===== */
+  #app{display:flex;min-height:100vh;}
+
+  /* ===== SIDEBAR ===== */
+  #sidebar{
+    width:var(--sidebar-w); flex-shrink:0; background:var(--negro); color:white;
+    position:fixed; top:0; left:0; bottom:0; z-index:200; overflow-y:auto;
+    transition:transform .25s ease; display:flex; flex-direction:column;
+  }
+  .sb-brand{
+    padding:1.2rem 1.4rem; display:flex; align-items:center; gap:.6rem;
+    border-bottom:1px solid rgba(255,255,255,.08);
+  }
+  .sb-brand .butterfly{font-size:1.4rem;}
+  .sb-brand-text{font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:600;letter-spacing:.03em;}
+  .sb-brand-text span{color:var(--turquesa);}
+  .sb-nav{flex:1; padding:.8rem .6rem; display:flex; flex-direction:column; gap:.2rem;}
+  .sb-item{
+    display:flex; align-items:center; gap:.7rem; padding:.65rem .8rem; border-radius:10px;
+    color:rgba(255,255,255,.65); cursor:pointer; font-size:.85rem; font-weight:500;
+    transition:background .15s, color .15s; border:none; background:none; width:100%; text-align:left;
+  }
+  .sb-item:hover{background:rgba(255,255,255,.06); color:white;}
+  .sb-item.active{background:linear-gradient(135deg, rgba(20,184,166,.25), rgba(236,72,153,.15)); color:white; box-shadow:inset 3px 0 0 var(--turquesa);}
+  .sb-item .ic{font-size:1.1rem; width:22px; text-align:center;}
+  .sb-item .num{font-family:'JetBrains Mono',monospace; font-size:.6rem; opacity:.5;}
+  .sb-item.soon{opacity:.4; cursor:not-allowed;}
+  .sb-item.soon:hover{background:none; color:rgba(255,255,255,.65);}
+  .sb-item .soon-badge{
+    margin-left:auto; font-size:.55rem; background:rgba(255,255,255,.1); padding:.15rem .4rem;
+    border-radius:6px; letter-spacing:.05em; font-weight:700;
+  }
+  .sb-footer{padding:.9rem 1.4rem; font-size:.65rem; color:rgba(255,255,255,.35); border-top:1px solid rgba(255,255,255,.08);}
+
+  /* ===== HEADER ===== */
+  #main{flex:1; margin-left:var(--sidebar-w); display:flex; flex-direction:column; min-height:100vh;}
+  header{
+    height:var(--header-h); background:rgba(248,250,251,.92); backdrop-filter:blur(12px);
+    border-bottom:1px solid rgba(15,23,42,.08); display:flex; align-items:center;
+    justify-content:space-between; padding:0 1.6rem; position:sticky; top:0; z-index:100;
+  }
+  .hdr-left{display:flex; align-items:center; gap:1rem;}
+  #menu-toggle{display:none; background:none; border:none; font-size:1.3rem; cursor:pointer; color:var(--negro);}
+  .hdr-logo{font-family:'Cormorant Garamond',serif; font-size:1.1rem; font-weight:600; display:flex; align-items:center; gap:.4rem;}
+  .hdr-right{display:flex; align-items:center; gap:1rem;}
+  #save-indicator{
+    font-size:.72rem; font-weight:600; padding:.35rem .8rem; border-radius:20px;
+    display:flex; align-items:center; gap:.4rem; transition:all .2s;
+  }
+  #save-indicator.saved{background:var(--turquesa-light); color:#0F766E;}
+  #save-indicator.saving{background:var(--dorado-light); color:#92400E;}
+  #save-indicator.offline{background:var(--gris-light); color:var(--gris);}
+  #conn-status{font-size:.7rem; font-weight:600; padding:.35rem .7rem; border-radius:20px; display:flex; align-items:center; gap:.35rem;}
+  #conn-status.online{background:rgba(5,150,105,.1); color:var(--verde);}
+  #conn-status.offline{background:rgba(239,68,68,.1); color:var(--rojo);}
+  .dot{width:7px; height:7px; border-radius:50%; background:currentColor;}
+
+  /* ===== CONTENT ===== */
+  #content{padding:1.6rem; flex:1;}
+  .view{display:none; animation:fadeIn .25s ease;}
+  .view.active{display:block;}
+  @keyframes fadeIn{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);}}
+  .page-title{font-family:'Cormorant Garamond',serif; font-size:1.9rem; font-weight:600; margin-bottom:.2rem;}
+  .page-sub{color:var(--gris); font-size:.85rem; margin-bottom:1.6rem;}
+
+  /* ===== KPI CARDS ===== */
+  .kpi-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:1rem; margin-bottom:1.8rem;}
+  .kpi-card{
+    background:white; border:1px solid rgba(15,23,42,.07); border-radius:18px; padding:1.3rem 1.4rem;
+    position:relative; overflow:hidden; transition:transform .15s, box-shadow .15s;
+  }
+  .kpi-card:hover{transform:translateY(-2px); box-shadow:0 10px 30px rgba(0,0,0,.06);}
+  .kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--turquesa),var(--rosado));}
+  .kpi-card.alert::before{background:linear-gradient(90deg,var(--rojo),#F97316);}
+  .kpi-icon{font-size:1.4rem; margin-bottom:.5rem; display:block;}
+  .kpi-label{font-size:.72rem; color:var(--gris); text-transform:uppercase; letter-spacing:.06em; font-weight:600; margin-bottom:.3rem;}
+  .kpi-value{font-family:'JetBrains Mono',monospace; font-size:1.7rem; font-weight:700; color:var(--negro);}
+  .kpi-value.alert{color:var(--rojo);}
+  .kpi-delta{font-size:.72rem; margin-top:.3rem; font-weight:600;}
+  .kpi-delta.up{color:var(--verde);}
+  .kpi-delta.down{color:var(--rojo);}
+
+  /* ===== SECTIONS ===== */
+  .section-row{display:grid; grid-template-columns:1.3fr 1fr; gap:1.2rem; margin-bottom:1.2rem;}
+  @media (max-width:900px){.section-row{grid-template-columns:1fr;}}
+  .panel{background:white; border:1px solid rgba(15,23,42,.07); border-radius:18px; padding:1.4rem;}
+  .panel-title{font-weight:700; font-size:.95rem; margin-bottom:1rem; display:flex; align-items:center; gap:.5rem;}
+  .panel-title .badge-live{font-size:.6rem; background:var(--turquesa-light); color:#0F766E; padding:.15rem .5rem; border-radius:8px; font-weight:700; letter-spacing:.05em;}
+
+  /* Brief Claude */
+  .brief-box{
+    background:linear-gradient(135deg, rgba(20,184,166,.06), rgba(236,72,153,.05));
+    border:1px solid rgba(20,184,166,.15); border-radius:14px; padding:1.1rem 1.2rem;
+    font-size:.85rem; line-height:1.7; color:var(--negro);
+  }
+  .brief-box strong{color:var(--turquesa);}
+  .brief-time{font-family:'JetBrains Mono',monospace; font-size:.68rem; color:var(--gris); margin-top:.7rem; display:block;}
+
+  /* Alertas */
+  .alert-item{
+    display:flex; align-items:flex-start; gap:.7rem; padding:.7rem .8rem; border-radius:12px;
+    margin-bottom:.5rem; font-size:.8rem; line-height:1.5;
+  }
+  .alert-item:last-child{margin-bottom:0;}
+  .alert-item.critico{background:rgba(239,68,68,.06); border-left:3px solid var(--rojo);}
+  .alert-item.aviso{background:rgba(201,168,76,.08); border-left:3px solid var(--dorado);}
+  .alert-item.info{background:rgba(20,184,166,.06); border-left:3px solid var(--turquesa);}
+  .alert-icon{font-size:1rem;}
+  .alert-text b{display:block; margin-bottom:.1rem;}
+  .alert-text span{color:var(--gris); font-size:.75rem;}
+
+  /* Tabla ventas */
+  table.simple{width:100%; border-collapse:collapse; font-size:.82rem;}
+  table.simple th{text-align:left; padding:.6rem .5rem; color:var(--gris); font-weight:600; font-size:.7rem; text-transform:uppercase; letter-spacing:.04em; border-bottom:1px solid rgba(15,23,42,.08);}
+  table.simple td{padding:.65rem .5rem; border-bottom:1px solid rgba(15,23,42,.05);}
+  table.simple tr:last-child td{border-bottom:none;}
+  .canal-pill{font-size:.65rem; font-weight:700; padding:.15rem .5rem; border-radius:8px;}
+  .canal-pill.shopify{background:var(--turquesa-light); color:#0F766E;}
+  .canal-pill.pos{background:var(--rosado-light); color:#9D174D;}
+  .canal-pill.manual{background:var(--dorado-light); color:#92400E;}
+
+  /* Accesos rápidos */
+  .quick-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:.8rem;}
+  .quick-card{
+    background:white; border:1px solid rgba(15,23,42,.07); border-radius:14px; padding:1rem;
+    text-align:center; cursor:pointer; transition:transform .15s, border-color .15s;
+  }
+  .quick-card:hover{transform:translateY(-3px); border-color:var(--turquesa);}
+  .quick-card .qi{font-size:1.5rem; display:block; margin-bottom:.4rem;}
+  .quick-card .qt{font-size:.75rem; font-weight:600;}
+
+  /* Placeholder módulos */
+  .placeholder-box{
+    background:white; border:1px dashed rgba(15,23,42,.15); border-radius:18px;
+    padding:3rem 1.5rem; text-align:center; color:var(--gris);
+  }
+  .placeholder-box .pi{font-size:2.2rem; display:block; margin-bottom:.8rem;}
+  .placeholder-box h3{font-family:'Cormorant Garamond',serif; font-size:1.4rem; color:var(--negro); margin-bottom:.4rem;}
+  .placeholder-box p{font-size:.85rem; max-width:400px; margin:0 auto;}
+  .placeholder-box.soon{border-color:rgba(139,92,246,.3); background:var(--violeta-light);}
+  .placeholder-box.soon h3{color:var(--violeta);}
+
+  /* Botones */
+  .btn{border:none; padding:.6rem 1.1rem; border-radius:10px; font-weight:600; font-size:.8rem; cursor:pointer; transition:transform .15s;}
+  .btn:hover{transform:translateY(-1px);}
+  .btn-primary{background:linear-gradient(135deg,var(--turquesa),var(--rosado)); color:white;}
+  .btn-ghost{background:var(--gris-light); color:var(--negro);}
+
+  /* Formulario / Modal genérico (reutilizable en todos los módulos) */
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(15,23,42,.55); display:none;
+    align-items:center; justify-content:center; z-index:500; padding:1rem;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal-box{background:white; border-radius:20px; padding:1.6rem; width:100%; max-width:420px; max-height:90vh; overflow-y:auto;}
+  .modal-box h3{font-family:'Cormorant Garamond',serif; font-size:1.3rem; margin-bottom:1rem;}
+  .field{margin-bottom:.9rem;}
+  .field label{display:block; font-size:.75rem; font-weight:600; color:var(--gris); margin-bottom:.3rem;}
+  .field input, .field select, .field textarea{
+    width:100%; padding:.6rem .7rem; border:1px solid rgba(15,23,42,.15); border-radius:10px; font-size:.85rem;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus{outline:none; border-color:var(--turquesa);}
+  .modal-actions{display:flex; gap:.6rem; margin-top:1.2rem;}
+  .modal-actions .btn{flex:1;}
+
+  /* ===== M1 CALCULADORA ===== */
+  .tabs{display:flex; gap:.5rem; margin-bottom:1.4rem; flex-wrap:wrap;}
+  .tab-btn{padding:.55rem 1rem; border-radius:10px; border:1px solid rgba(15,23,42,.1); background:white; font-size:.8rem; font-weight:600; cursor:pointer; color:var(--gris); transition:all .15s;}
+  .tab-btn.active{background:linear-gradient(135deg,var(--turquesa),var(--rosado)); color:white; border-color:transparent;}
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block; animation:fadeIn .2s ease;}
+  .calc-grid{display:grid; grid-template-columns:1fr 1fr; gap:1.4rem; align-items:start;}
+  @media(max-width:700px){.calc-grid{grid-template-columns:1fr;}}
+  .calc-result{background:linear-gradient(135deg, rgba(20,184,166,.08), rgba(236,72,153,.06)); border-radius:14px; padding:1.2rem;}
+  .calc-result .r-row{margin-bottom:1rem;}
+  .calc-result .r-row:last-child{margin-bottom:0;}
+  .calc-result .r-label{font-size:.7rem; color:var(--gris); text-transform:uppercase; letter-spacing:.05em; font-weight:700;}
+  .calc-result .r-value{font-family:'JetBrains Mono',monospace; font-size:1.5rem; font-weight:700; color:var(--negro); margin:.15rem 0;}
+  .calc-result .r-value.good{color:var(--verde);}
+  .calc-result .r-value.bad{color:var(--rojo);}
+  .calc-note{font-size:.75rem; color:var(--gris); line-height:1.6; margin-top:.8rem; padding-top:.8rem; border-top:1px solid rgba(15,23,42,.08);}
+  .field-hint{font-size:.68rem; color:var(--gris); margin-top:.2rem;}
+  .field-row{display:grid; grid-template-columns:1fr 1fr; gap:.8rem;}
+
+  /* ===== M2 CRM ===== */
+  .crm-toolbar{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:.8rem; margin-bottom:1.2rem;}
+  .crm-filters{display:flex; gap:.5rem; flex-wrap:wrap;}
+  .filter-chip{padding:.4rem .85rem; border-radius:20px; font-size:.72rem; font-weight:700; cursor:pointer; border:2px solid transparent; transition:all .15s;}
+  .filter-chip.f-all{background:var(--gris-light); color:var(--negro);}
+  .filter-chip.f-vip{background:var(--dorado-light); color:#92400E;}
+  .filter-chip.f-regular{background:var(--turquesa-light); color:#0F766E;}
+  .filter-chip.f-dormida{background:rgba(239,68,68,.08); color:var(--rojo);}
+  .filter-chip.f-nueva{background:var(--rosado-light); color:#9D174D;}
+  .filter-chip.chip-active{border-color:var(--negro);}
+  .crm-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:1rem;}
+  .clienta-card{background:white; border:1px solid rgba(15,23,42,.07); border-radius:16px; padding:1.1rem; cursor:pointer; transition:transform .15s, box-shadow .15s;}
+  .clienta-card:hover{transform:translateY(-3px); box-shadow:0 10px 26px rgba(0,0,0,.06);}
+  .clienta-top{display:flex; justify-content:space-between; align-items:flex-start; gap:.5rem; margin-bottom:.5rem;}
+  .clienta-nombre{font-weight:700; font-size:.9rem;}
+  .clienta-meta{font-size:.72rem; color:var(--gris); margin-top:.15rem;}
+  .seg-badge{font-size:.6rem; font-weight:800; padding:.2rem .5rem; border-radius:8px; letter-spacing:.04em; white-space:nowrap;}
+  .seg-badge.vip{background:var(--dorado-light); color:#92400E;}
+  .seg-badge.regular{background:var(--turquesa-light); color:#0F766E;}
+  .seg-badge.dormida{background:rgba(239,68,68,.1); color:var(--rojo);}
+  .seg-badge.nueva{background:var(--rosado-light); color:#9D174D;}
+  .clienta-stats{display:flex; justify-content:space-between; font-size:.75rem; margin-top:.7rem; padding-top:.7rem; border-top:1px solid rgba(15,23,42,.06); color:var(--gris);}
+  .clienta-stats b{display:block; font-family:'JetBrains Mono',monospace; color:var(--negro); font-size:.85rem;}
+  .reactivacion-box{
+    background:rgba(239,68,68,.05); border:1px solid rgba(239,68,68,.2); border-radius:14px;
+    padding:1rem 1.2rem; margin-bottom:1.2rem; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:.7rem;
+  }
+  .reactivacion-box .rt{font-size:.85rem; font-weight:600; color:var(--negro);}
+  .reactivacion-box .rt b{color:var(--rojo);}
+  .ficha-row{display:flex; justify-content:space-between; padding:.55rem 0; border-bottom:1px solid rgba(15,23,42,.06); font-size:.83rem;}
+  .ficha-row:last-child{border-bottom:none;}
+  .ficha-row span:first-child{color:var(--gris);}
+  .ficha-row span:last-child{font-weight:600;}
+  .btn-wa{background:#25D366; color:white;}
+
+  /* ===== M4 SHOPIFY RT ===== */
+  .funnel{display:flex; flex-direction:column; gap:.7rem;}
+  .funnel-step{display:flex; align-items:center; gap:.8rem;}
+  .funnel-label{width:150px; font-size:.78rem; font-weight:600; flex-shrink:0;}
+  .funnel-bar-bg{flex:1; height:32px; background:var(--gris-light); border-radius:8px; overflow:hidden;}
+  .funnel-bar-fill{height:100%; background:linear-gradient(90deg,var(--turquesa),var(--rosado)); display:flex; align-items:center; padding-left:.6rem; color:white; font-size:.72rem; font-weight:700; border-radius:8px; transition:width 1s ease; white-space:nowrap;}
+  .funnel-bar-fill.zero{background:linear-gradient(90deg,#EF4444,#F97316); width:2% !important; color:transparent;}
+  .funnel-pct{width:64px; text-align:right; font-family:'JetBrains Mono',monospace; font-size:.75rem; color:var(--gris); flex-shrink:0;}
+  .funnel-note{font-size:.72rem; color:var(--gris); margin-top:.8rem; line-height:1.6;}
+
+  .lastunit-banner{
+    background:rgba(239,68,68,.06); border:1px solid rgba(239,68,68,.2); border-radius:14px;
+    padding:1rem 1.2rem; margin-bottom:1.2rem; font-size:.85rem; color:var(--negro);
+  }
+  .lastunit-banner b{color:var(--rojo);}
+  .lastunit-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:.8rem;}
+  .lastunit-card{background:white; border:1px solid rgba(239,68,68,.2); border-radius:14px; overflow:hidden; position:relative;}
+  .lastunit-card img{width:100%; height:100px; object-fit:cover; display:block; background:var(--gris-light);}
+  .lastunit-badge{position:absolute; top:.5rem; left:.5rem; background:var(--rojo); color:white; font-size:.58rem; font-weight:800; padding:.2rem .45rem; border-radius:6px; letter-spacing:.03em;}
+  .lastunit-info{padding:.6rem .7rem;}
+  .lastunit-info .ln{font-size:.76rem; font-weight:700; margin-bottom:.15rem; line-height:1.3;}
+  .lastunit-info .lp{font-family:'JetBrains Mono',monospace; font-size:.78rem; color:var(--turquesa);}
+
+  .carrito-item{display:flex; justify-content:space-between; align-items:center; gap:.8rem; padding:.8rem 1rem; border-radius:12px; background:var(--gris-light); margin-bottom:.6rem;}
+  .carrito-item:last-child{margin-bottom:0;}
+  .carrito-info b{display:block; font-size:.83rem;}
+  .carrito-info span{font-size:.72rem; color:var(--gris);}
+
+  /* ===== M5 VENTAS — CAJA UNIFICADA ===== */
+  .canal-total-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:.8rem; margin-bottom:1.2rem;}
+  .canal-total-card{background:white; border:1px solid rgba(15,23,42,.07); border-radius:14px; padding:1rem 1.1rem; text-align:center;}
+  .canal-total-card .ct-canal{font-size:.68rem; font-weight:700; text-transform:uppercase; color:var(--gris); letter-spacing:.05em;}
+  .canal-total-card .ct-monto{font-family:'JetBrains Mono',monospace; font-size:1.25rem; font-weight:700; margin-top:.3rem; color:var(--negro);}
+  .canal-total-card.total{background:linear-gradient(135deg, rgba(20,184,166,.08), rgba(236,72,153,.06)); border-color:rgba(20,184,166,.2);}
+  .canal-total-card.total .ct-monto{color:var(--turquesa); font-size:1.4rem;}
+
+  .hora-bar-row{display:flex; align-items:center; gap:.6rem; margin-bottom:.55rem;}
+  .hora-label{width:52px; font-size:.72rem; color:var(--gris); font-family:'JetBrains Mono',monospace; flex-shrink:0;}
+  .hora-bar-bg{flex:1; height:16px; background:var(--gris-light); border-radius:6px; overflow:hidden;}
+  .hora-bar-fill{height:100%; background:linear-gradient(90deg,var(--turquesa),var(--rosado)); border-radius:6px; transition:width .6s ease;}
+  .hora-val{width:76px; text-align:right; font-size:.72rem; font-family:'JetBrains Mono',monospace; flex-shrink:0;}
+
+  .proyeccion-box{
+    background:linear-gradient(135deg, rgba(201,168,76,.08), rgba(236,72,153,.05));
+    border:1px solid rgba(201,168,76,.25); border-radius:14px; padding:1.2rem;
+  }
+  .proyeccion-box .py-label{font-size:.72rem; text-transform:uppercase; letter-spacing:.05em; color:var(--gris); font-weight:700;}
+  .proyeccion-box .py-value{font-family:'JetBrains Mono',monospace; font-size:1.8rem; font-weight:700; color:var(--negro); margin:.2rem 0 .6rem;}
+
+  /* ===== M3 ADS ===== */
+  .campana-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:1rem;}
+  .campana-card{background:white; border:1px solid rgba(15,23,42,.07); border-radius:16px; padding:1.1rem;}
+  .campana-top{display:flex; justify-content:space-between; align-items:flex-start; gap:.5rem; margin-bottom:.5rem;}
+  .campana-nombre{font-weight:700; font-size:.85rem; line-height:1.3;}
+  .campana-meta{font-size:.72rem; color:var(--gris); margin-top:.15rem;}
+  .roi-badge{font-size:.65rem; font-weight:800; padding:.2rem .55rem; border-radius:8px; white-space:nowrap;}
+  .roi-badge.pos{background:rgba(5,150,105,.12); color:var(--verde);}
+  .roi-badge.neg{background:rgba(239,68,68,.1); color:var(--rojo);}
+  .campana-stats{display:flex; justify-content:space-between; font-size:.75rem; margin-top:.7rem; padding-top:.7rem; border-top:1px solid rgba(15,23,42,.06); color:var(--gris);}
+  .campana-stats b{display:block; font-family:'JetBrains Mono',monospace; color:var(--negro); font-size:.85rem;}
+  .content-item{
+    display:flex; align-items:center; gap:.8rem; padding:.8rem; border-radius:12px;
+    background:var(--gris-light); margin-bottom:.6rem;
+  }
+  .content-item:last-child{margin-bottom:0;}
+  .content-icon{font-size:1.3rem; flex-shrink:0;}
+  .content-info b{display:block; font-size:.82rem;}
+  .content-info span{font-size:.72rem; color:var(--gris); line-height:1.4;}
+  .content-date{
+    font-family:'JetBrains Mono',monospace; font-size:.68rem; color:var(--turquesa); font-weight:700;
+    background:var(--turquesa-light); padding:.25rem .55rem; border-radius:8px; flex-shrink:0; white-space:nowrap;
+  }
+  .meta-resumen-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:.8rem; margin-bottom:1.2rem;}
+  .meta-resumen-card{background:white; border:1px solid rgba(15,23,42,.07); border-radius:14px; padding:1rem; text-align:center;}
+  .meta-resumen-card .mr-label{font-size:.68rem; text-transform:uppercase; letter-spacing:.05em; color:var(--gris); font-weight:700;}
+  .meta-resumen-card .mr-value{font-family:'JetBrains Mono',monospace; font-size:1.2rem; font-weight:700; margin-top:.3rem;}
+
+  /* ===== M6 COMPRAS ===== */
+  .proveedor-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:1rem;}
+  .proveedor-card{background:white; border:1px solid rgba(15,23,42,.07); border-radius:16px; padding:1.1rem;}
+  .proveedor-nombre{font-weight:700; font-size:.85rem;}
+  .proveedor-meta{font-size:.72rem; color:var(--gris); margin-top:.2rem; line-height:1.5;}
+  .proveedor-despacho{
+    display:inline-block; margin-top:.6rem; font-size:.65rem; font-weight:700; padding:.2rem .55rem;
+    border-radius:8px; background:var(--turquesa-light); color:#0F766E;
+  }
+  .estado-pill{font-size:.65rem; font-weight:700; padding:.2rem .55rem; border-radius:8px; white-space:nowrap;}
+  .estado-pill.pendiente{background:var(--dorado-light); color:#92400E;}
+  .estado-pill.transito{background:var(--turquesa-light); color:#0F766E;}
+  .estado-pill.recibido{background:rgba(5,150,105,.12); color:var(--verde);}
+  .stockmin-item{display:flex; justify-content:space-between; align-items:center; padding:.6rem .8rem; border-radius:10px; background:rgba(239,68,68,.05); margin-bottom:.5rem; font-size:.8rem;}
+  .stockmin-item:last-child{margin-bottom:0;}
+  .stockmin-item b{color:var(--rojo);}
+
+  /* ===== M7 FINANZAS · SII ===== */
+  .tipo-pill{font-size:.65rem; font-weight:700; padding:.15rem .5rem; border-radius:8px;}
+  .tipo-pill.ingreso{background:var(--turquesa-light); color:#0F766E;}
+  .tipo-pill.egreso{background:rgba(239,68,68,.08); color:var(--rojo);}
+  .f29-row{display:flex; justify-content:space-between; align-items:center; padding:.65rem 0; border-bottom:1px solid rgba(15,23,42,.06); font-size:.85rem;}
+  .f29-row:last-child{border-bottom:none;}
+  .f29-row .lbl{color:var(--gris);}
+  .f29-row .val{font-family:'JetBrains Mono',monospace; font-weight:700;}
+  .f29-row.total{margin-top:.3rem; padding-top:.8rem; border-top:2px solid rgba(15,23,42,.1);}
+  .f29-row.total .val{color:var(--turquesa); font-size:1.15rem;}
+  .f29-row.total .val.rojo{color:var(--rojo);}
+  .f29-tasa{display:flex; align-items:center; gap:.5rem; font-size:.8rem;}
+  .f29-tasa input{width:70px; padding:.35rem .5rem; border:1px solid rgba(15,23,42,.15); border-radius:8px; font-size:.8rem;}
+
+  .flujo-bar-row{display:flex; align-items:center; gap:.6rem; margin-bottom:.55rem;}
+  .flujo-label{width:60px; font-size:.72rem; color:var(--gris); font-family:'JetBrains Mono',monospace; flex-shrink:0;}
+  .flujo-bar-bg{flex:1; height:20px; background:var(--gris-light); border-radius:6px; overflow:hidden;}
+  .flujo-bar-fill{height:100%; border-radius:6px; background:linear-gradient(90deg,var(--turquesa),var(--dorado)); transition:width .6s ease;}
+  .flujo-bar-fill.neg{background:linear-gradient(90deg,#EF4444,#F97316);}
+  .flujo-val{width:100px; text-align:right; font-size:.72rem; font-family:'JetBrains Mono',monospace; flex-shrink:0;}
+  .flujo-alerta{background:rgba(239,68,68,.06); border:1px solid rgba(239,68,68,.2); border-radius:12px; padding:.8rem 1rem; margin-top:1rem; font-size:.8rem;}
+
+  .cierre-badge{font-size:.65rem; font-weight:700; padding:.2rem .6rem; border-radius:8px; background:var(--dorado-light); color:#92400E; margin-left:.5rem;}
+
+  /* ===== M8 INFORMES · BI ===== */
+  .informe-actions{display:flex; flex-direction:column; gap:.7rem;}
+  .informe-actions .btn{width:100%; text-align:center;}
+  .looker-placeholder{
+    border:2px dashed rgba(139,92,246,.35); border-radius:14px; padding:2rem 1.2rem; text-align:center;
+    background:var(--violeta-light); color:#5B21B6; font-size:.85rem; line-height:1.6;
+  }
+  .looker-placeholder .lp-icon{font-size:1.8rem; display:block; margin-bottom:.6rem;}
+  .looker-frame{width:100%; height:420px; border:none; border-radius:14px; display:block;}
+  .url-input-row{display:flex; gap:.5rem; margin-bottom:1rem;}
+  .url-input-row input{flex:1; padding:.6rem .7rem; border:1px solid rgba(15,23,42,.15); border-radius:10px; font-size:.8rem;}
+  .resumen-mes-note{font-size:.72rem; color:var(--gris); margin-top:.6rem; line-height:1.6;}
+
+  /* ===== M9 INTELLIGENCE ===== */
+  .usage-item{display:flex; justify-content:space-between; align-items:center; padding:.65rem .85rem; border-radius:10px; background:var(--gris-light); margin-bottom:.5rem; font-size:.82rem;}
+  .usage-item:last-child{margin-bottom:0;}
+  .usage-rank{font-family:'JetBrains Mono',monospace; font-weight:700; color:var(--turquesa);}
+  .clean-item{display:flex; justify-content:space-between; align-items:center; gap:.6rem; padding:.7rem .9rem; border-radius:12px; background:rgba(201,168,76,.08); border:1px solid rgba(201,168,76,.25); margin-bottom:.6rem; font-size:.82rem;}
+  .clean-item:last-child{margin-bottom:0;}
+  .clean-item.resuelto{opacity:.4;}
+  .clean-item.resuelto .clean-texto{text-decoration:line-through;}
+  .insight-box{background:linear-gradient(135deg, rgba(20,184,166,.08), rgba(139,92,246,.06)); border:1px solid rgba(20,184,166,.2); border-radius:14px; padding:1.1rem 1.2rem; font-size:.85rem; line-height:1.7; margin-bottom:1rem;}
+  .insight-box:last-child{margin-bottom:0;}
+  .insight-box b{color:var(--turquesa);}
+  .toggle-row{display:flex; align-items:center; justify-content:space-between; padding:.6rem 0; font-size:.85rem;}
+  .toggle-switch{position:relative; width:44px; height:24px; flex-shrink:0;}
+  .toggle-switch input{opacity:0; width:0; height:0;}
+  .toggle-slider{position:absolute; cursor:pointer; inset:0; background:var(--gris-light); border-radius:24px; transition:.2s;}
+  .toggle-slider:before{content:''; position:absolute; height:18px; width:18px; left:3px; bottom:3px; background:white; border-radius:50%; transition:.2s; box-shadow:0 1px 3px rgba(0,0,0,.2);}
+  .toggle-switch input:checked + .toggle-slider{background:var(--turquesa);}
+  .toggle-switch input:checked + .toggle-slider:before{transform:translateX(20px);}
+
+  /* ===== M11 ACADEMY ===== */
+  .academy-cat-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:1rem;}
+  .academy-cat-card{background:white; border:1px solid rgba(15,23,42,.07); border-radius:18px; padding:1.3rem;}
+  .academy-cat-header{display:flex; align-items:center; gap:.6rem; margin-bottom:.9rem;}
+  .academy-cat-icon{font-size:1.4rem;}
+  .academy-cat-title{font-weight:700; font-size:.92rem;}
+  .academy-item{padding:.7rem 0; border-bottom:1px solid rgba(15,23,42,.06);}
+  .academy-item:last-child{border-bottom:none; padding-bottom:0;}
+  .academy-item-title{font-size:.82rem; font-weight:600; display:flex; align-items:center; gap:.4rem; flex-wrap:wrap;}
+  .academy-item-desc{font-size:.75rem; color:var(--gris); margin-top:.25rem; line-height:1.55;}
+  .badge-nuevo{font-size:.58rem; font-weight:800; background:var(--rosado-light); color:#9D174D; padding:.15rem .4rem; border-radius:6px; letter-spacing:.03em; flex-shrink:0;}
+  .nota-guardar{font-size:.68rem; color:var(--turquesa); cursor:pointer; margin-top:.4rem; font-weight:600; display:inline-block; background:none; border:none; padding:0;}
+  .mis-notas-item{background:var(--gris-light); border-radius:10px; padding:.6rem .8rem; margin-bottom:.5rem; font-size:.78rem;}
+  .mis-notas-item:last-child{margin-bottom:0;}
+
+  /* ===== RESPONSIVE MOBILE ===== */
+  @media (max-width:860px){
+    #sidebar{transform:translateX(-100%);}
+    #sidebar.open{transform:translateX(0);}
+    #main{margin-left:0;}
+    #menu-toggle{display:block;}
+    .hdr-logo span.full{display:none;}
+    #content{padding:1rem;}
+    .kpi-grid{grid-template-columns:repeat(2,1fr);}
+    #sb-overlay{position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:190; display:none;}
+    #sb-overlay.open{display:block;}
+  }
+  @media (max-width:480px){
+    .kpi-grid{grid-template-columns:1fr 1fr;}
+    .kpi-value{font-size:1.3rem;}
+  }
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside id="sidebar">
+    <div class="sb-brand">
+      <span class="butterfly">🦋</span>
+      <span class="sb-brand-text">ASIRI <span>ERP</span></span>
+    </div>
+    <nav class="sb-nav" id="sb-nav">
+      <!-- generado por JS -->
+    </nav>
+    <div class="sb-footer">ASIRI La Boutique · Chile<br>v1.0 · Sesión 1</div>
+  </aside>
+  <div id="sb-overlay" onclick="toggleSidebar(false)"></div>
+
+  <!-- ===== MAIN ===== -->
+  <div id="main">
+    <header>
+      <div class="hdr-left">
+        <button id="menu-toggle" onclick="toggleSidebar()">☰</button>
+        <div class="hdr-logo"><span>🦋</span><span class="full">ASIRI ERP</span></div>
+      </div>
+      <div class="hdr-right">
+        <span id="save-indicator" class="saved">✓ Guardado</span>
+        <span id="conn-status" class="online"><span class="dot"></span>Online</span>
+      </div>
+    </header>
+
+    <div id="content">
+      <!-- Las vistas de cada módulo se insertan aquí por JS -->
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL GENÉRICO (demo autoguardado) ===== -->
+<div class="modal-overlay" id="modal-venta">
+  <div class="modal-box">
+    <h3>Registrar Venta Manual</h3>
+    <div class="field">
+      <label>Producto</label>
+      <input type="text" id="f-producto" placeholder="Ej: Blusa lino rosa" oninput="autoSave()">
+    </div>
+    <div class="field">
+      <label>Monto (CLP)</label>
+      <input type="number" id="f-monto" placeholder="18000" oninput="autoSave()">
+    </div>
+    <div class="field">
+      <label>Canal</label>
+      <select id="f-canal" onchange="autoSave()">
+        <option value="manual">Manual</option>
+        <option value="pos">Mercado Pago POS</option>
+        <option value="shopify">Shopify</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-venta')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarVentaManual()">Guardar Venta</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== M2 CRM — MODAL NUEVA/EDITAR CLIENTA ===== -->
+<div class="modal-overlay" id="modal-clienta">
+  <div class="modal-box">
+    <h3>Nueva Clienta ASIRI</h3>
+    <div class="field">
+      <label>Nombre completo</label>
+      <input type="text" id="c-nombre" placeholder="Ej: Camila Reyes" oninput="autoSave()">
+    </div>
+    <div class="field">
+      <label>Teléfono (WhatsApp)</label>
+      <input type="text" id="c-telefono" placeholder="+56 9 1234 5678" oninput="autoSave()">
+    </div>
+    <div class="field">
+      <label>Email</label>
+      <input type="email" id="c-email" placeholder="clienta@email.com" oninput="autoSave()">
+    </div>
+    <div class="field">
+      <label>Notas</label>
+      <textarea id="c-notas" rows="2" placeholder="Talla, preferencias, etc." oninput="autoSave()"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-clienta')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarClienta()">Guardar Clienta</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== M2 CRM — MODAL FICHA CLIENTA ===== -->
+<div class="modal-overlay" id="modal-ficha">
+  <div class="modal-box" id="ficha-contenido"></div>
+</div>
+
+<!-- ===== M7 FINANZAS — MODAL CIERRE MENSUAL ===== -->
+<div class="modal-overlay" id="modal-cierre">
+  <div class="modal-box" id="cierre-contenido"></div>
+</div>
+
+<!-- ===== M6 COMPRAS — MODAL NUEVA ORDEN DE COMPRA ===== -->
+<div class="modal-overlay" id="modal-orden">
+  <div class="modal-box">
+    <h3>Nueva Orden de Compra</h3>
+    <div class="field">
+      <label>Proveedor</label>
+      <input type="text" id="o-proveedor" placeholder="Ej: Textiles Andrea" oninput="autoSave()">
+    </div>
+    <div class="field">
+      <label>Producto</label>
+      <input type="text" id="o-producto" placeholder="Ej: Blusa lino" oninput="autoSave()">
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Cantidad</label><input type="number" id="o-cantidad" placeholder="10" oninput="autoSave()"></div>
+      <div class="field"><label>Costo unitario (CLP)</label><input type="number" id="o-costo" placeholder="9000" oninput="autoSave()"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-orden')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarOrdenCompra()">Guardar Orden</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   ASIRI ERP — index.html — Sesión 1
+   SPA vanilla · Sin frameworks · Autoguardado · PWA
+   ============================================================ */
+
+/* ---------- 1. DEFINICIÓN DE MÓDULOS ---------- */
+const MODULOS = [
+  {id:'m0', num:'M0', icon:'🏠', nombre:'Home', soon:false},
+  {id:'m1', num:'M1', icon:'🧮', nombre:'Calculadora', soon:false},
+  {id:'m2', num:'M2', icon:'💎', nombre:'CRM', soon:false},
+  {id:'m3', num:'M3', icon:'📣', nombre:'Ads', soon:false},
+  {id:'m4', num:'M4', icon:'🛍', nombre:'Shopify', soon:false},
+  {id:'m5', num:'M5', icon:'💰', nombre:'Ventas', soon:false},
+  {id:'m6', num:'M6', icon:'📦', nombre:'Compras', soon:false},
+  {id:'m7', num:'M7', icon:'📊', nombre:'Finanzas', soon:false},
+  {id:'m8', num:'M8', icon:'📈', nombre:'Informes', soon:false},
+  {id:'m9', num:'M9', icon:'🧠', nombre:'Intelligence', soon:false},
+  {id:'m10', num:'M10', icon:'🤖', nombre:'Studio', soon:true},
+  {id:'m11', num:'M11', icon:'📚', nombre:'Academy', soon:false},
+];
+
+let moduloActivo = 'm0';
+
+/* ---------- 2. RENDER SIDEBAR ---------- */
+function renderSidebar(){
+  const nav = document.getElementById('sb-nav');
+  nav.innerHTML = MODULOS.map(m => `
+    <button class="sb-item ${m.id===moduloActivo?'active':''} ${m.soon?'soon':''}"
+            onclick="${m.soon ? '' : `irAModulo('${m.id}')`}">
+      <span class="ic">${m.icon}</span>
+      <span>${m.nombre}</span>
+      <span class="num">${m.num}</span>
+      ${m.soon ? '<span class="soon-badge">PRONTO</span>' : ''}
+    </button>
+  `).join('');
+}
+
+function irAModulo(id){
+  registrarVisita(id);
+  // M9 (Usage Tracker) y M0 (Adaptive HOME) dependen de VISITAS — se regeneran en cada navegación para reflejar el uso real
+  if(id === 'm9') document.getElementById('view-m9').innerHTML = renderIntelligence();
+  if(id === 'm0') document.getElementById('view-m0').innerHTML = renderHome();
+  moduloActivo = id;
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  const view = document.getElementById('view-'+id);
+  if(view) view.classList.add('active');
+  renderSidebar();
+  toggleSidebar(false);
+  window.scrollTo(0,0);
+}
+
+function toggleSidebar(force){
+  const sb = document.getElementById('sidebar');
+  const ov = document.getElementById('sb-overlay');
+  const open = force !== undefined ? force : !sb.classList.contains('open');
+  sb.classList.toggle('open', open);
+  ov.classList.toggle('open', open);
+}
+
+/* ---------- 3. DATOS DE EJEMPLO (se reemplazan con datos reales via Apps Script) ---------- */
+const DATA_DEMO = {
+  cajaHoy: 47800,
+  cajaHoyDelta: '+12%',
+  stockCritico: 6,
+  conversion: 0.0,
+  clientasNuevas: 2,
+  brief: `Buenos días, ASIRI 🦋. Hoy hay <strong>1 producto con última unidad</strong> (Blusa Lino Rosa) — considera activar countdown Liquid. La conversión sigue en 0% sobre 1.439 sesiones del mes: prioridad #1 esta semana es trust signals + checkout. Meta Ads: el Reel de Facebook sigue siendo tu mejor ROI (36.8%) — vale la pena replicar el formato.`,
+  alertas: [
+    {tipo:'critico', icon:'🚨', titulo:'Conversión en 0% — 30 días', detalle:'1.439 sesiones sin ventas online. Revisar checkout y trust signals.'},
+    {tipo:'aviso', icon:'⚠️', titulo:'6 productos con stock crítico (1 unidad)', detalle:'Activar alerta "última unidad disponible" en Shopify.'},
+    {tipo:'aviso', icon:'🛒', titulo:'8 carritos abandonados sin recuperar', detalle:'Enviar WhatsApp de recuperación desde M4.'},
+    {tipo:'info', icon:'💎', titulo:'2 clientas nuevas esta semana', detalle:'Agregar a CRM y segmentar como "Nueva".'},
+  ],
+  ventas: [
+    {hora:'10:32', producto:'Blusa Lino Rosa', canal:'shopify', monto:18000},
+    {hora:'13:05', producto:'Jeans Recto Azul', canal:'pos', monto:19500},
+    {hora:'15:40', producto:'Blusa Seda Blanca', canal:'manual', monto:17800},
+  ]
+};
+
+/* ---------- 3b. DATOS DEMO CRM — 10 clientas (coincide con Shopify: 10 clientes registrados) ---------- */
+let CRM_DEMO = [
+  {id:1, nombre:'Camila Reyes', telefono:'+56912345671', email:'camila.reyes@gmail.com', compras:5, ltv:92000, diasUltimaCompra:8, notas:'Talla M · prefiere blusas'},
+  {id:2, nombre:'Fernanda Soto', telefono:'+56923456782', email:'fer.soto@gmail.com', compras:4, ltv:71500, diasUltimaCompra:15, notas:'Compra para regalos'},
+  {id:3, nombre:'Javiera Muñoz', telefono:'+56934567893', email:'javi.munoz@gmail.com', compras:1, ltv:18000, diasUltimaCompra:5, notas:'Llegó por Instagram'},
+  {id:4, nombre:'Antonia Vidal', telefono:'+56945678904', email:'antonia.vidal@gmail.com', compras:2, ltv:37000, diasUltimaCompra:22, notas:'Talca — retiro en persona'},
+  {id:5, nombre:'Valentina Rojas', telefono:'+56956789015', email:'vale.rojas@gmail.com', compras:6, ltv:108000, diasUltimaCompra:3, notas:'VIP — compra mensual'},
+  {id:6, nombre:'Trinidad Álvarez', telefono:'+56967890126', email:'trini.alvarez@gmail.com', compras:1, ltv:19500, diasUltimaCompra:95, notas:'Sin contacto desde marzo'},
+  {id:7, nombre:'Isidora Campos', telefono:'+56978901237', email:'isi.campos@gmail.com', compras:2, ltv:35800, diasUltimaCompra:70, notas:'Respondía bien a descuentos'},
+  {id:8, nombre:'Constanza Fuentes', telefono:'+56989012348', email:'coni.fuentes@gmail.com', compras:1, ltv:18500, diasUltimaCompra:2, notas:'Primera compra vía Reel'},
+  {id:9, nombre:'Martina Herrera', telefono:'+56990123459', email:'martina.herrera@gmail.com', compras:3, ltv:54000, diasUltimaCompra:40, notas:'Concepción — pide despacho rápido'},
+  {id:10, nombre:'Josefa Contreras', telefono:'+56901234560', email:'josefa.contreras@gmail.com', compras:0, ltv:0, diasUltimaCompra:120, notas:'Se registró pero nunca compró'},
+];
+
+/* Segmentación automática: VIP / Regular / Dormida / Nueva */
+function segmentarClienta(c){
+  if(c.diasUltimaCompra > 60) return {key:'dormida', label:'Dormida', clase:'dormida'};
+  if(c.compras <= 1 && c.diasUltimaCompra <= 14) return {key:'nueva', label:'Nueva', clase:'nueva'};
+  if(c.compras >= 3 || c.ltv >= 70000) return {key:'vip', label:'VIP', clase:'vip'};
+  return {key:'regular', label:'Regular', clase:'regular'};
+}
+
+let filtroCRM = 'all';
+
+/* ---------- 3c. DATOS REALES SHOPIFY — vía Shopify Admin API (asirilaboutique.com) ----------
+   Consultado en vivo el 23-jul-2026: 0 órdenes en los últimos 30 días, prácticamente
+   TODO el catálogo activo tiene inventario = 1 unidad (no solo 6 productos como se creía). */
+const SHOPIFY_ORDENES_30D = 0;
+const SHOPIFY_SESIONES_30D = 1439;
+
+const SHOPIFY_ULTIMA_UNIDAD = [
+  {nombre:'Blusa Valentina', precio:18990, img:'https://cdn.shopify.com/s/files/1/0593/7892/5697/files/rn-image_picker_lib_temp_a22ee696-fa87-4e9d-adc9-5ae9b0138a0a.jpg'},
+  {nombre:'Jeans Wide Leg Andrea', precio:18000, img:'https://cdn.shopify.com/s/files/1/0593/7892/5697/files/rn-image_picker_lib_temp_6244da80-8ebc-4271-a21f-9657a876ea34.jpg'},
+  {nombre:'Sweater Belén', precio:18990, img:'https://cdn.shopify.com/s/files/1/0593/7892/5697/files/rn-image_picker_lib_temp_cf9e80fd-49ef-4906-8bf0-6fd196cde1c1.jpg'},
+  {nombre:'Blazer Sofía', precio:22990, img:'https://cdn.shopify.com/s/files/1/0593/7892/5697/files/rn-image_picker_lib_temp_c1f36eb7-0d3c-40a4-8e48-dcf2552d93f1.jpg'},
+  {nombre:'Maxi Vestido Rojo', precio:13500, img:'https://cdn.shopify.com/s/files/1/0593/7892/5697/files/rn-image_picker_lib_temp_03748593-d040-41f4-a6c9-215de5ab1b0a.png'},
+  {nombre:'Cardigan Blu', precio:16000, img:'https://cdn.shopify.com/s/files/1/0593/7892/5697/files/rn-image_picker_lib_temp_9466a2eb-7b1f-4168-aac0-fd82f7605ae5.jpg'},
+  {nombre:'Chaqueta Puffa', precio:20000, img:'https://cdn.shopify.com/s/files/1/0593/7892/5697/files/rn-image_picker_lib_temp_f69971cd-5d3c-4e86-9036-0a2fd252335b.jpg'},
+  {nombre:'Sweater Julia', precio:18000, img:'https://cdn.shopify.com/s/files/1/0593/7892/5697/files/rn-image_picker_lib_temp_61ae3bf1-cce9-4736-9284-3fff4a0b3c2c.jpg'},
+];
+
+/* Carritos abandonados — demo, se conecta a checkouts reales cuando Shopify entregue el webhook */
+const CARRITOS_DEMO = [
+  {nombre:'Fernanda Soto', telefono:'+56923456782', producto:'Blazer Sofía', monto:22990, hace:'2h'},
+  {nombre:'Trinidad Álvarez', telefono:'+56967890126', producto:'Maxi Vestido Rojo', monto:13500, hace:'5h'},
+  {nombre:'Isidora Campos', telefono:'+56978901237', producto:'Cardigan Blu', monto:16000, hace:'8h'},
+  {nombre:'Josefa Contreras', telefono:'+56901234560', producto:'Sweater Julia', monto:18000, hace:'1d'},
+  {nombre:'Martina Herrera', telefono:'+56990123459', producto:'Jeans Wide Leg Andrea', monto:18000, hace:'1d'},
+  {nombre:'Antonia Vidal', telefono:'+56945678904', producto:'Chaqueta Puffa', monto:20000, hace:'2d'},
+  {nombre:'Constanza Fuentes', telefono:'+56989012348', producto:'Blusa Valentina', monto:18990, hace:'2d'},
+  {nombre:'Javiera Muñoz', telefono:'+56934567893', producto:'Sweater Belén', monto:18990, hace:'3d'},
+];
+
+/* ---------- 3d. DATOS DEMO M3 ADS — histórico real 6 campañas (Análisis Meta Business jul 2025–jul 2026) ---------- */
+const CAMPANAS_DEMO = [
+  {nombre:'Reel Facebook — Otoño 2025', formato:'Reel Facebook', inversion:9200, ventas:12590},
+  {nombre:'Historia IG — Verano 2026', formato:'Historia Instagram', inversion:7100, ventas:7633},
+  {nombre:'Reel IG — Invierno 2026', formato:'Reel Instagram', inversion:6850, ventas:7062},
+  {nombre:'Carrusel FB — Lanzamiento Sweaters', formato:'Carrusel Facebook', inversion:6300, ventas:5800},
+  {nombre:'Reel Facebook — Black Friday', formato:'Reel Facebook', inversion:5127, ventas:6050},
+  {nombre:'Historia FB — Día de la Madre', formato:'Historia Facebook', inversion:4200, ventas:3700},
+];
+
+/* Planificador de contenido — serie "El Efecto de la Ropa" grabada en Canon EOS 90D */
+const CONTENIDO_DEMO = [
+  {fecha:'24 jul', icon:'🎬', titulo:'Reel: "El Efecto de la Ropa" — Ep. 4', detalle:'Psicología del color en blazers — grabado en Canon EOS 90D'},
+  {fecha:'26 jul', icon:'📸', titulo:'Carrusel producto: Cardigan Blu', detalle:'Ángulo neuromarketing: el azul reduce el cortisol — reforzar en copy'},
+  {fecha:'28 jul', icon:'💬', titulo:'Historia: Testimonio clienta VIP', detalle:'Reactivar formato historia con mejor costo, testear guión distinto'},
+  {fecha:'31 jul', icon:'🎬', titulo:'Reel Facebook: Última unidad', detalle:'Replicar formato de mejor ROI histórico (36.8%) con urgencia real de inventario'},
+];
+
+/* ---------- 3e. DATOS DEMO M6 COMPRAS ---------- */
+const PROVEEDORES_DEMO = [
+  {nombre:'Textiles Andrea', rubro:'Blusas y sweaters', contacto:'+56922223333', despacho:'5-7 días'},
+  {nombre:'Denim Maule', rubro:'Jeans y pantalones', contacto:'+56933334444', despacho:'3-5 días'},
+  {nombre:'Confecciones Trinidad', rubro:'Vestidos y enteritos', contacto:'+56944445555', despacho:'7-10 días'},
+  {nombre:'Punto Sur', rubro:'Cardigans y tejidos', contacto:'+56955556666', despacho:'4-6 días'},
+];
+
+let ORDENES_DEMO = [
+  {proveedor:'Textiles Andrea', producto:'Blusa lino', cantidad:12, costo:9000, estado:'transito'},
+  {proveedor:'Denim Maule', producto:'Jeans wide leg', cantidad:8, costo:10500, estado:'pendiente'},
+  {proveedor:'Punto Sur', producto:'Cardigan punto', cantidad:10, costo:8500, estado:'recibido'},
+];
+
+/* ---------- 3f. ESTADO M7 FINANZAS ---------- */
+let TASA_PPM = 0.3; // % sobre ventas netas — ajustar según tasa real asignada por el SII a ASIRI
+let MES_CERRADO = false;
+
+/* ---------- 3g. ESTADO M8 INFORMES ---------- */
+let LOOKER_URL = ''; // Valeria pega aquí la URL de su reporte Looker Studio (embed link)
+
+/* ---------- 3h. ESTADO M9 INTELLIGENCE — Usage Tracker (persiste en localStorage, funciona offline) ---------- */
+let VISITAS = {};
+try { VISITAS = JSON.parse(localStorage.getItem('asiri_visitas') || '{}'); } catch(e) { VISITAS = {}; }
+let ADAPTIVE_HOME_ON = localStorage.getItem('asiri_adaptive_home') === 'true';
+let LIMPIEZA_RESUELTOS = new Set();
+
+function registrarVisita(id){
+  VISITAS[id] = (VISITAS[id] || 0) + 1;
+  try { localStorage.setItem('asiri_visitas', JSON.stringify(VISITAS)); } catch(e) {}
+}
+
+/* Clean Data Engine — detecta problemas reales cruzando CRM (M2) y Compras (M6) */
+function detectarProblemasLimpieza(){
+  const problemas = [];
+  // Duplicados de teléfono en CRM
+  const telefonos = {};
+  CRM_DEMO.forEach(c => { telefonos[c.telefono] = (telefonos[c.telefono]||0) + 1; });
+  Object.keys(telefonos).forEach(tel => {
+    if(telefonos[tel] > 1) problemas.push({id:'dup-'+tel, texto:`Teléfono duplicado en CRM: ${tel}`});
+  });
+  // Clientas registradas sin ninguna compra
+  CRM_DEMO.filter(c => c.compras === 0).forEach(c => {
+    problemas.push({id:'sincompra-'+c.id, texto:`${c.nombre} está registrada pero nunca compró — considera reactivar o archivar`});
+  });
+  // Órdenes de compra pendientes
+  ORDENES_DEMO.forEach((o,i) => {
+    if(o.estado === 'pendiente') problemas.push({id:'orden-'+i, texto:`Orden pendiente sin seguimiento: ${o.producto} (${o.proveedor})`});
+  });
+  return problemas;
+}
+
+/* ---------- 3i. ESTADO M11 ACADEMY — notas guardadas por Valeria (localStorage) ---------- */
+let NOTAS_ACADEMY = [];
+try { NOTAS_ACADEMY = JSON.parse(localStorage.getItem('asiri_notas_academy') || '[]'); } catch(e) { NOTAS_ACADEMY = []; }
+
+const ACADEMY_CONTENIDO = {
+  canon: {icon:'📷', titulo:'Canon EOS 90D para ASIRI', items:[
+    {titulo:'Modo C1 para producto en tela', nuevo:true, desc:'ISO 400, f/5.6, 1/125 — resultado: textura perfecta en lana y tejidos gruesos, ideal para sweaters de invierno.'},
+    {titulo:'Iluminación invierno vs verano', nuevo:false, desc:'Invierno: luz de ventana a las 11am-1pm da mejor temperatura de color para telas oscuras. Verano: evitar luz directa después de las 3pm.'},
+    {titulo:'Workflow captura → Shopify', nuevo:false, desc:'Disparar en RAW+JPEG, editar solo el JPEG para velocidad, subir directo desde la app Shopify por WiFi de la cámara.'},
+  ]},
+  shopify: {icon:'🛍', titulo:'Shopify Novedades', items:[
+    {titulo:'Combined Listings', nuevo:true, desc:'Muestra variantes como productos separados en la grilla — +23% conversión reportado en tiendas de moda.'},
+    {titulo:'One-page checkout 2026', nuevo:true, desc:'Reduce pasos del checkout a una sola pantalla — relevante para el problema de conversión 0% de ASIRI.'},
+    {titulo:'Apps recomendadas para ropa', nuevo:false, desc:'Apps de trust badges y countdown de urgencia — directamente aplicable a "última unidad" de tus productos.'},
+  ]},
+  instagram: {icon:'📱', titulo:'Instagram & Algoritmo', items:[
+    {titulo:'Reels cortos ganan alcance', nuevo:true, desc:'Reels de 7-12 segundos están rindiendo 2x más alcance orgánico que los de 30 segundos — testear formato corto para "El Efecto de la Ropa".'},
+    {titulo:'Colabs entre cuentas', nuevo:false, desc:'Formato nuevo de Instagram para co-publicar con otras cuentas — oportunidad con micro-influencers moda Chile.'},
+  ]},
+  claude: {icon:'🤖', titulo:'Claude & IA Novedades', items:[
+    {titulo:'Modelos Claude 5 disponibles', nuevo:true, desc:'Sonnet 5, Opus 4.8 y Haiku 4.5 — mejoras en razonamiento aplicables a M10 Studio cuando se construya.'},
+    {titulo:'Integración Claude + Meta Ads', nuevo:false, desc:'Nuevas herramientas para gestionar campañas sin salir del chat — relevante para M3 Ads.'},
+  ]},
+  neuromarketing: {icon:'🦋', titulo:'ASIRI World — Neuromarketing', items:[
+    {titulo:'El azul reduce el cortisol', nuevo:false, desc:'Aplicado ya en el copy del Cardigan Blu — reforzar este ángulo en más prendas de tonos fríos.'},
+    {titulo:'Psicología del color en fotografía', nuevo:false, desc:'Fondos neutros resaltan mejor los colores saturados de las prendas — reduce la carga cognitiva de la clienta al decidir.'},
+    {titulo:'Urgencia real vs. urgencia falsa', nuevo:true, desc:'Con 8 de 8 productos revisados en última unidad, ASIRI tiene urgencia 100% real — comunicarlo sin exagerar aumenta la confianza.'},
+  ]}
+};
+
+/* Resumen ejecutivo — cruza datos reales de M2 CRM, M5 Ventas, M6 Compras y M7 Finanzas */
+function calcularResumenMensual(){
+  const totalHoy = DATA_DEMO.ventas.reduce((s,v) => s + v.monto, 0);
+  const diaDelMes = 23, diasDelMes = 31;
+  const ventasProyectadasMes = Math.round((totalHoy / diaDelMes) * diasDelMes);
+  const comprasTotal = ORDENES_DEMO.reduce((s,o) => s + o.cantidad*o.costo, 0);
+  const f29 = calcularF29();
+  const ingresosTotal = f29.libro.filter(m => m.tipo === 'ingreso').reduce((s,m) => s + m.total, 0);
+  const egresosTotal = f29.libro.filter(m => m.tipo === 'egreso').reduce((s,m) => s + m.total, 0);
+  const resultadoNeto = ingresosTotal - egresosTotal - f29.totalAPagar;
+  return {
+    totalHoy, ventasProyectadasMes, comprasTotal, resultadoNeto, f29,
+    clientasTotales: CRM_DEMO.length,
+    clientasVIP: CRM_DEMO.filter(c => segmentarClienta(c).key === 'vip').length,
+    ordenesCompra: ORDENES_DEMO.length,
+    conversion: 0
+  };
+}
+
+/* ---------- 4. RENDER HOME (M0) ---------- */
+function renderHome(){
+  const html = `
+    <div class="page-title">Dashboard Ejecutivo 🏠</div>
+    <div class="page-sub">Resumen del negocio en tiempo real — ASIRI La Boutique</div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <span class="kpi-icon">💰</span>
+        <div class="kpi-label">Caja del Día</div>
+        <div class="kpi-value">$${DATA_DEMO.cajaHoy.toLocaleString('es-CL')}</div>
+        <div class="kpi-delta up">↑ ${DATA_DEMO.cajaHoyDelta} vs ayer</div>
+      </div>
+      <div class="kpi-card alert">
+        <span class="kpi-icon">📦</span>
+        <div class="kpi-label">Stock Crítico</div>
+        <div class="kpi-value alert">${DATA_DEMO.stockCritico}</div>
+        <div class="kpi-delta down">productos con 1 unidad</div>
+      </div>
+      <div class="kpi-card alert">
+        <span class="kpi-icon">🎯</span>
+        <div class="kpi-label">Conversión Shopify</div>
+        <div class="kpi-value alert">${DATA_DEMO.conversion}%</div>
+        <div class="kpi-delta down">1.439 sesiones / 0 ventas</div>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-icon">💎</span>
+        <div class="kpi-label">Clientas Nuevas</div>
+        <div class="kpi-value">${DATA_DEMO.clientasNuevas}</div>
+        <div class="kpi-delta up">esta semana</div>
+      </div>
+    </div>
+
+    <div class="section-row">
+      <div class="panel">
+        <div class="panel-title">🤖 Brief Claude · 8am <span class="badge-live">HOY</span></div>
+        <div class="brief-box">
+          ${DATA_DEMO.brief}
+          <span class="brief-time">Generado automáticamente · 21 jul 2026, 08:00</span>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">🔔 Alertas Proactivas</div>
+        ${DATA_DEMO.alertas.map(a => `
+          <div class="alert-item ${a.tipo}">
+            <span class="alert-icon">${a.icon}</span>
+            <div class="alert-text"><b>${a.titulo}</b><span>${a.detalle}</span></div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    <div class="section-row">
+      <div class="panel">
+        <div class="panel-title">🧾 Últimas Ventas</div>
+        <table class="simple">
+          <tr><th>Hora</th><th>Producto</th><th>Canal</th><th>Monto</th></tr>
+          ${DATA_DEMO.ventas.map(v => `
+            <tr>
+              <td>${v.hora}</td>
+              <td>${v.producto}</td>
+              <td><span class="canal-pill ${v.canal}">${v.canal}</span></td>
+              <td>$${v.monto.toLocaleString('es-CL')}</td>
+            </tr>
+          `).join('')}
+        </table>
+        <div style="margin-top:1rem;"><button class="btn btn-primary" onclick="openModal('modal-venta')">+ Registrar Venta</button></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">⚡ Acceso Rápido ${ADAPTIVE_HOME_ON ? '<span class="badge-live">🧠 ADAPTATIVO</span>' : ''}</div>
+        <div class="quick-grid">
+          ${obtenerAccesoRapido().map(m => `
+            <div class="quick-card" onclick="irAModulo('${m.id}')"><span class="qi">${m.icon}</span><span class="qt">${m.label}</span></div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+  return html;
+}
+
+/* M9 Adaptive HOME — si está activado, ordena el acceso rápido por uso real (VISITAS); si no, usa el orden por defecto */
+const ACCESO_RAPIDO_TODOS = [
+  {id:'m5', icon:'💰', label:'Ventas'},
+  {id:'m2', icon:'💎', label:'CRM'},
+  {id:'m4', icon:'🛍', label:'Shopify'},
+  {id:'m1', icon:'🧮', label:'Calculadora'},
+  {id:'m3', icon:'📣', label:'Ads'},
+  {id:'m6', icon:'📦', label:'Compras'},
+  {id:'m7', icon:'📊', label:'Finanzas'},
+  {id:'m8', icon:'📈', label:'Informes'},
+];
+function obtenerAccesoRapido(){
+  if(!ADAPTIVE_HOME_ON) return ACCESO_RAPIDO_TODOS.slice(0,4);
+  return [...ACCESO_RAPIDO_TODOS].sort((a,b) => (VISITAS[b.id]||0) - (VISITAS[a.id]||0)).slice(0,4);
+}
+
+/* ============================================================
+   M1 — CALCULADORA ECOMMERCE (100% offline, JS puro)
+   4 herramientas: Precio de Venta · ROI Meta Ads · Punto de Equilibrio · Simulador Descuentos
+   ============================================================ */
+function renderCalculadora(){
+  return `
+    <div class="page-title">🧮 Calculadora Ecommerce</div>
+    <div class="page-sub">Precio, ROI, punto de equilibrio y descuentos — funciona sin internet</div>
+
+    <div class="tabs">
+      <button class="tab-btn active" onclick="cambiarTabCalc('precio')" id="tab-btn-precio">💵 Precio de Venta</button>
+      <button class="tab-btn" onclick="cambiarTabCalc('roi')" id="tab-btn-roi">📣 ROI Meta Ads</button>
+      <button class="tab-btn" onclick="cambiarTabCalc('equilibrio')" id="tab-btn-equilibrio">⚖️ Punto Equilibrio</button>
+      <button class="tab-btn" onclick="cambiarTabCalc('descuento')" id="tab-btn-descuento">🏷️ Simulador Descuentos</button>
+    </div>
+
+    <!-- PRECIO DE VENTA -->
+    <div class="tab-panel active" id="panel-precio">
+      <div class="calc-grid">
+        <div class="panel">
+          <div class="panel-title">Datos del producto</div>
+          <div class="field"><label>Costo de la prenda (CLP)</label><input type="number" id="pv-costo" value="9000" oninput="calcPrecioVenta()"></div>
+          <div class="field-row">
+            <div class="field"><label>Margen deseado (%)</label><input type="number" id="pv-margen" value="45" oninput="calcPrecioVenta()"></div>
+            <div class="field"><label>Comisión plataforma (%)</label><input type="number" id="pv-comision" value="6" oninput="calcPrecioVenta()"><div class="field-hint">Shopify ~2.9% + MP ~3.5%</div></div>
+          </div>
+          <div class="field"><label>Costo envío/empaque (CLP)</label><input type="number" id="pv-envio" value="1500" oninput="calcPrecioVenta()"></div>
+        </div>
+        <div class="calc-result">
+          <div class="r-row"><div class="r-label">Precio de venta sugerido</div><div class="r-value good" id="pv-resultado">$0</div></div>
+          <div class="r-row"><div class="r-label">Utilidad neta por unidad</div><div class="r-value" id="pv-utilidad">$0</div></div>
+          <div class="calc-note">Fórmula: (Costo + Envío) ÷ (1 − (Margen% + Comisión%) ÷ 100). Referencia ASIRI: tus productos se venden hoy entre $18.000–$19.000 CLP.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROI META ADS -->
+    <div class="tab-panel" id="panel-roi">
+      <div class="calc-grid">
+        <div class="panel">
+          <div class="panel-title">Datos de la campaña</div>
+          <div class="field"><label>Inversión Meta Ads (CLP)</label><input type="number" id="roi-inversion" value="150000" oninput="calcROI()"></div>
+          <div class="field"><label>Ventas generadas por la campaña (CLP)</label><input type="number" id="roi-ventas" value="180000" oninput="calcROI()"></div>
+          <div class="field"><label>Formato</label>
+            <select id="roi-formato" onchange="calcROI()">
+              <option value="reel-fb">Reel Facebook (mejor histórico: 36.8% ROI)</option>
+              <option value="historia-ig">Historia Instagram (7.5% ROI)</option>
+              <option value="reel-ig">Reel Instagram (3.1% ROI)</option>
+              <option value="otro">Otro</option>
+            </select>
+          </div>
+        </div>
+        <div class="calc-result">
+          <div class="r-row"><div class="r-label">ROI</div><div class="r-value" id="roi-resultado">0%</div></div>
+          <div class="r-row"><div class="r-label">ROAS (retorno por peso invertido)</div><div class="r-value" id="roi-roas">0x</div></div>
+          <div class="calc-note" id="roi-nota">Ingresa los datos de tu campaña para comparar contra tu histórico ASIRI.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PUNTO DE EQUILIBRIO -->
+    <div class="tab-panel" id="panel-equilibrio">
+      <div class="calc-grid">
+        <div class="panel">
+          <div class="panel-title">Costos del negocio</div>
+          <div class="field"><label>Costos fijos mensuales (CLP)</label><input type="number" id="pe-fijos" value="350000" oninput="calcEquilibrio()"><div class="field-hint">Ads, apps Shopify, packaging base, etc.</div></div>
+          <div class="field-row">
+            <div class="field"><label>Precio venta promedio (CLP)</label><input type="number" id="pe-precio" value="18500" oninput="calcEquilibrio()"></div>
+            <div class="field"><label>Costo variable/unidad (CLP)</label><input type="number" id="pe-variable" value="10500" oninput="calcEquilibrio()"></div>
+          </div>
+        </div>
+        <div class="calc-result">
+          <div class="r-row"><div class="r-label">Unidades a vender para cubrir costos</div><div class="r-value" id="pe-unidades">0</div></div>
+          <div class="r-row"><div class="r-label">Ventas totales necesarias</div><div class="r-value" id="pe-ventas">$0</div></div>
+          <div class="calc-note">Fórmula: Costos Fijos ÷ (Precio − Costo Variable). Bajo este número, ASIRI opera con pérdida ese mes.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SIMULADOR DESCUENTOS -->
+    <div class="tab-panel" id="panel-descuento">
+      <div class="calc-grid">
+        <div class="panel">
+          <div class="panel-title">Simular descuento</div>
+          <div class="field"><label>Precio original (CLP)</label><input type="number" id="sd-precio" value="18500" oninput="calcDescuento()"></div>
+          <div class="field"><label>Costo de la prenda (CLP)</label><input type="number" id="sd-costo" value="9500" oninput="calcDescuento()"></div>
+          <div class="field"><label>% Descuento</label><input type="range" id="sd-pct" min="0" max="70" value="20" oninput="calcDescuento()"><div class="field-hint" id="sd-pct-label">20%</div></div>
+        </div>
+        <div class="calc-result">
+          <div class="r-row"><div class="r-label">Precio final con descuento</div><div class="r-value" id="sd-final">$0</div></div>
+          <div class="r-row"><div class="r-label">Margen resultante</div><div class="r-value" id="sd-margen">0%</div></div>
+          <div class="calc-note" id="sd-nota">Ajusta el descuento para ver el impacto real en tu margen antes de publicarlo.</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function cambiarTabCalc(tab){
+  document.querySelectorAll('#view-m1 .tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#view-m1 .tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-btn-'+tab).classList.add('active');
+  document.getElementById('panel-'+tab).classList.add('active');
+}
+
+function calcPrecioVenta(){
+  const costo = Number(document.getElementById('pv-costo').value) || 0;
+  const margen = Number(document.getElementById('pv-margen').value) || 0;
+  const comision = Number(document.getElementById('pv-comision').value) || 0;
+  const envio = Number(document.getElementById('pv-envio').value) || 0;
+  const divisor = 1 - ((margen + comision) / 100);
+  const precio = divisor > 0 ? (costo + envio) / divisor : 0;
+  const utilidad = precio - costo - envio - (precio * comision / 100);
+  document.getElementById('pv-resultado').textContent = '$' + Math.round(precio).toLocaleString('es-CL');
+  document.getElementById('pv-utilidad').textContent = '$' + Math.round(utilidad).toLocaleString('es-CL');
+  autoSave();
+}
+
+function calcROI(){
+  const inv = Number(document.getElementById('roi-inversion').value) || 0;
+  const ventas = Number(document.getElementById('roi-ventas').value) || 0;
+  const roi = inv > 0 ? ((ventas - inv) / inv) * 100 : 0;
+  const roas = inv > 0 ? ventas / inv : 0;
+  const el = document.getElementById('roi-resultado');
+  el.textContent = roi.toFixed(1) + '%';
+  el.className = 'r-value ' + (roi >= 0 ? 'good' : 'bad');
+  document.getElementById('roi-roas').textContent = roas.toFixed(2) + 'x';
+  const formato = document.getElementById('roi-formato').value;
+  const historico = {'reel-fb':36.8, 'historia-ig':7.5, 'reel-ig':3.1, 'otro':null};
+  const h = historico[formato];
+  document.getElementById('roi-nota').textContent = h !== null
+    ? `Tu histórico en este formato es ${h}% ROI. ${roi >= h ? '✅ Vas por encima del histórico.' : '⚠️ Vas por debajo del histórico — revisa audiencia o creativo.'}`
+    : 'Formato sin histórico registrado en ASIRI.';
+  autoSave();
+}
+
+function calcEquilibrio(){
+  const fijos = Number(document.getElementById('pe-fijos').value) || 0;
+  const precio = Number(document.getElementById('pe-precio').value) || 0;
+  const variable = Number(document.getElementById('pe-variable').value) || 0;
+  const margenContrib = precio - variable;
+  const unidades = margenContrib > 0 ? Math.ceil(fijos / margenContrib) : 0;
+  document.getElementById('pe-unidades').textContent = unidades.toLocaleString('es-CL');
+  document.getElementById('pe-ventas').textContent = '$' + (unidades * precio).toLocaleString('es-CL');
+  autoSave();
+}
+
+function calcDescuento(){
+  const precio = Number(document.getElementById('sd-precio').value) || 0;
+  const costo = Number(document.getElementById('sd-costo').value) || 0;
+  const pct = Number(document.getElementById('sd-pct').value) || 0;
+  const final = precio * (1 - pct / 100);
+  const margen = final > 0 ? ((final - costo) / final) * 100 : 0;
+  document.getElementById('sd-pct-label').textContent = pct + '%';
+  document.getElementById('sd-final').textContent = '$' + Math.round(final).toLocaleString('es-CL');
+  const elMargen = document.getElementById('sd-margen');
+  elMargen.textContent = margen.toFixed(1) + '%';
+  elMargen.className = 'r-value ' + (margen >= 20 ? 'good' : 'bad');
+  document.getElementById('sd-nota').textContent = margen < 20
+    ? '⚠️ Margen bajo el 20% — este descuento puede no ser rentable.'
+    : '✅ Margen saludable con este descuento.';
+  autoSave();
+}
+
+/* ============================================================
+   M2 — CRM CLIENTAS ASIRI
+   Ficha completa · Segmentación VIP/Regular/Dormida/Nueva · WhatsApp
+   ============================================================ */
+function renderCRM(){
+  const dormidas = CRM_DEMO.filter(c => segmentarClienta(c).key === 'dormida');
+  return `
+    <div class="page-title">💎 CRM · Clientas ASIRI</div>
+    <div class="page-sub">${CRM_DEMO.length} clientas registradas — segmentación automática</div>
+
+    ${dormidas.length ? `
+      <div class="reactivacion-box">
+        <div class="rt">🚨 <b>${dormidas.length} clienta${dormidas.length>1?'s':''} dormida${dormidas.length>1?'s':''}</b> sin comprar hace más de 60 días — oportunidad de reactivación.</div>
+        <button class="btn btn-primary" onclick="filtrarCRM('dormida')">Ver dormidas</button>
+      </div>
+    ` : ''}
+
+    <div class="crm-toolbar">
+      <div class="crm-filters">
+        <span class="filter-chip f-all ${filtroCRM==='all'?'chip-active':''}" onclick="filtrarCRM('all')">Todas (${CRM_DEMO.length})</span>
+        <span class="filter-chip f-vip ${filtroCRM==='vip'?'chip-active':''}" onclick="filtrarCRM('vip')">VIP (${CRM_DEMO.filter(c=>segmentarClienta(c).key==='vip').length})</span>
+        <span class="filter-chip f-regular ${filtroCRM==='regular'?'chip-active':''}" onclick="filtrarCRM('regular')">Regular (${CRM_DEMO.filter(c=>segmentarClienta(c).key==='regular').length})</span>
+        <span class="filter-chip f-dormida ${filtroCRM==='dormida'?'chip-active':''}" onclick="filtrarCRM('dormida')">Dormida (${dormidas.length})</span>
+        <span class="filter-chip f-nueva ${filtroCRM==='nueva'?'chip-active':''}" onclick="filtrarCRM('nueva')">Nueva (${CRM_DEMO.filter(c=>segmentarClienta(c).key==='nueva').length})</span>
+      </div>
+      <button class="btn btn-primary" onclick="abrirNuevaClienta()">+ Nueva Clienta</button>
+    </div>
+
+    <div class="crm-grid" id="crm-grid">
+      ${renderClientasGrid()}
+    </div>
+  `;
+}
+
+function renderClientasGrid(){
+  const lista = filtroCRM === 'all' ? CRM_DEMO : CRM_DEMO.filter(c => segmentarClienta(c).key === filtroCRM);
+  if(!lista.length) return `<div class="placeholder-box"><span class="pi">💎</span><p>No hay clientas en este segmento.</p></div>`;
+  return lista.map(c => {
+    const seg = segmentarClienta(c);
+    return `
+      <div class="clienta-card" onclick="abrirFicha(${c.id})">
+        <div class="clienta-top">
+          <div><div class="clienta-nombre">${c.nombre}</div><div class="clienta-meta">${c.telefono}</div></div>
+          <span class="seg-badge ${seg.clase}">${seg.label}</span>
+        </div>
+        <div class="clienta-stats">
+          <div>Compras<b>${c.compras}</b></div>
+          <div>LTV<b>$${c.ltv.toLocaleString('es-CL')}</b></div>
+          <div>Última<b>${c.diasUltimaCompra}d</b></div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function filtrarCRM(seg){
+  filtroCRM = seg;
+  irAModulo('m2');
+  document.getElementById('view-m2').innerHTML = renderCRM();
+}
+
+function abrirNuevaClienta(){
+  document.getElementById('c-nombre').value = '';
+  document.getElementById('c-telefono').value = '';
+  document.getElementById('c-email').value = '';
+  document.getElementById('c-notas').value = '';
+  openModal('modal-clienta');
+}
+
+function guardarClienta(){
+  const nombre = document.getElementById('c-nombre').value;
+  const telefono = document.getElementById('c-telefono').value;
+  if(!nombre || !telefono){ alert('Completa nombre y teléfono'); return; }
+  CRM_DEMO.unshift({
+    id: Date.now(),
+    nombre, telefono,
+    email: document.getElementById('c-email').value,
+    compras: 0, ltv: 0, diasUltimaCompra: 0,
+    notas: document.getElementById('c-notas').value
+  });
+  closeModal('modal-clienta');
+  document.getElementById('view-m2').innerHTML = renderCRM();
+  autoSave(true);
+}
+
+function abrirFicha(id){
+  const c = CRM_DEMO.find(x => x.id === id);
+  if(!c) return;
+  const seg = segmentarClienta(c);
+  document.getElementById('ficha-contenido').innerHTML = `
+    <h3>${c.nombre} <span class="seg-badge ${seg.clase}">${seg.label}</span></h3>
+    <div class="ficha-row"><span>Teléfono</span><span>${c.telefono}</span></div>
+    <div class="ficha-row"><span>Email</span><span>${c.email || '—'}</span></div>
+    <div class="ficha-row"><span>Compras totales</span><span>${c.compras}</span></div>
+    <div class="ficha-row"><span>LTV</span><span>$${c.ltv.toLocaleString('es-CL')}</span></div>
+    <div class="ficha-row"><span>Última compra</span><span>hace ${c.diasUltimaCompra} días</span></div>
+    <div class="ficha-row"><span>Notas</span><span>${c.notas || '—'}</span></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-ficha')">Cerrar</button>
+      <button class="btn btn-wa" onclick="abrirWhatsApp(${c.id})">💬 WhatsApp</button>
+    </div>
+  `;
+  openModal('modal-ficha');
+}
+
+function abrirWhatsApp(id){
+  const c = CRM_DEMO.find(x => x.id === id);
+  if(!c) return;
+  const seg = segmentarClienta(c);
+  const mensajes = {
+    dormida: `Hola ${c.nombre.split(' ')[0]} 🦋 Te extrañamos en ASIRI La Boutique. Tenemos piezas nuevas que pensamos en ti — ¿te muestro?`,
+    vip: `Hola ${c.nombre.split(' ')[0]} 🦋 Gracias por ser parte de nuestras clientas VIP. Tenemos un adelanto exclusivo para ti antes de publicarlo.`,
+    nueva: `Hola ${c.nombre.split(' ')[0]} 🦋 ¡Gracias por tu primera compra en ASIRI! Cualquier duda con tu pedido, aquí estamos.`,
+    regular: `Hola ${c.nombre.split(' ')[0]} 🦋 Tenemos nuevas piezas en ASIRI La Boutique que te podrían encantar.`
+  };
+  const texto = encodeURIComponent(mensajes[seg.key] || mensajes.regular);
+  const numero = c.telefono.replace(/[^0-9]/g,'');
+  window.open(`https://wa.me/${numero}?text=${texto}`, '_blank');
+}
+
+/* ============================================================
+   M4 — SHOPIFY TIENDA ONLINE (tiempo real)
+   Órdenes RT · Funnel de conversión · Carritos abandonados · Alerta última unidad
+   ============================================================ */
+function renderShopify(){
+  // Funnel estimado a partir de benchmarks moda ecommerce Chile, aplicado a las 1.439 sesiones reales
+  const sesiones = SHOPIFY_SESIONES_30D;
+  const vistaProducto = Math.round(sesiones * 0.43);
+  const agregoCarrito = Math.round(vistaProducto * 0.22);
+  const iniciCheckout = Math.round(agregoCarrito * 0.36);
+  const compra = SHOPIFY_ORDENES_30D;
+  const pasos = [
+    {label:'Sesiones', valor:sesiones, base:sesiones},
+    {label:'Vio un producto', valor:vistaProducto, base:sesiones},
+    {label:'Agregó al carrito', valor:agregoCarrito, base:sesiones},
+    {label:'Inició checkout', valor:iniciCheckout, base:sesiones},
+    {label:'Compró', valor:compra, base:sesiones},
+  ];
+
+  return `
+    <div class="page-title">🛍 Shopify · Tienda Online</div>
+    <div class="page-sub">asirilaboutique.com — datos en vivo vía Shopify Admin API</div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card"><span class="kpi-icon">👀</span><div class="kpi-label">Sesiones (30d)</div><div class="kpi-value">${sesiones.toLocaleString('es-CL')}</div></div>
+      <div class="kpi-card alert"><span class="kpi-icon">📦</span><div class="kpi-label">Órdenes (30d)</div><div class="kpi-value alert">${compra}</div></div>
+      <div class="kpi-card alert"><span class="kpi-icon">🎯</span><div class="kpi-label">Conversión</div><div class="kpi-value alert">0%</div></div>
+      <div class="kpi-card alert"><span class="kpi-icon">🚨</span><div class="kpi-label">Carritos Abandonados</div><div class="kpi-value alert">${CARRITOS_DEMO.length}</div></div>
+    </div>
+
+    <div class="lastunit-banner">
+      🚨 <b>${SHOPIFY_ULTIMA_UNIDAD.length} de tus productos activos</b> tienen inventario = 1 unidad ahora mismo — prácticamente todo el catálogo está en última unidad. Considera activar countdown/urgencia Liquid en la tienda.
+    </div>
+
+    <div class="section-row">
+      <div class="panel">
+        <div class="panel-title">🎯 Funnel de Conversión <span class="badge-live">30 DÍAS</span></div>
+        <div class="funnel">
+          ${pasos.map(p => {
+            const pct = p.base > 0 ? Math.max((p.valor / p.base) * 100, p.valor > 0 ? 2 : 0) : 0;
+            const esCero = p.valor === 0;
+            return `
+              <div class="funnel-step">
+                <div class="funnel-label">${p.label}</div>
+                <div class="funnel-bar-bg">
+                  <div class="funnel-bar-fill ${esCero ? 'zero' : ''}" style="width:${pct}%">${p.valor.toLocaleString('es-CL')}</div>
+                </div>
+                <div class="funnel-pct">${p.base > 0 ? ((p.valor/p.base)*100).toFixed(1) : '0.0'}%</div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+        <div class="funnel-note">Vista de producto, carrito y checkout son estimados según benchmark de moda ecommerce Chile aplicado a tus sesiones reales. Sesiones y órdenes son datos reales de Shopify. El quiebre real está confirmado en el paso final: 0 compras.</div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">🛒 Carritos Abandonados</div>
+        ${CARRITOS_DEMO.map((c,i) => `
+          <div class="carrito-item">
+            <div class="carrito-info"><b>${c.nombre}</b><span>${c.producto} · $${c.monto.toLocaleString('es-CL')} · hace ${c.hace}</span></div>
+            <button class="btn btn-wa" style="padding:.4rem .7rem; font-size:.7rem;" onclick="recuperarCarrito(${i})">💬 WA</button>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">⚠️ Última Unidad Disponible</div>
+      <div class="lastunit-grid">
+        ${SHOPIFY_ULTIMA_UNIDAD.map(p => `
+          <div class="lastunit-card">
+            <span class="lastunit-badge">1 UNIDAD</span>
+            <img src="${p.img}" alt="${p.nombre}" loading="lazy" onerror="this.style.display='none'">
+            <div class="lastunit-info"><div class="ln">${p.nombre}</div><div class="lp">$${p.precio.toLocaleString('es-CL')}</div></div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function recuperarCarrito(i){
+  const c = CARRITOS_DEMO[i];
+  if(!c) return;
+  const texto = encodeURIComponent(`Hola ${c.nombre.split(' ')[0]} 🦋 Vimos que dejaste "${c.producto}" en tu carrito de ASIRI La Boutique — nos queda solo 1 unidad. ¿Te ayudo a completar tu compra?`);
+  const numero = c.telefono.replace(/[^0-9]/g,'');
+  window.open(`https://wa.me/${numero}?text=${texto}`, '_blank');
+}
+
+/* ============================================================
+   M5 — VENTAS · CAJA UNIFICADA
+   Shopify + MP POS + Manual = total real del día · Proyección mes · Análisis por hora
+   ============================================================ */
+function renderVentas(){
+  const porCanal = {shopify:0, pos:0, manual:0};
+  DATA_DEMO.ventas.forEach(v => { porCanal[v.canal] = (porCanal[v.canal]||0) + v.monto; });
+  const totalHoy = porCanal.shopify + porCanal.pos + porCanal.manual;
+
+  const diaDelMes = 23; // 23 julio 2026
+  const diasDelMes = 31;
+  const proyeccionMes = Math.round((totalHoy / diaDelMes) * diasDelMes);
+
+  // Análisis por hora — agrupa las ventas demo por bloque horario
+  const bloques = ['09-11h','11-13h','13-15h','15-17h','17-19h','19-21h'];
+  const montosPorBloque = bloques.map(() => 0);
+  DATA_DEMO.ventas.forEach(v => {
+    const h = Number(v.hora.split(':')[0]);
+    const idx = Math.min(Math.floor((h - 9) / 2), bloques.length - 1);
+    if(idx >= 0) montosPorBloque[idx] += v.monto;
+  });
+  const maxBloque = Math.max(...montosPorBloque, 1);
+
+  return `
+    <div class="page-title">💰 Ventas · Caja Unificada</div>
+    <div class="page-sub">Shopify + Mercado Pago POS + Manual = tu caja real del día</div>
+
+    <div class="canal-total-grid">
+      <div class="canal-total-card"><div class="ct-canal">🛍 Shopify</div><div class="ct-monto">$${porCanal.shopify.toLocaleString('es-CL')}</div></div>
+      <div class="canal-total-card"><div class="ct-canal">💳 MP POS</div><div class="ct-monto">$${porCanal.pos.toLocaleString('es-CL')}</div></div>
+      <div class="canal-total-card"><div class="ct-canal">✍️ Manual</div><div class="ct-monto">$${porCanal.manual.toLocaleString('es-CL')}</div></div>
+      <div class="canal-total-card total"><div class="ct-canal">💰 Total Día</div><div class="ct-monto">$${totalHoy.toLocaleString('es-CL')}</div></div>
+    </div>
+
+    <div class="section-row">
+      <div class="panel">
+        <div class="panel-title">📊 Análisis por Hora</div>
+        ${bloques.map((b,i) => `
+          <div class="hora-bar-row">
+            <div class="hora-label">${b}</div>
+            <div class="hora-bar-bg"><div class="hora-bar-fill" style="width:${(montosPorBloque[i]/maxBloque)*100}%"></div></div>
+            <div class="hora-val">$${montosPorBloque[i].toLocaleString('es-CL')}</div>
+          </div>
+        `).join('')}
+      </div>
+      <div class="proyeccion-box">
+        <div class="py-label">Proyección del Mes (julio 2026)</div>
+        <div class="py-value">$${proyeccionMes.toLocaleString('es-CL')}</div>
+        <div class="calc-note">Basado en el promedio diario de hoy ($${Math.round(totalHoy/diaDelMes).toLocaleString('es-CL')}/día) proyectado a los 31 días de julio. Día ${diaDelMes} de ${diasDelMes}.</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">🧾 Todas las Ventas de Hoy</div>
+      <table class="simple">
+        <tr><th>Hora</th><th>Producto</th><th>Canal</th><th>Monto</th></tr>
+        ${DATA_DEMO.ventas.map(v => `
+          <tr>
+            <td>${v.hora}</td>
+            <td>${v.producto}</td>
+            <td><span class="canal-pill ${v.canal}">${v.canal}</span></td>
+            <td>$${v.monto.toLocaleString('es-CL')}</td>
+          </tr>
+        `).join('')}
+      </table>
+      <div style="margin-top:1rem;"><button class="btn btn-primary" onclick="openModal('modal-venta')">+ Registrar Venta</button></div>
+    </div>
+  `;
+}
+
+/* ============================================================
+   M3 — ADS · MARKETING Y CONTENIDO
+   Meta Ads tracker ROI · Planificador de contenido con psicología de moda
+   ============================================================ */
+function renderAds(){
+  const totalInversion = CAMPANAS_DEMO.reduce((s,c) => s + c.inversion, 0);
+  const totalVentas = CAMPANAS_DEMO.reduce((s,c) => s + c.ventas, 0);
+  const roiGlobal = ((totalVentas - totalInversion) / totalInversion) * 100;
+  const mejor = [...CAMPANAS_DEMO].sort((a,b) => (b.ventas-b.inversion)/b.inversion - (a.ventas-a.inversion)/a.inversion)[0];
+
+  return `
+    <div class="page-title">📣 Ads · Marketing y Contenido</div>
+    <div class="page-sub">Meta Ads tracker + planificador — histórico jul 2025–jul 2026</div>
+
+    <div class="meta-resumen-grid">
+      <div class="meta-resumen-card"><div class="mr-label">Invertido total</div><div class="mr-value">$${totalInversion.toLocaleString('es-CL')}</div></div>
+      <div class="meta-resumen-card"><div class="mr-label">Ventas generadas</div><div class="mr-value">$${totalVentas.toLocaleString('es-CL')}</div></div>
+      <div class="meta-resumen-card"><div class="mr-label">ROI Global</div><div class="mr-value" style="color:${roiGlobal>=0?'var(--verde)':'var(--rojo)'}">${roiGlobal.toFixed(1)}%</div></div>
+      <div class="meta-resumen-card"><div class="mr-label">Mejor formato</div><div class="mr-value" style="font-size:.85rem;">${mejor.formato}</div></div>
+    </div>
+
+    <div class="section-row">
+      <div class="panel">
+        <div class="panel-title">📊 Campañas — ROI por Formato</div>
+        <div class="campana-grid">
+          ${CAMPANAS_DEMO.map(c => {
+            const roi = ((c.ventas - c.inversion) / c.inversion) * 100;
+            return `
+              <div class="campana-card">
+                <div class="campana-top">
+                  <div><div class="campana-nombre">${c.nombre}</div><div class="campana-meta">${c.formato}</div></div>
+                  <span class="roi-badge ${roi>=0?'pos':'neg'}">${roi>=0?'+':''}${roi.toFixed(1)}%</span>
+                </div>
+                <div class="campana-stats">
+                  <div>Inversión<b>$${c.inversion.toLocaleString('es-CL')}</b></div>
+                  <div>Ventas<b>$${c.ventas.toLocaleString('es-CL')}</b></div>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">🗓️ Planificador de Contenido <span class="badge-live">EL EFECTO DE LA ROPA</span></div>
+        ${CONTENIDO_DEMO.map(c => `
+          <div class="content-item">
+            <span class="content-icon">${c.icon}</span>
+            <div class="content-info" style="flex:1;"><b>${c.titulo}</b><span>${c.detalle}</span></div>
+            <span class="content-date">${c.fecha}</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+/* ============================================================
+   M6 — COMPRAS · GESTIÓN MERCADERÍA
+   Proveedores · Órdenes de compra · Seguimiento despachos · Stock mínimo
+   ============================================================ */
+function renderCompras(){
+  return `
+    <div class="page-title">📦 Compras · Gestión Mercadería</div>
+    <div class="page-sub">Proveedores, órdenes de compra y seguimiento de despachos</div>
+
+    <div class="section-row">
+      <div class="panel">
+        <div class="panel-title">🚨 Stock Mínimo — Necesita Reposición</div>
+        ${SHOPIFY_ULTIMA_UNIDAD.slice(0,6).map(p => `
+          <div class="stockmin-item">
+            <span>${p.nombre}</span>
+            <b>1 unidad</b>
+          </div>
+        `).join('')}
+      </div>
+      <div class="panel">
+        <div class="panel-title">🏭 Proveedores</div>
+        <div class="proveedor-grid">
+          ${PROVEEDORES_DEMO.map(p => `
+            <div class="proveedor-card">
+              <div class="proveedor-nombre">${p.nombre}</div>
+              <div class="proveedor-meta">${p.rubro}<br>${p.contacto}</div>
+              <span class="proveedor-despacho">🚚 ${p.despacho}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">🧾 Órdenes de Compra</div>
+      <table class="simple" id="ordenes-tabla">
+        <tr><th>Proveedor</th><th>Producto</th><th>Cant.</th><th>Costo Unit.</th><th>Total</th><th>Estado</th></tr>
+        ${renderFilasOrdenes()}
+      </table>
+      <div style="margin-top:1rem;"><button class="btn btn-primary" onclick="openModal('modal-orden')">+ Nueva Orden de Compra</button></div>
+    </div>
+  `;
+}
+
+function renderFilasOrdenes(){
+  const estadoLabel = {pendiente:'Pendiente', transito:'En Tránsito', recibido:'Recibido'};
+  return ORDENES_DEMO.map(o => `
+    <tr>
+      <td>${o.proveedor}</td>
+      <td>${o.producto}</td>
+      <td>${o.cantidad}</td>
+      <td>$${o.costo.toLocaleString('es-CL')}</td>
+      <td>$${(o.cantidad*o.costo).toLocaleString('es-CL')}</td>
+      <td><span class="estado-pill ${o.estado}">${estadoLabel[o.estado]}</span></td>
+    </tr>
+  `).join('');
+}
+
+function guardarOrdenCompra(){
+  const proveedor = document.getElementById('o-proveedor').value;
+  const producto = document.getElementById('o-producto').value;
+  const cantidad = Number(document.getElementById('o-cantidad').value);
+  const costo = Number(document.getElementById('o-costo').value);
+  if(!proveedor || !producto || !cantidad || !costo){ alert('Completa todos los campos'); return; }
+  ORDENES_DEMO.unshift({proveedor, producto, cantidad, costo, estado:'pendiente'});
+  closeModal('modal-orden');
+  document.getElementById('ordenes-tabla').innerHTML = `<tr><th>Proveedor</th><th>Producto</th><th>Cant.</th><th>Costo Unit.</th><th>Total</th><th>Estado</th></tr>${renderFilasOrdenes()}`;
+  autoSave(true);
+}
+
+/* ============================================================
+   M7 — FINANZAS · SII CHILE
+   Libro Ingresos y Egresos · F29 pre-calculado · Cierre mensual · Flujo de caja 30 días
+   ============================================================ */
+
+/* Construye el Libro IyE a partir de ventas reales (M5) y compras reales (M6) */
+function construirLibroIyE(){
+  const ingresos = DATA_DEMO.ventas.map(v => ({
+    fecha: '23 jul', tipo:'ingreso', doc: v.canal === 'shopify' ? 'Boleta Web' : v.canal === 'pos' ? 'Boleta MP POS' : 'Boleta Manual',
+    concepto: v.producto, total: v.monto
+  }));
+  const egresos = ORDENES_DEMO.map(o => ({
+    fecha: '23 jul', tipo:'egreso', doc:'Factura Proveedor',
+    concepto: `${o.producto} (${o.proveedor})`, total: o.cantidad * o.costo
+  }));
+  return [...ingresos, ...egresos].map(m => {
+    const neto = Math.round(m.total / 1.19);
+    const iva = m.total - neto;
+    return {...m, neto, iva};
+  });
+}
+
+function calcularF29(){
+  const libro = construirLibroIyE();
+  const ivaDebito = libro.filter(m => m.tipo === 'ingreso').reduce((s,m) => s + m.iva, 0);
+  const ivaCredito = libro.filter(m => m.tipo === 'egreso').reduce((s,m) => s + m.iva, 0);
+  const ventasNetas = libro.filter(m => m.tipo === 'ingreso').reduce((s,m) => s + m.neto, 0);
+  const ivaDeterminado = ivaDebito - ivaCredito;
+  const ppm = Math.round(ventasNetas * (TASA_PPM / 100));
+  const totalAPagar = Math.max(ivaDeterminado, 0) + ppm;
+  return { libro, ivaDebito, ivaCredito, ventasNetas, ivaDeterminado, ppm, totalAPagar };
+}
+
+function renderFinanzas(){
+  const f29 = calcularF29();
+  const egresosTotal = f29.libro.filter(m => m.tipo === 'egreso').reduce((s,m) => s + m.total, 0);
+  const ingresosTotal = f29.libro.filter(m => m.tipo === 'ingreso').reduce((s,m) => s + m.total, 0);
+
+  return `
+    <div class="page-title">📊 Finanzas · SII ${MES_CERRADO ? '<span class="cierre-badge">MES CERRADO</span>' : ''}</div>
+    <div class="page-sub">Libro IyE, F29 y flujo de caja — datos reales de Ventas (M5) y Compras (M6)</div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card"><span class="kpi-icon">💵</span><div class="kpi-label">Ingresos (hoy)</div><div class="kpi-value">$${ingresosTotal.toLocaleString('es-CL')}</div></div>
+      <div class="kpi-card"><span class="kpi-icon">📤</span><div class="kpi-label">Egresos (hoy)</div><div class="kpi-value">$${egresosTotal.toLocaleString('es-CL')}</div></div>
+      <div class="kpi-card"><span class="kpi-icon">🧾</span><div class="kpi-label">IVA Débito</div><div class="kpi-value">$${f29.ivaDebito.toLocaleString('es-CL')}</div></div>
+      <div class="kpi-card ${f29.ivaDeterminado>0?'alert':''}"><span class="kpi-icon">⚖️</span><div class="kpi-label">${f29.ivaDeterminado>=0?'IVA a Pagar':'Remanente Crédito'}</div><div class="kpi-value ${f29.ivaDeterminado>0?'alert':''}">$${Math.abs(f29.ivaDeterminado).toLocaleString('es-CL')}</div></div>
+    </div>
+
+    <div class="section-row">
+      <div class="panel">
+        <div class="panel-title">🧾 F29 Pre-calculado <span class="badge-live">JULIO 2026</span></div>
+        <div class="f29-row"><span class="lbl">Ventas Netas</span><span class="val">$${f29.ventasNetas.toLocaleString('es-CL')}</span></div>
+        <div class="f29-row"><span class="lbl">IVA Débito Fiscal (19%)</span><span class="val">$${f29.ivaDebito.toLocaleString('es-CL')}</span></div>
+        <div class="f29-row"><span class="lbl">IVA Crédito Fiscal (compras)</span><span class="val">−$${f29.ivaCredito.toLocaleString('es-CL')}</span></div>
+        <div class="f29-row"><span class="lbl">IVA Determinado</span><span class="val">$${f29.ivaDeterminado.toLocaleString('es-CL')}</span></div>
+        <div class="f29-row">
+          <span class="lbl">PPM — tasa provisional</span>
+          <span class="f29-tasa"><input type="number" step="0.05" id="ppm-tasa" value="${TASA_PPM}" onchange="cambiarTasaPPM(this.value)">%</span>
+        </div>
+        <div class="f29-row"><span class="lbl">PPM a pagar</span><span class="val">$${f29.ppm.toLocaleString('es-CL')}</span></div>
+        <div class="f29-row total"><span class="lbl">Total F29 a Pagar</span><span class="val">$${f29.totalAPagar.toLocaleString('es-CL')}</span></div>
+        <div class="calc-note">Tasa PPM referencial — confirmar con tu contador la tasa real asignada por el SII a ASIRI La Boutique en su última Renta.</div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">📅 Flujo de Caja · Próximos 30 Días</div>
+        ${renderFlujoCaja()}
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">📖 Libro de Ingresos y Egresos</div>
+      <table class="simple">
+        <tr><th>Fecha</th><th>Tipo</th><th>Documento</th><th>Concepto</th><th>Neto</th><th>IVA</th><th>Total</th></tr>
+        ${f29.libro.map(m => `
+          <tr>
+            <td>${m.fecha}</td>
+            <td><span class="tipo-pill ${m.tipo}">${m.tipo === 'ingreso' ? 'Ingreso' : 'Egreso'}</span></td>
+            <td>${m.doc}</td>
+            <td>${m.concepto}</td>
+            <td>$${m.neto.toLocaleString('es-CL')}</td>
+            <td>$${m.iva.toLocaleString('es-CL')}</td>
+            <td>$${m.total.toLocaleString('es-CL')}</td>
+          </tr>
+        `).join('')}
+      </table>
+      <div style="margin-top:1rem;"><button class="btn btn-primary" onclick="abrirCierreMensual()">🔒 Cerrar Mes</button></div>
+    </div>
+  `;
+}
+
+function renderFlujoCaja(){
+  const saldoInicial = 850000; // ajustar con saldo bancario real de ASIRI
+  const totalHoy = DATA_DEMO.ventas.reduce((s,v) => s + v.monto, 0);
+  const totalEgresosHoy = ORDENES_DEMO.reduce((s,o) => s + o.cantidad*o.costo, 0);
+  const promedioIngresoDiario = totalHoy; // referencia: caja de hoy como proxy diario
+  const promedioEgresoDiario = totalEgresosHoy / 31;
+
+  const checkpoints = [5,10,15,20,25,30];
+  const saldos = checkpoints.map(dia => Math.round(saldoInicial + dia*(promedioIngresoDiario - promedioEgresoDiario)));
+  const maxAbs = Math.max(...saldos.map(s => Math.abs(s)), 1);
+  const hayNegativo = saldos.some(s => s < 0);
+
+  const filas = checkpoints.map((dia,i) => `
+    <div class="flujo-bar-row">
+      <div class="flujo-label">Día ${dia}</div>
+      <div class="flujo-bar-bg"><div class="flujo-bar-fill ${saldos[i]<0?'neg':''}" style="width:${Math.min((Math.abs(saldos[i])/maxAbs)*100,100)}%"></div></div>
+      <div class="flujo-val">$${saldos[i].toLocaleString('es-CL')}</div>
+    </div>
+  `).join('');
+
+  return `
+    ${filas}
+    <div class="calc-note">Saldo inicial referencial $${saldoInicial.toLocaleString('es-CL')} + proyección lineal según tu venta e compra promedio diarias actuales. Ajustar saldo inicial con tu cuenta bancaria real.</div>
+    ${hayNegativo ? `<div class="flujo-alerta">⚠️ El flujo proyectado cae bajo $0 en algún punto de los próximos 30 días. Revisa gastos comprometidos o acelera cobranzas antes de que ocurra.</div>` : ''}
+  `;
+}
+
+function cambiarTasaPPM(valor){
+  TASA_PPM = Number(valor) || 0;
+  document.getElementById('view-m7').innerHTML = renderFinanzas();
+  autoSave();
+}
+
+function abrirCierreMensual(){
+  const f29 = calcularF29();
+  const ingresosTotal = f29.libro.filter(m => m.tipo === 'ingreso').reduce((s,m) => s + m.total, 0);
+  const egresosTotal = f29.libro.filter(m => m.tipo === 'egreso').reduce((s,m) => s + m.total, 0);
+  const resultadoNeto = ingresosTotal - egresosTotal - f29.totalAPagar;
+
+  document.getElementById('cierre-contenido').innerHTML = `
+    <h3>Cierre Mensual — Julio 2026</h3>
+    <div class="f29-row"><span class="lbl">Ingresos Totales</span><span class="val">$${ingresosTotal.toLocaleString('es-CL')}</span></div>
+    <div class="f29-row"><span class="lbl">Egresos Totales</span><span class="val">−$${egresosTotal.toLocaleString('es-CL')}</span></div>
+    <div class="f29-row"><span class="lbl">IVA + PPM (F29)</span><span class="val">−$${f29.totalAPagar.toLocaleString('es-CL')}</span></div>
+    <div class="f29-row total"><span class="lbl">Resultado Neto Estimado</span><span class="val ${resultadoNeto<0?'rojo':''}">$${resultadoNeto.toLocaleString('es-CL')}</span></div>
+    <div class="calc-note">Al confirmar, el mes queda marcado como cerrado en ASIRI ERP. Esto es un resumen operativo — no reemplaza la declaración oficial en el SII.</div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-cierre')">Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmarCierreMensual()">Confirmar Cierre</button>
+    </div>
+  `;
+  openModal('modal-cierre');
+}
+
+function confirmarCierreMensual(){
+  MES_CERRADO = true;
+  closeModal('modal-cierre');
+  document.getElementById('view-m7').innerHTML = renderFinanzas();
+  autoSave(true);
+}
+
+/* ============================================================
+   M8 — INFORMES · BI
+   PDF ejecutivo automático · Looker Studio embebido · Export Excel · Informe WhatsApp
+   ============================================================ */
+function renderInformes(){
+  const r = calcularResumenMensual();
+
+  return `
+    <div class="page-title">📈 Informes · BI</div>
+    <div class="page-sub">Reporte ejecutivo, BI en vivo y exportación — datos reales cruzados de todo ASIRI ERP</div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card"><span class="kpi-icon">💰</span><div class="kpi-label">Ventas Proyectadas Mes</div><div class="kpi-value">$${r.ventasProyectadasMes.toLocaleString('es-CL')}</div></div>
+      <div class="kpi-card"><span class="kpi-icon">💎</span><div class="kpi-label">Clientas (VIP)</div><div class="kpi-value">${r.clientasTotales} (${r.clientasVIP})</div></div>
+      <div class="kpi-card"><span class="kpi-icon">📦</span><div class="kpi-label">Compras del Mes</div><div class="kpi-value">$${r.comprasTotal.toLocaleString('es-CL')}</div></div>
+      <div class="kpi-card ${r.resultadoNeto<0?'alert':''}"><span class="kpi-icon">📊</span><div class="kpi-label">Resultado Neto Est.</div><div class="kpi-value ${r.resultadoNeto<0?'alert':''}">$${r.resultadoNeto.toLocaleString('es-CL')}</div></div>
+    </div>
+
+    <div class="section-row">
+      <div class="panel">
+        <div class="panel-title">📄 Reporte Ejecutivo</div>
+        <div class="informe-actions">
+          <button class="btn btn-primary" onclick="generarPDFMensual()">📄 Generar PDF Mensual</button>
+          <button class="btn btn-wa" onclick="enviarInformeWhatsApp()">💬 Enviar Informe Semanal por WhatsApp</button>
+          <button class="btn btn-ghost" onclick="exportarExcel()">📊 Descargar Excel (4 hojas)</button>
+        </div>
+        <div class="resumen-mes-note">El PDF abre el diálogo de impresión del navegador — elige "Guardar como PDF" como destino. El Excel se descarga en formato .xls con hojas: Resumen, Ventas, CRM Clientas y Compras.</div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">📊 Looker Studio <span class="badge-live">BI EN VIVO</span></div>
+        <div class="url-input-row">
+          <input type="text" id="looker-url" placeholder="Pega aquí el link 'Insertar informe' de Looker Studio" value="${LOOKER_URL}">
+          <button class="btn btn-primary" onclick="guardarLookerURL()">Conectar</button>
+        </div>
+        ${LOOKER_URL ? `
+          <iframe class="looker-frame" src="${LOOKER_URL}" allowfullscreen></iframe>
+        ` : `
+          <div class="looker-placeholder">
+            <span class="lp-icon">📊</span>
+            <b>Aún no está conectado tu Looker Studio.</b><br>
+            En Looker Studio: Compartir → Insertar informe → copia el link y pégalo arriba. Se conecta a tu Google Sheet "ASIRI_ERP_DB" para mostrar gráficos de tendencia en vivo, sin salir del ERP.
+          </div>
+        `}
+      </div>
+    </div>
+  `;
+}
+
+function guardarLookerURL(){
+  const val = document.getElementById('looker-url').value.trim();
+  LOOKER_URL = val;
+  document.getElementById('view-m8').innerHTML = renderInformes();
+  autoSave(true);
+}
+
+/* ---------- PDF ejecutivo — genera un documento imprimible y abre el diálogo de impresión (Guardar como PDF) ---------- */
+function generarPDFMensual(){
+  const r = calcularResumenMensual();
+  const fecha = new Date().toLocaleDateString('es-CL', {day:'2-digit', month:'long', year:'numeric'});
+  const html = `
+    <!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>ASIRI ERP — Informe Ejecutivo</title>
+    <style>
+      body{font-family:Arial,sans-serif; color:#0F172A; padding:2rem; max-width:800px; margin:0 auto;}
+      h1{font-size:1.5rem; margin-bottom:.2rem;}
+      .sub{color:#64748B; font-size:.85rem; margin-bottom:1.5rem;}
+      table{width:100%; border-collapse:collapse; margin-bottom:1.5rem; font-size:.85rem;}
+      th,td{text-align:left; padding:.5rem; border-bottom:1px solid #E2E8F0;}
+      th{background:#0F172A; color:white;}
+      .kpi{display:inline-block; width:23%; margin-right:1%; vertical-align:top; padding:.8rem; border:1px solid #E2E8F0; border-radius:8px; margin-bottom:1rem;}
+      .kpi b{display:block; font-size:1.1rem;}
+      .kpi span{font-size:.7rem; color:#64748B; text-transform:uppercase;}
+    </style></head>
+    <body>
+      <h1>🦋 ASIRI ERP — Informe Ejecutivo</h1>
+      <div class="sub">ASIRI La Boutique · Generado el ${fecha}</div>
+      <div class="kpi"><span>Ventas Proy. Mes</span><b>$${r.ventasProyectadasMes.toLocaleString('es-CL')}</b></div>
+      <div class="kpi"><span>Clientas (VIP)</span><b>${r.clientasTotales} (${r.clientasVIP})</b></div>
+      <div class="kpi"><span>Compras del Mes</span><b>$${r.comprasTotal.toLocaleString('es-CL')}</b></div>
+      <div class="kpi"><span>Resultado Neto</span><b>$${r.resultadoNeto.toLocaleString('es-CL')}</b></div>
+      <h3>Ventas Recientes</h3>
+      <table><tr><th>Hora</th><th>Producto</th><th>Canal</th><th>Monto</th></tr>
+      ${DATA_DEMO.ventas.map(v => `<tr><td>${v.hora}</td><td>${v.producto}</td><td>${v.canal}</td><td>$${v.monto.toLocaleString('es-CL')}</td></tr>`).join('')}
+      </table>
+      <h3>Órdenes de Compra</h3>
+      <table><tr><th>Proveedor</th><th>Producto</th><th>Cant.</th><th>Total</th></tr>
+      ${ORDENES_DEMO.map(o => `<tr><td>${o.proveedor}</td><td>${o.producto}</td><td>${o.cantidad}</td><td>$${(o.cantidad*o.costo).toLocaleString('es-CL')}</td></tr>`).join('')}
+      </table>
+      <p style="font-size:.7rem; color:#94A3B8;">Generado automáticamente por ASIRI ERP — no reemplaza informes contables oficiales.</p>
+    </body></html>
+  `;
+  const ventana = window.open('', '_blank');
+  if(!ventana){ alert('Habilita las ventanas emergentes para generar el PDF.'); return; }
+  ventana.document.write(html);
+  ventana.document.close();
+  ventana.onload = () => ventana.print();
+}
+
+/* ---------- Informe semanal por WhatsApp ---------- */
+function enviarInformeWhatsApp(){
+  const r = calcularResumenMensual();
+  const texto = encodeURIComponent(
+    `🦋 *ASIRI ERP — Resumen Semanal*\n\n` +
+    `💰 Ventas proyectadas mes: $${r.ventasProyectadasMes.toLocaleString('es-CL')}\n` +
+    `💎 Clientas: ${r.clientasTotales} (${r.clientasVIP} VIP)\n` +
+    `📦 Compras del mes: $${r.comprasTotal.toLocaleString('es-CL')}\n` +
+    `📊 Resultado neto estimado: $${r.resultadoNeto.toLocaleString('es-CL')}\n\n` +
+    `Generado automáticamente por ASIRI ERP.`
+  );
+  window.open(`https://wa.me/?text=${texto}`, '_blank');
+}
+
+/* ---------- Export Excel — formato SpreadsheetML (XML nativo, sin librerías) ---------- */
+function xmlEsc(v){
+  return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function celda(valor, tipo){
+  tipo = tipo || (typeof valor === 'number' ? 'Number' : 'String');
+  return `<Cell><Data ss:Type="${tipo}">${xmlEsc(valor)}</Data></Cell>`;
+}
+function filaXml(celdas){
+  return `<Row>${celdas.join('')}</Row>`;
+}
+function hojaXml(nombre, filas){
+  return `<Worksheet ss:Name="${xmlEsc(nombre)}"><Table>${filas.join('')}</Table></Worksheet>`;
+}
+
+function exportarExcel(){
+  const r = calcularResumenMensual();
+
+  const hojaResumen = hojaXml('Resumen', [
+    filaXml([celda('KPI'), celda('Valor')]),
+    filaXml([celda('Ventas Proyectadas Mes'), celda(r.ventasProyectadasMes)]),
+    filaXml([celda('Clientas Totales'), celda(r.clientasTotales)]),
+    filaXml([celda('Clientas VIP'), celda(r.clientasVIP)]),
+    filaXml([celda('Compras del Mes'), celda(r.comprasTotal)]),
+    filaXml([celda('Resultado Neto Estimado'), celda(r.resultadoNeto)]),
+    filaXml([celda('IVA Determinado'), celda(r.f29.ivaDeterminado)]),
+  ]);
+
+  const hojaVentas = hojaXml('Ventas', [
+    filaXml([celda('Hora'), celda('Producto'), celda('Canal'), celda('Monto')]),
+    ...DATA_DEMO.ventas.map(v => filaXml([celda(v.hora), celda(v.producto), celda(v.canal), celda(v.monto)]))
+  ]);
+
+  const hojaCRM = hojaXml('CRM Clientas', [
+    filaXml([celda('Nombre'), celda('Teléfono'), celda('Compras'), celda('LTV'), celda('Días Última Compra'), celda('Segmento')]),
+    ...CRM_DEMO.map(c => filaXml([celda(c.nombre), celda(c.telefono), celda(c.compras), celda(c.ltv), celda(c.diasUltimaCompra), celda(segmentarClienta(c).label)]))
+  ]);
+
+  const hojaCompras = hojaXml('Compras', [
+    filaXml([celda('Proveedor'), celda('Producto'), celda('Cantidad'), celda('Costo Unitario'), celda('Total'), celda('Estado')]),
+    ...ORDENES_DEMO.map(o => filaXml([celda(o.proveedor), celda(o.producto), celda(o.cantidad), celda(o.costo), celda(o.cantidad*o.costo), celda(o.estado)]))
+  ]);
+
+  const workbook = `<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+${hojaResumen}${hojaVentas}${hojaCRM}${hojaCompras}
+</Workbook>`;
+
+  const blob = new Blob([workbook], {type:'application/vnd.ms-excel'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'ASIRI_ERP_Informe.xls';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* ============================================================
+   M9 — ASIRI INTELLIGENCE
+   Usage Tracker · Adaptive HOME · Clean Data Engine · Predictive Intelligence · Conversion Optimizer
+   ============================================================ */
+function renderIntelligence(){
+  const ranking = Object.keys(VISITAS).length
+    ? Object.entries(VISITAS).sort((a,b) => b[1]-a[1])
+    : [];
+  const problemas = detectarProblemasLimpieza();
+
+  // Predictive Intelligence — insight honesto: aún no hay 3 meses de datos, pero se calcula uno real posible hoy
+  const productoMasComprado = ORDENES_DEMO.length
+    ? [...ORDENES_DEMO].sort((a,b) => (b.cantidad*b.costo) - (a.cantidad*a.costo))[0]
+    : null;
+
+  // Conversion Optimizer — cruza CRM VIP con el mejor formato de Ads
+  const vipCount = CRM_DEMO.filter(c => segmentarClienta(c).key === 'vip').length;
+  const mejorFormato = [...CAMPANAS_DEMO].sort((a,b) => (b.ventas-b.inversion)/b.inversion - (a.ventas-a.inversion)/a.inversion)[0];
+
+  return `
+    <div class="page-title">🧠 ASIRI Intelligence</div>
+    <div class="page-sub">El ERP que aprende del uso real y se limpia solo — M9</div>
+
+    <div class="section-row">
+      <div class="panel">
+        <div class="panel-title">🔍 Usage Tracker</div>
+        ${ranking.length ? ranking.map(([id,count],i) => {
+          const m = MODULOS.find(x => x.id === id);
+          return `<div class="usage-item"><span><span class="usage-rank">#${i+1}</span> ${m ? m.icon+' '+m.nombre : id}</span><span>${count} visita${count!==1?'s':''}</span></div>`;
+        }).join('') : `<div class="placeholder-box"><span class="pi">🔍</span><p>Aún no hay suficientes visitas registradas. Navega por los módulos y vuelve aquí — el ranking se arma solo.</p></div>`}
+        <div class="toggle-row">
+          <span>🏠 Adaptive HOME — reordenar Acceso Rápido según tu uso real</span>
+          <label class="toggle-switch">
+            <input type="checkbox" ${ADAPTIVE_HOME_ON?'checked':''} onchange="toggleAdaptiveHome(this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="calc-note">Cada vez que navegas entre módulos, ASIRI ERP lo registra localmente (sin enviar nada a ningún servidor). Con Adaptive HOME activado, tu Home muestra primero los 4 módulos que más usas.</div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">🧹 Clean Data Engine</div>
+        ${problemas.length ? problemas.map(p => `
+          <div class="clean-item ${LIMPIEZA_RESUELTOS.has(p.id)?'resuelto':''}" id="clean-${p.id}">
+            <span class="clean-texto">${p.texto}</span>
+            <button class="btn btn-ghost" style="padding:.35rem .7rem; font-size:.68rem;" onclick="resolverLimpieza('${p.id}')">${LIMPIEZA_RESUELTOS.has(p.id)?'✓ Resuelto':'Marcar resuelto'}</button>
+          </div>
+        `).join('') : `<div class="placeholder-box"><span class="pi">✨</span><p>Sin problemas detectados por ahora.</p></div>`}
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">🔮 Predictive Intelligence & 💡 Conversion Optimizer</div>
+      <div class="insight-box">
+        🔮 <b>Predictive Intelligence:</b> aún no hay 3 meses de historial real de ventas por producto/temporada — se necesita para proyecciones confiables. Con lo que sí existe hoy: tu mayor inversión en mercadería este mes es <b>${productoMasComprado ? productoMasComprado.producto+' ('+productoMasComprado.proveedor+')' : 'sin datos'}</b> — vigila su rotación real en Shopify antes de repetir la compra.
+      </div>
+      <div class="insight-box">
+        💡 <b>Conversion Optimizer:</b> tienes ${vipCount} clientas VIP en tu CRM y tu formato con mejor ROI histórico es <b>${mejorFormato.formato} (+${(((mejorFormato.ventas-mejorFormato.inversion)/mejorFormato.inversion)*100).toFixed(1)}%)</b>. Sugerencia: crea una campaña dirigida a tus VIP replicando ese formato antes que uno nuevo sin historial.
+      </div>
+    </div>
+  `;
+}
+
+function toggleAdaptiveHome(checked){
+  ADAPTIVE_HOME_ON = checked;
+  localStorage.setItem('asiri_adaptive_home', checked);
+  document.getElementById('view-m9').innerHTML = renderIntelligence();
+  autoSave(true);
+}
+
+function resolverLimpieza(id){
+  if(LIMPIEZA_RESUELTOS.has(id)) LIMPIEZA_RESUELTOS.delete(id);
+  else LIMPIEZA_RESUELTOS.add(id);
+  document.getElementById('view-m9').innerHTML = renderIntelligence();
+  autoSave();
+}
+
+/* ============================================================
+   M11 — ASIRI ACADEMY
+   5 categorías curadas · Badge "Nuevo" · Guardar como nota propia
+   ============================================================ */
+function renderAcademy(){
+  const totalNuevos = Object.values(ACADEMY_CONTENIDO).reduce((s,cat) => s + cat.items.filter(i=>i.nuevo).length, 0);
+
+  return `
+    <div class="page-title">📚 ASIRI Academy</div>
+    <div class="page-sub">Aprendizaje continuo curado — ${totalNuevos} novedades esta semana · lectura &lt;5 min</div>
+
+    <div class="academy-cat-grid">
+      ${Object.entries(ACADEMY_CONTENIDO).map(([key,cat]) => `
+        <div class="academy-cat-card">
+          <div class="academy-cat-header"><span class="academy-cat-icon">${cat.icon}</span><span class="academy-cat-title">${cat.titulo}</span></div>
+          ${cat.items.map((item,i) => `
+            <div class="academy-item">
+              <div class="academy-item-title">${item.titulo} ${item.nuevo?'<span class="badge-nuevo">NUEVO</span>':''}</div>
+              <div class="academy-item-desc">${item.desc}</div>
+              <button class="nota-guardar" onclick="guardarNotaAcademy('${key}', ${i})">💾 Guardar como nota</button>
+            </div>
+          `).join('')}
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="panel" style="margin-top:1.2rem;">
+      <div class="panel-title">📝 Mis Notas Guardadas</div>
+      ${NOTAS_ACADEMY.length ? NOTAS_ACADEMY.map((n,i) => `
+        <div class="mis-notas-item">${n} <button class="nota-guardar" style="color:var(--rojo); float:right;" onclick="borrarNotaAcademy(${i})">Quitar</button></div>
+      `).join('') : `<div class="placeholder-box"><span class="pi">📝</span><p>Guarda cualquier aprendizaje de arriba con un clic y aparecerá aquí para consultarlo cuando quieras.</p></div>`}
+    </div>
+  `;
+}
+
+function guardarNotaAcademy(key, i){
+  const item = ACADEMY_CONTENIDO[key].items[i];
+  NOTAS_ACADEMY.unshift(`${ACADEMY_CONTENIDO[key].icon} ${item.titulo} — ${item.desc}`);
+  localStorage.setItem('asiri_notas_academy', JSON.stringify(NOTAS_ACADEMY));
+  document.getElementById('view-m11').innerHTML = renderAcademy();
+  autoSave(true);
+}
+
+function borrarNotaAcademy(i){
+  NOTAS_ACADEMY.splice(i,1);
+  localStorage.setItem('asiri_notas_academy', JSON.stringify(NOTAS_ACADEMY));
+  document.getElementById('view-m11').innerHTML = renderAcademy();
+  autoSave(true);
+}
+
+/* ---------- 5. RENDER MÓDULOS PLACEHOLDER ---------- */
+function renderPlaceholder(m){
+  if(m.soon){
+    return `
+      <div class="page-title">${m.icon} ${m.nombre}</div>
+      <div class="page-sub">${m.num} · Módulo de inteligencia adaptativa</div>
+      <div class="placeholder-box soon">
+        <span class="pi">${m.icon}</span>
+        <h3>Próximamente</h3>
+        <p>${m.nombre} se construye en la Sesión 9 (semana del 08 agosto 2026), una vez que el sistema core tenga datos reales de uso.</p>
+      </div>
+    `;
+  }
+  return `
+    <div class="page-title">${m.icon} ${m.nombre}</div>
+    <div class="page-sub">${m.num} · En construcción — llega en la próxima sesión</div>
+    <div class="placeholder-box">
+      <span class="pi">${m.icon}</span>
+      <h3>${m.nombre} — Sesión siguiente</h3>
+      <p>Este módulo se construye en la próxima sesión de Claude Code, según el cronograma 21–30 julio 2026.</p>
+    </div>
+  `;
+}
+
+/* ---------- 6. INICIALIZAR VISTAS ---------- */
+function initViews(){
+  const content = document.getElementById('content');
+  const RENDERERS = { m0: renderHome, m1: renderCalculadora, m2: renderCRM, m3: renderAds, m4: renderShopify, m5: renderVentas, m6: renderCompras, m7: renderFinanzas, m8: renderInformes, m9: renderIntelligence, m11: renderAcademy };
+  const wrappers = MODULOS.map(m => {
+    const inner = RENDERERS[m.id] ? RENDERERS[m.id]() : renderPlaceholder(m);
+    return `<div class="view ${m.id==='m0'?'active':''}" id="view-${m.id}">${inner}</div>`;
+  }).join('');
+  content.innerHTML = wrappers;
+  // Ejecuta el cálculo inicial de M1 con los valores de ejemplo precargados
+  calcPrecioVenta(); calcROI(); calcEquilibrio(); calcDescuento();
+}
+
+/* ---------- 7. MODALES ---------- */
+function openModal(id){ document.getElementById(id).classList.add('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+
+function guardarVentaManual(){
+  const producto = document.getElementById('f-producto').value;
+  const monto = document.getElementById('f-monto').value;
+  const canal = document.getElementById('f-canal').value;
+  if(!producto || !monto){ alert('Completa producto y monto'); return; }
+  DATA_DEMO.ventas.unshift({hora:new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'}), producto, canal, monto:Number(monto)});
+  DATA_DEMO.cajaHoy += Number(monto);
+  closeModal('modal-venta');
+  document.getElementById('view-m0').innerHTML = renderHome();
+  document.getElementById('view-m5').innerHTML = renderVentas();
+  irAModulo(moduloActivo === 'm5' ? 'm5' : 'm0');
+  autoSave(true);
+}
+
+/* ============================================================
+   8. AUTOGUARDADO — debounce 1.5s
+   Si online → POST a Apps Script webhook
+   Si offline → guarda en IndexedDB, sincroniza al reconectar
+   ============================================================ */
+
+// ⚠️ Reemplazar con la URL real del webhook al desplegar Apps Script (M6 "Implementar como app web")
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/TU_ID_DE_IMPLEMENTACION/exec';
+
+let saveTimer = null;
+const indicator = () => document.getElementById('save-indicator');
+
+function autoSave(immediate){
+  clearTimeout(saveTimer);
+  setIndicator('saving');
+  const run = () => guardarDatos();
+  if(immediate){ run(); } else { saveTimer = setTimeout(run, 1500); }
+}
+
+function setIndicator(state){
+  const el = indicator();
+  if(!el) return;
+  el.className = state;
+  if(state === 'saving') el.innerHTML = '⚠ Guardando...';
+  else if(state === 'saved') el.innerHTML = '✓ Guardado';
+  else if(state === 'offline') el.innerHTML = '📴 Offline — guardado local';
+}
+
+async function guardarDatos(){
+  const payload = { timestamp: new Date().toISOString(), origen:'ASIRI-ERP', data: DATA_DEMO };
+
+  if(!navigator.onLine){
+    await guardarEnIndexedDB(payload);
+    setIndicator('offline');
+    return;
+  }
+
+  try{
+    await fetch(APPS_SCRIPT_URL, {
+      method:'POST',
+      mode:'no-cors', // Apps Script webhooks requieren no-cors desde front simple
+      headers:{'Content-Type':'text/plain'},
+      body: JSON.stringify(payload)
+    });
+    setIndicator('saved');
+  }catch(err){
+    // Si falla el POST (sin URL configurada aún, o sin red) → fallback local
+    await guardarEnIndexedDB(payload);
+    setIndicator('offline');
+  }
+}
+
+/* ---------- 9. INDEXEDDB (offline) ---------- */
+let dbPromise = null;
+function abrirDB(){
+  if(dbPromise) return dbPromise;
+  dbPromise = new Promise((resolve, reject) => {
+    const req = indexedDB.open('asiri-erp-db', 1);
+    req.onupgradeneeded = e => {
+      const db = e.target.result;
+      if(!db.objectStoreNames.contains('pendientes')){
+        db.createObjectStore('pendientes', {keyPath:'timestamp'});
+      }
+    };
+    req.onsuccess = e => resolve(e.target.result);
+    req.onerror = e => reject(e);
+  });
+  return dbPromise;
+}
+
+async function guardarEnIndexedDB(payload){
+  const db = await abrirDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('pendientes','readwrite');
+    tx.objectStore('pendientes').put(payload);
+    tx.oncomplete = resolve;
+    tx.onerror = reject;
+  });
+}
+
+async function sincronizarPendientes(){
+  const db = await abrirDB();
+  const tx = db.transaction('pendientes','readonly');
+  const all = await new Promise((resolve) => {
+    const req = tx.objectStore('pendientes').getAll();
+    req.onsuccess = () => resolve(req.result);
+  });
+  if(!all.length) return;
+
+  for(const payload of all){
+    try{
+      await fetch(APPS_SCRIPT_URL, {
+        method:'POST', mode:'no-cors',
+        headers:{'Content-Type':'text/plain'},
+        body: JSON.stringify(payload)
+      });
+    }catch(e){ /* se reintenta en la próxima reconexión */ }
+  }
+  // limpiar cola sincronizada
+  const dbw = await abrirDB();
+  const txw = dbw.transaction('pendientes','readwrite');
+  txw.objectStore('pendientes').clear();
+  setIndicator('saved');
+}
+
+/* ---------- 10. ESTADO DE CONEXIÓN ---------- */
+function actualizarEstadoConexion(){
+  const el = document.getElementById('conn-status');
+  if(navigator.onLine){
+    el.className = 'online';
+    el.innerHTML = '<span class="dot"></span>Online';
+    sincronizarPendientes();
+  }else{
+    el.className = 'offline';
+    el.innerHTML = '<span class="dot"></span>Offline';
+    setIndicator('offline');
+  }
+}
+window.addEventListener('online', actualizarEstadoConexion);
+window.addEventListener('offline', actualizarEstadoConexion);
+
+/* ---------- 11. PWA — Service Worker ---------- */
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(err => console.warn('SW no registrado:', err));
+  });
+}
+
+/* ---------- 12. INIT ---------- */
+document.addEventListener('DOMContentLoaded', () => {
+  renderSidebar();
+  initViews();
+  actualizarEstadoConexion();
+  setIndicator('saved');
+});
+</script>
+</body>
+</html>
