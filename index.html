@@ -682,38 +682,18 @@ function escaparHTML(valor){
 
 /* ---------- 3. DATOS DE EJEMPLO (se reemplazan con datos reales via Apps Script) ---------- */
 const DATA_DEMO = {
-  cajaHoy: 47800,
-  cajaHoyDelta: '+12%',
-  stockCritico: 6,
+  cajaHoy: 0,
+  cajaHoyDelta: '+0%',
+  stockCritico: 20,
   conversion: 0.0,
-  clientasNuevas: 2,
-  brief: `Buenos días, ASIRI 🦋. Hoy hay <strong>1 producto con última unidad</strong> (Blusa Lino Rosa) — considera activar countdown Liquid. La conversión sigue en 0% sobre 1.439 sesiones del mes: prioridad #1 esta semana es trust signals + checkout. Meta Ads: el Reel de Facebook sigue siendo tu mejor ROI (36.8%) — vale la pena replicar el formato.`,
-  alertas: [
-    {tipo:'critico', icon:'🚨', titulo:'Conversión en 0% — 30 días', detalle:'1.439 sesiones sin ventas online. Revisar checkout y trust signals.'},
-    {tipo:'aviso', icon:'⚠️', titulo:'6 productos con stock crítico (1 unidad)', detalle:'Activar alerta "última unidad disponible" en Shopify.'},
-    {tipo:'aviso', icon:'🛒', titulo:'8 carritos abandonados sin recuperar', detalle:'Enviar WhatsApp de recuperación desde M4.'},
-    {tipo:'info', icon:'💎', titulo:'2 clientas nuevas esta semana', detalle:'Agregar a CRM y segmentar como "Nueva".'},
-  ],
-  ventas: [
-    {hora:'10:32', producto:'Blusa Lino Rosa', canal:'shopify', monto:18000},
-    {hora:'13:05', producto:'Jeans Recto Azul', canal:'pos', monto:19500},
-    {hora:'15:40', producto:'Blusa Seda Blanca', canal:'manual', monto:17800},
-  ]
+  clientasNuevas: 0,
+  brief: `¡Bienvenida a ASIRI ERP, ASIRI! 🦋 El sistema está listo para operar con datos reales — todavía no hay ventas registradas hoy. Empieza con "+ Registrar Venta" o explora los módulos del sidebar.`,
+  alertas: [],
+  ventas: []
 };
 
-/* ---------- 3b. DATOS DEMO CRM — 10 clientas (coincide con Shopify: 10 clientes registrados) ---------- */
-let CRM_DEMO = [
-  {id:1, nombre:'Camila Reyes', telefono:'+56912345671', email:'camila.reyes@gmail.com', compras:5, ltv:92000, diasUltimaCompra:8, notas:'Talla M · prefiere blusas'},
-  {id:2, nombre:'Fernanda Soto', telefono:'+56923456782', email:'fer.soto@gmail.com', compras:4, ltv:71500, diasUltimaCompra:15, notas:'Compra para regalos'},
-  {id:3, nombre:'Javiera Muñoz', telefono:'+56934567893', email:'javi.munoz@gmail.com', compras:1, ltv:18000, diasUltimaCompra:5, notas:'Llegó por Instagram'},
-  {id:4, nombre:'Antonia Vidal', telefono:'+56945678904', email:'antonia.vidal@gmail.com', compras:2, ltv:37000, diasUltimaCompra:22, notas:'Talca — retiro en persona'},
-  {id:5, nombre:'Valentina Rojas', telefono:'+56956789015', email:'vale.rojas@gmail.com', compras:6, ltv:108000, diasUltimaCompra:3, notas:'VIP — compra mensual'},
-  {id:6, nombre:'Trinidad Álvarez', telefono:'+56967890126', email:'trini.alvarez@gmail.com', compras:1, ltv:19500, diasUltimaCompra:95, notas:'Sin contacto desde marzo'},
-  {id:7, nombre:'Isidora Campos', telefono:'+56978901237', email:'isi.campos@gmail.com', compras:2, ltv:35800, diasUltimaCompra:70, notas:'Respondía bien a descuentos'},
-  {id:8, nombre:'Constanza Fuentes', telefono:'+56989012348', email:'coni.fuentes@gmail.com', compras:1, ltv:18500, diasUltimaCompra:2, notas:'Primera compra vía Reel'},
-  {id:9, nombre:'Martina Herrera', telefono:'+56990123459', email:'martina.herrera@gmail.com', compras:3, ltv:54000, diasUltimaCompra:40, notas:'Concepción — pide despacho rápido'},
-  {id:10, nombre:'Josefa Contreras', telefono:'+56901234560', email:'josefa.contreras@gmail.com', compras:0, ltv:0, diasUltimaCompra:120, notas:'Se registró pero nunca compró'},
-];
+/* ---------- 3b. CRM — puesta en marcha: sin clientas de prueba, cárgalas desde M2 ---------- */
+let CRM_DEMO = [];
 
 /* Segmentación automática: VIP / Regular / Dormida / Nueva */
 function segmentarClienta(c){
@@ -726,43 +706,41 @@ function segmentarClienta(c){
 let filtroCRM = localStorage.getItem('asiri_crm_filtro') || 'all';
 
 /* ---------- 3c. DATOS REALES SHOPIFY — vía Shopify Admin API (asirilaboutique.com) ----------
-   Consultado en vivo el 23-jul-2026: 0 órdenes en los últimos 30 días, prácticamente
-   TODO el catálogo activo tiene inventario = 1 unidad (no solo 6 productos como se creía). */
+   Reconsultado en vivo el 24-jul-2026: 0 órdenes en los últimos 30 días. Catálogo revisado
+   (primeros 30 productos activos): 20 con inventario = 1 unidad — el inventario rotó desde
+   la primera consulta. SHOPIFY_SESIONES_30D queda con el último dato conocido (memoria del
+   negocio) porque las sesiones no se pueden reconsultar con las herramientas disponibles aquí. */
 const SHOPIFY_ORDENES_30D = 0;
 const SHOPIFY_SESIONES_30D = 1439;
 
 const SHOPIFY_ULTIMA_UNIDAD = [
   {nombre:'Blusa Valentina', precio:18990, img:'https://cdn.shopify.com/s/files/1/0593/7892/5697/files/rn-image_picker_lib_temp_a22ee696-fa87-4e9d-adc9-5ae9b0138a0a.jpg'},
   {nombre:'Jeans Wide Leg Andrea', precio:18000, img:'https://cdn.shopify.com/s/files/1/0593/7892/5697/files/rn-image_picker_lib_temp_6244da80-8ebc-4271-a21f-9657a876ea34.jpg'},
+  {nombre:'Polera California', precio:10000, img:'https://cdn.shopify.com/s/files/1/0593/7892/5697/files/rn-image_picker_lib_temp_fa1d79a0-97c1-45a9-a58f-7ec8624b6f4f.jpg'},
+  {nombre:'Blusa Alberta', precio:10000, img:'https://cdn.shopify.com/s/files/1/0593/7892/5697/files/rn-image_picker_lib_temp_a4eb3d3a-b0fe-495b-81e3-e68924cea55a.jpg'},
+  {nombre:'Maxi Vestido Rojo', precio:13500, img:'https://cdn.shopify.com/s/files/1/0593/7892/5697/files/rn-image_picker_lib_temp_03748593-d040-41f4-a6c9-215de5ab1b0a.png'},
+  {nombre:'Enterito', precio:10000, img:'https://cdn.shopify.com/s/files/1/0593/7892/5697/files/rn-image_picker_lib_temp_6fe27c2c-6971-438d-880f-0076e9a937ba.png'},
   {nombre:'Sweater Belén', precio:18990, img:'https://cdn.shopify.com/s/files/1/0593/7892/5697/files/rn-image_picker_lib_temp_cf9e80fd-49ef-4906-8bf0-6fd196cde1c1.jpg'},
   {nombre:'Blazer Sofía', precio:22990, img:'https://cdn.shopify.com/s/files/1/0593/7892/5697/files/rn-image_picker_lib_temp_c1f36eb7-0d3c-40a4-8e48-dcf2552d93f1.jpg'},
-  {nombre:'Maxi Vestido Rojo', precio:13500, img:'https://cdn.shopify.com/s/files/1/0593/7892/5697/files/rn-image_picker_lib_temp_03748593-d040-41f4-a6c9-215de5ab1b0a.png'},
-  {nombre:'Cardigan Blu', precio:16000, img:'https://cdn.shopify.com/s/files/1/0593/7892/5697/files/rn-image_picker_lib_temp_9466a2eb-7b1f-4168-aac0-fd82f7605ae5.jpg'},
+  {nombre:'Chaqueta Sin Mangas Valentina', precio:16000, img:'https://cdn.shopify.com/s/files/1/0593/7892/5697/files/rn-image_picker_lib_temp_44692e89-eff9-4b63-b7f4-fcb6c23c728d.jpg'},
+  {nombre:'Tejido Artesanal', precio:10000, img:'https://cdn.shopify.com/s/files/1/0593/7892/5697/files/rn-image_picker_lib_temp_bd82214b-1d03-4d68-861a-6846152d3947.png'},
   {nombre:'Chaqueta Puffa', precio:20000, img:'https://cdn.shopify.com/s/files/1/0593/7892/5697/files/rn-image_picker_lib_temp_f69971cd-5d3c-4e86-9036-0a2fd252335b.jpg'},
+  {nombre:'Cardigan Blu', precio:16000, img:'https://cdn.shopify.com/s/files/1/0593/7892/5697/files/rn-image_picker_lib_temp_9466a2eb-7b1f-4168-aac0-fd82f7605ae5.jpg'},
   {nombre:'Sweater Julia', precio:18000, img:'https://cdn.shopify.com/s/files/1/0593/7892/5697/files/rn-image_picker_lib_temp_61ae3bf1-cce9-4736-9284-3fff4a0b3c2c.jpg'},
+  {nombre:'Blusa Esperanza', precio:12500, img:'https://cdn.shopify.com/s/files/1/0593/7892/5697/files/rn-image_picker_lib_temp_df018e03-92b0-4eda-9071-93e4f3f7eb07.jpg'},
+  {nombre:'Vestido Italiano', precio:10000, img:'https://cdn.shopify.com/s/files/1/0593/7892/5697/files/rn-image_picker_lib_temp_333f8e7b-67a7-450c-bd46-68070598cc06.png'},
+  {nombre:'Sweater Paz', precio:20000, img:'https://cdn.shopify.com/s/files/1/0593/7892/5697/files/rn-image_picker_lib_temp_97f6f634-af3a-4581-ba24-e42e72fb8c42.jpg'},
+  {nombre:'Pantalón Cotele', precio:11990, img:'https://cdn.shopify.com/s/files/1/0593/7892/5697/files/rn-image_picker_lib_temp_f592251d-1a9c-48d5-9ede-9ff4f7903405.jpg'},
+  {nombre:'Sweater Susan', precio:11990, img:'https://cdn.shopify.com/s/files/1/0593/7892/5697/files/rn-image_picker_lib_temp_ab4a3a0b-7f6d-489e-9c8a-6dd7c6fc33fe.jpg'},
+  {nombre:'Cardigan Carmen', precio:16000, img:'https://cdn.shopify.com/s/files/1/0593/7892/5697/files/rn-image_picker_lib_temp_6283b23c-97f6-4b14-aa1f-97c93c3a39c7.jpg'},
+  {nombre:'Jeans Tachas', precio:11990, img:'https://cdn.shopify.com/s/files/1/0593/7892/5697/files/rn-image_picker_lib_temp_aac231b7-43dd-40a3-906f-3209fded5132.jpg'},
 ];
 
-/* Carritos abandonados — demo, se conecta a checkouts reales cuando Shopify entregue el webhook */
-const CARRITOS_DEMO = [
-  {nombre:'Fernanda Soto', telefono:'+56923456782', producto:'Blazer Sofía', monto:22990, hace:'2h', contactado:false},
-  {nombre:'Trinidad Álvarez', telefono:'+56967890126', producto:'Maxi Vestido Rojo', monto:13500, hace:'5h', contactado:false},
-  {nombre:'Isidora Campos', telefono:'+56978901237', producto:'Cardigan Blu', monto:16000, hace:'8h', contactado:false},
-  {nombre:'Josefa Contreras', telefono:'+56901234560', producto:'Sweater Julia', monto:18000, hace:'1d', contactado:false},
-  {nombre:'Martina Herrera', telefono:'+56990123459', producto:'Jeans Wide Leg Andrea', monto:18000, hace:'1d', contactado:false},
-  {nombre:'Antonia Vidal', telefono:'+56945678904', producto:'Chaqueta Puffa', monto:20000, hace:'2d', contactado:false},
-  {nombre:'Constanza Fuentes', telefono:'+56989012348', producto:'Blusa Valentina', monto:18990, hace:'2d', contactado:false},
-  {nombre:'Javiera Muñoz', telefono:'+56934567893', producto:'Sweater Belén', monto:18990, hace:'3d', contactado:false},
-];
+/* Carritos abandonados — puesta en marcha: vacío, se conecta a checkouts reales cuando Shopify entregue el webhook */
+const CARRITOS_DEMO = [];
 
-/* ---------- 3d. DATOS DEMO M3 ADS — histórico real 6 campañas (Análisis Meta Business jul 2025–jul 2026) ---------- */
-const CAMPANAS_DEMO = [
-  {nombre:'Reel Facebook — Otoño 2025', formato:'Reel Facebook', inversion:9200, ventas:12590},
-  {nombre:'Historia IG — Verano 2026', formato:'Historia Instagram', inversion:7100, ventas:7633},
-  {nombre:'Reel IG — Invierno 2026', formato:'Reel Instagram', inversion:6850, ventas:7062},
-  {nombre:'Carrusel FB — Lanzamiento Sweaters', formato:'Carrusel Facebook', inversion:6300, ventas:5800},
-  {nombre:'Reel Facebook — Black Friday', formato:'Reel Facebook', inversion:5127, ventas:6050},
-  {nombre:'Historia FB — Día de la Madre', formato:'Historia Facebook', inversion:4200, ventas:3700},
-];
+/* ---------- 3d. M3 ADS — puesta en marcha: sin campañas de prueba, cárgalas desde M3 o reconecta Meta Ads más adelante ---------- */
+const CAMPANAS_DEMO = [];
 
 /* Planificador de contenido — serie "El Efecto de la Ropa" grabada en Canon EOS 90D */
 const CONTENIDO_DEMO = [
@@ -772,19 +750,10 @@ const CONTENIDO_DEMO = [
   {fecha:'31 jul', icon:'🎬', titulo:'Reel Facebook: Última unidad', detalle:'Replicar formato de mejor ROI histórico (36.8%) con urgencia real de inventario'},
 ];
 
-/* ---------- 3e. DATOS DEMO M6 COMPRAS ---------- */
-const PROVEEDORES_DEMO = [
-  {nombre:'Textiles Andrea', rubro:'Blusas y sweaters', contacto:'+56922223333', despacho:'5-7 días'},
-  {nombre:'Denim Maule', rubro:'Jeans y pantalones', contacto:'+56933334444', despacho:'3-5 días'},
-  {nombre:'Confecciones Trinidad', rubro:'Vestidos y enteritos', contacto:'+56944445555', despacho:'7-10 días'},
-  {nombre:'Punto Sur', rubro:'Cardigans y tejidos', contacto:'+56955556666', despacho:'4-6 días'},
-];
+/* ---------- 3e. M6 COMPRAS — puesta en marcha: sin proveedores ni órdenes de prueba ---------- */
+const PROVEEDORES_DEMO = [];
 
-let ORDENES_DEMO = [
-  {proveedor:'Textiles Andrea', producto:'Blusa lino', cantidad:12, costo:9000, estado:'transito', fecha:Date.now()},
-  {proveedor:'Denim Maule', producto:'Jeans wide leg', cantidad:8, costo:10500, estado:'pendiente', fecha:Date.now()},
-  {proveedor:'Punto Sur', producto:'Cardigan punto', cantidad:10, costo:8500, estado:'recibido', fecha:Date.now()},
-];
+let ORDENES_DEMO = [];
 
 /* ---------- 3f. ESTADO M7 FINANZAS ---------- */
 let TASA_PPM = 0.3; // % sobre ventas netas — ajustar según tasa real asignada por el SII a ASIRI
