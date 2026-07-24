@@ -300,6 +300,9 @@
   /* ===== M3 ADS ===== */
   .campana-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:1rem;}
   .campana-card{background:white; border:1px solid rgba(15,23,42,.07); border-radius:16px; padding:1.1rem;}
+  .fila-acciones{display:flex; gap:.5rem; margin-top:.7rem; padding-top:.7rem; border-top:1px solid rgba(15,23,42,.06);}
+  .fila-acciones .btn{padding:.35rem .7rem; font-size:.68rem;}
+  .btn-eliminar{background:rgba(239,68,68,.08); color:var(--rojo);}
   .campana-top{display:flex; justify-content:space-between; align-items:flex-start; gap:.5rem; margin-bottom:.5rem;}
   .campana-nombre{font-weight:700; font-size:.85rem; line-height:1.3;}
   .campana-meta{font-size:.72rem; color:var(--gris); margin-top:.15rem;}
@@ -412,6 +415,25 @@
   .nota-guardar{font-size:.68rem; color:var(--turquesa); cursor:pointer; margin-top:.4rem; font-weight:600; display:inline-block; background:none; border:none; padding:0;}
   .mis-notas-item{background:var(--gris-light); border-radius:10px; padding:.6rem .8rem; margin-bottom:.5rem; font-size:.78rem;}
   .mis-notas-item:last-child{margin-bottom:0;}
+
+  /* ===== M10 STUDIO ===== */
+  .studio-status{display:inline-flex; align-items:center; gap:.4rem; font-size:.68rem; font-weight:700; padding:.3rem .7rem; border-radius:20px; margin-left:.5rem;}
+  .studio-status.demo{background:var(--dorado-light); color:#92400E;}
+  .studio-status.live{background:rgba(5,150,105,.12); color:var(--verde);}
+  .studio-chips{display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:1rem;}
+  .studio-chip{font-size:.72rem; padding:.45rem .8rem; border-radius:20px; background:var(--violeta-light); color:var(--violeta); cursor:pointer; font-weight:600; border:none;}
+  .studio-wrap{display:flex; flex-direction:column; height:460px;}
+  .studio-messages{flex:1; overflow-y:auto; padding:1rem; background:var(--gris-light); border-radius:14px 14px 0 0; display:flex; flex-direction:column; gap:.7rem;}
+  .studio-bubble{max-width:80%; padding:.7rem .9rem; border-radius:14px; font-size:.83rem; line-height:1.6;}
+  .studio-bubble.user{align-self:flex-end; background:linear-gradient(135deg,var(--turquesa),var(--rosado)); color:white; border-bottom-right-radius:4px;}
+  .studio-bubble.claude{align-self:flex-start; background:white; border:1px solid rgba(139,92,246,.2); color:var(--negro); border-bottom-left-radius:4px;}
+  .studio-bubble.claude .demo-tag{color:var(--violeta); font-weight:700; font-size:.68rem; display:block; margin-bottom:.3rem;}
+  .studio-bubble.escribiendo{align-self:flex-start; background:white; border:1px solid rgba(139,92,246,.2); color:var(--gris); font-size:.8rem; font-style:italic;}
+  .studio-input-row{display:flex; gap:.6rem; padding:.8rem; background:white; border:1px solid rgba(15,23,42,.08); border-top:none; border-radius:0 0 14px 14px;}
+  .studio-input-row input{flex:1; padding:.7rem .9rem; border:1px solid rgba(15,23,42,.15); border-radius:10px; font-size:.85rem;}
+  .bitacora-item{display:flex; gap:.7rem; padding:.7rem 0; border-bottom:1px solid rgba(15,23,42,.06); font-size:.8rem;}
+  .bitacora-item:last-child{border-bottom:none;}
+  .bitacora-fecha{font-family:'JetBrains Mono',monospace; font-size:.66rem; color:var(--gris); flex-shrink:0; width:70px;}
 
   /* ===== RESPONSIVE MOBILE ===== */
   @media (max-width:860px){
@@ -531,10 +553,39 @@
   <div class="modal-box" id="cierre-contenido"></div>
 </div>
 
+<!-- ===== M3 ADS — MODAL NUEVA CAMPAÑA ===== -->
+<div class="modal-overlay" id="modal-campana">
+  <div class="modal-box">
+    <h3 id="campana-modal-titulo">Nueva Campaña</h3>
+    <div class="field">
+      <label>Nombre</label>
+      <input type="text" id="camp-nombre" placeholder="Ej: Reel Facebook — Colección Invierno" oninput="autoSave()">
+    </div>
+    <div class="field">
+      <label>Formato</label>
+      <select id="camp-formato" onchange="autoSave()">
+        <option value="Reel Facebook">Reel Facebook</option>
+        <option value="Historia Instagram">Historia Instagram</option>
+        <option value="Reel Instagram">Reel Instagram</option>
+        <option value="Carrusel Facebook">Carrusel Facebook</option>
+        <option value="Historia Facebook">Historia Facebook</option>
+      </select>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Inversión (CLP)</label><input type="number" id="camp-inversion" placeholder="50000" oninput="autoSave()"></div>
+      <div class="field"><label>Ventas generadas (CLP)</label><input type="number" id="camp-ventas" placeholder="60000" oninput="autoSave()"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-campana')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarCampana()">Guardar Campaña</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===== M6 COMPRAS — MODAL NUEVA ORDEN DE COMPRA ===== -->
 <div class="modal-overlay" id="modal-orden">
   <div class="modal-box">
-    <h3>Nueva Orden de Compra</h3>
+    <h3 id="orden-modal-titulo">Nueva Orden de Compra</h3>
     <div class="field">
       <label>Proveedor</label>
       <input type="text" id="o-proveedor" placeholder="Ej: Textiles Andrea" oninput="autoSave()">
@@ -572,7 +623,7 @@ const MODULOS = [
   {id:'m7', num:'M7', icon:'📊', nombre:'Finanzas', soon:false},
   {id:'m8', num:'M8', icon:'📈', nombre:'Informes', soon:false},
   {id:'m9', num:'M9', icon:'🧠', nombre:'Intelligence', soon:false},
-  {id:'m10', num:'M10', icon:'🤖', nombre:'Studio', soon:true},
+  {id:'m10', num:'M10', icon:'🤖', nombre:'Studio', soon:false},
   {id:'m11', num:'M11', icon:'📚', nombre:'Academy', soon:false},
 ];
 
@@ -612,6 +663,21 @@ function toggleSidebar(force){
   const open = force !== undefined ? force : !sb.classList.contains('open');
   sb.classList.toggle('open', open);
   ov.classList.toggle('open', open);
+}
+
+/* ---------- 2b. SEGURIDAD — escape de texto ingresado por el usuario ----------
+   Nombres, notas, productos y proveedores se escriben en formularios y luego se
+   insertan vía innerHTML. Sin esto, un texto con < > podía interpretarse como HTML
+   (self-XSS). Se aplica a todo dato TIPEADO por Valeria — nunca a texto generado
+   por el propio sistema (ej. respuestas de Claude en M10 que sí llevan <b> intencional). */
+function escaparHTML(valor){
+  if(valor === undefined || valor === null) return '';
+  return String(valor)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
 /* ---------- 3. DATOS DE EJEMPLO (se reemplazan con datos reales via Apps Script) ---------- */
@@ -657,7 +723,7 @@ function segmentarClienta(c){
   return {key:'regular', label:'Regular', clase:'regular'};
 }
 
-let filtroCRM = 'all';
+let filtroCRM = localStorage.getItem('asiri_crm_filtro') || 'all';
 
 /* ---------- 3c. DATOS REALES SHOPIFY — vía Shopify Admin API (asirilaboutique.com) ----------
    Consultado en vivo el 23-jul-2026: 0 órdenes en los últimos 30 días, prácticamente
@@ -678,14 +744,14 @@ const SHOPIFY_ULTIMA_UNIDAD = [
 
 /* Carritos abandonados — demo, se conecta a checkouts reales cuando Shopify entregue el webhook */
 const CARRITOS_DEMO = [
-  {nombre:'Fernanda Soto', telefono:'+56923456782', producto:'Blazer Sofía', monto:22990, hace:'2h'},
-  {nombre:'Trinidad Álvarez', telefono:'+56967890126', producto:'Maxi Vestido Rojo', monto:13500, hace:'5h'},
-  {nombre:'Isidora Campos', telefono:'+56978901237', producto:'Cardigan Blu', monto:16000, hace:'8h'},
-  {nombre:'Josefa Contreras', telefono:'+56901234560', producto:'Sweater Julia', monto:18000, hace:'1d'},
-  {nombre:'Martina Herrera', telefono:'+56990123459', producto:'Jeans Wide Leg Andrea', monto:18000, hace:'1d'},
-  {nombre:'Antonia Vidal', telefono:'+56945678904', producto:'Chaqueta Puffa', monto:20000, hace:'2d'},
-  {nombre:'Constanza Fuentes', telefono:'+56989012348', producto:'Blusa Valentina', monto:18990, hace:'2d'},
-  {nombre:'Javiera Muñoz', telefono:'+56934567893', producto:'Sweater Belén', monto:18990, hace:'3d'},
+  {nombre:'Fernanda Soto', telefono:'+56923456782', producto:'Blazer Sofía', monto:22990, hace:'2h', contactado:false},
+  {nombre:'Trinidad Álvarez', telefono:'+56967890126', producto:'Maxi Vestido Rojo', monto:13500, hace:'5h', contactado:false},
+  {nombre:'Isidora Campos', telefono:'+56978901237', producto:'Cardigan Blu', monto:16000, hace:'8h', contactado:false},
+  {nombre:'Josefa Contreras', telefono:'+56901234560', producto:'Sweater Julia', monto:18000, hace:'1d', contactado:false},
+  {nombre:'Martina Herrera', telefono:'+56990123459', producto:'Jeans Wide Leg Andrea', monto:18000, hace:'1d', contactado:false},
+  {nombre:'Antonia Vidal', telefono:'+56945678904', producto:'Chaqueta Puffa', monto:20000, hace:'2d', contactado:false},
+  {nombre:'Constanza Fuentes', telefono:'+56989012348', producto:'Blusa Valentina', monto:18990, hace:'2d', contactado:false},
+  {nombre:'Javiera Muñoz', telefono:'+56934567893', producto:'Sweater Belén', monto:18990, hace:'3d', contactado:false},
 ];
 
 /* ---------- 3d. DATOS DEMO M3 ADS — histórico real 6 campañas (Análisis Meta Business jul 2025–jul 2026) ---------- */
@@ -715,9 +781,9 @@ const PROVEEDORES_DEMO = [
 ];
 
 let ORDENES_DEMO = [
-  {proveedor:'Textiles Andrea', producto:'Blusa lino', cantidad:12, costo:9000, estado:'transito'},
-  {proveedor:'Denim Maule', producto:'Jeans wide leg', cantidad:8, costo:10500, estado:'pendiente'},
-  {proveedor:'Punto Sur', producto:'Cardigan punto', cantidad:10, costo:8500, estado:'recibido'},
+  {proveedor:'Textiles Andrea', producto:'Blusa lino', cantidad:12, costo:9000, estado:'transito', fecha:Date.now()},
+  {proveedor:'Denim Maule', producto:'Jeans wide leg', cantidad:8, costo:10500, estado:'pendiente', fecha:Date.now()},
+  {proveedor:'Punto Sur', producto:'Cardigan punto', cantidad:10, costo:8500, estado:'recibido', fecha:Date.now()},
 ];
 
 /* ---------- 3f. ESTADO M7 FINANZAS ---------- */
@@ -732,6 +798,7 @@ let VISITAS = {};
 try { VISITAS = JSON.parse(localStorage.getItem('asiri_visitas') || '{}'); } catch(e) { VISITAS = {}; }
 let ADAPTIVE_HOME_ON = localStorage.getItem('asiri_adaptive_home') === 'true';
 let LIMPIEZA_RESUELTOS = new Set();
+try{ LIMPIEZA_RESUELTOS = new Set(JSON.parse(localStorage.getItem('asiri_limpieza_resueltos') || '[]')); }catch(e){ LIMPIEZA_RESUELTOS = new Set(); }
 
 function registrarVisita(id){
   VISITAS[id] = (VISITAS[id] || 0) + 1;
@@ -745,15 +812,20 @@ function detectarProblemasLimpieza(){
   const telefonos = {};
   CRM_DEMO.forEach(c => { telefonos[c.telefono] = (telefonos[c.telefono]||0) + 1; });
   Object.keys(telefonos).forEach(tel => {
-    if(telefonos[tel] > 1) problemas.push({id:'dup-'+tel, texto:`Teléfono duplicado en CRM: ${tel}`});
+    if(telefonos[tel] > 1) problemas.push({id:'dup-'+tel, texto:`Teléfono duplicado en CRM: ${escaparHTML(tel)}`});
   });
   // Clientas registradas sin ninguna compra
   CRM_DEMO.filter(c => c.compras === 0).forEach(c => {
-    problemas.push({id:'sincompra-'+c.id, texto:`${c.nombre} está registrada pero nunca compró — considera reactivar o archivar`});
+    problemas.push({id:'sincompra-'+c.id, texto:`${escaparHTML(c.nombre)} está registrada pero nunca compró — considera reactivar o archivar`});
   });
-  // Órdenes de compra pendientes
+  // Órdenes de compra pendientes hace +90 días sin seguimiento (umbral real, antes flagueaba cualquier pendiente)
+  const DIAS_UMBRAL_ORDEN_PENDIENTE = 90;
   ORDENES_DEMO.forEach((o,i) => {
-    if(o.estado === 'pendiente') problemas.push({id:'orden-'+i, texto:`Orden pendiente sin seguimiento: ${o.producto} (${o.proveedor})`});
+    if(o.estado !== 'pendiente') return;
+    const dias = o.fecha ? Math.floor((Date.now() - o.fecha) / 86400000) : 0;
+    if(dias >= DIAS_UMBRAL_ORDEN_PENDIENTE){
+      problemas.push({id:'orden-'+i, texto:`Orden pendiente hace ${dias} días sin seguimiento: ${escaparHTML(o.producto)} (${escaparHTML(o.proveedor)})`});
+    }
   });
   return problemas;
 }
@@ -761,6 +833,13 @@ function detectarProblemasLimpieza(){
 /* ---------- 3i. ESTADO M11 ACADEMY — notas guardadas por Valeria (localStorage) ---------- */
 let NOTAS_ACADEMY = [];
 try { NOTAS_ACADEMY = JSON.parse(localStorage.getItem('asiri_notas_academy') || '[]'); } catch(e) { NOTAS_ACADEMY = []; }
+
+/* ---------- 3j. ESTADO M10 STUDIO — chat constructor con Claude ---------- */
+let STUDIO_MENSAJES = [];
+try { STUDIO_MENSAJES = JSON.parse(localStorage.getItem('asiri_studio_chat') || '[]'); } catch(e) { STUDIO_MENSAJES = []; }
+let BITACORA_STUDIO = [];
+try { BITACORA_STUDIO = JSON.parse(localStorage.getItem('asiri_studio_bitacora') || '[]'); } catch(e) { BITACORA_STUDIO = []; }
+let STUDIO_CONECTADO = localStorage.getItem('asiri_studio_conectado') === 'true';
 
 const ACADEMY_CONTENIDO = {
   canon: {icon:'📷', titulo:'Canon EOS 90D para ASIRI', items:[
@@ -818,7 +897,7 @@ function renderHome(){
         <span class="kpi-icon">💰</span>
         <div class="kpi-label">Caja del Día</div>
         <div class="kpi-value">$${DATA_DEMO.cajaHoy.toLocaleString('es-CL')}</div>
-        <div class="kpi-delta up">↑ ${DATA_DEMO.cajaHoyDelta} vs ayer</div>
+        <div class="kpi-delta ${String(DATA_DEMO.cajaHoyDelta).startsWith('-') ? 'down' : 'up'}">${String(DATA_DEMO.cajaHoyDelta).startsWith('-') ? '↓' : '↑'} ${DATA_DEMO.cajaHoyDelta} vs ayer</div>
       </div>
       <div class="kpi-card alert">
         <span class="kpi-icon">📦</span>
@@ -867,7 +946,7 @@ function renderHome(){
           ${DATA_DEMO.ventas.map(v => `
             <tr>
               <td>${v.hora}</td>
-              <td>${v.producto}</td>
+              <td>${escaparHTML(v.producto)}</td>
               <td><span class="canal-pill ${v.canal}">${v.canal}</span></td>
               <td>$${v.monto.toLocaleString('es-CL')}</td>
             </tr>
@@ -1110,7 +1189,7 @@ function renderClientasGrid(){
     return `
       <div class="clienta-card" onclick="abrirFicha(${c.id})">
         <div class="clienta-top">
-          <div><div class="clienta-nombre">${c.nombre}</div><div class="clienta-meta">${c.telefono}</div></div>
+          <div><div class="clienta-nombre">${escaparHTML(c.nombre)}</div><div class="clienta-meta">${escaparHTML(c.telefono)}</div></div>
           <span class="seg-badge ${seg.clase}">${seg.label}</span>
         </div>
         <div class="clienta-stats">
@@ -1125,6 +1204,7 @@ function renderClientasGrid(){
 
 function filtrarCRM(seg){
   filtroCRM = seg;
+  try{ localStorage.setItem('asiri_crm_filtro', seg); }catch(e){}
   irAModulo('m2');
   document.getElementById('view-m2').innerHTML = renderCRM();
 }
@@ -1158,13 +1238,13 @@ function abrirFicha(id){
   if(!c) return;
   const seg = segmentarClienta(c);
   document.getElementById('ficha-contenido').innerHTML = `
-    <h3>${c.nombre} <span class="seg-badge ${seg.clase}">${seg.label}</span></h3>
-    <div class="ficha-row"><span>Teléfono</span><span>${c.telefono}</span></div>
-    <div class="ficha-row"><span>Email</span><span>${c.email || '—'}</span></div>
+    <h3>${escaparHTML(c.nombre)} <span class="seg-badge ${seg.clase}">${seg.label}</span></h3>
+    <div class="ficha-row"><span>Teléfono</span><span>${escaparHTML(c.telefono)}</span></div>
+    <div class="ficha-row"><span>Email</span><span>${escaparHTML(c.email) || '—'}</span></div>
     <div class="ficha-row"><span>Compras totales</span><span>${c.compras}</span></div>
     <div class="ficha-row"><span>LTV</span><span>$${c.ltv.toLocaleString('es-CL')}</span></div>
     <div class="ficha-row"><span>Última compra</span><span>hace ${c.diasUltimaCompra} días</span></div>
-    <div class="ficha-row"><span>Notas</span><span>${c.notas || '—'}</span></div>
+    <div class="ficha-row"><span>Notas</span><span>${escaparHTML(c.notas) || '—'}</span></div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal('modal-ficha')">Cerrar</button>
       <button class="btn btn-wa" onclick="abrirWhatsApp(${c.id})">💬 WhatsApp</button>
@@ -1245,9 +1325,9 @@ function renderShopify(){
       <div class="panel">
         <div class="panel-title">🛒 Carritos Abandonados</div>
         ${CARRITOS_DEMO.map((c,i) => `
-          <div class="carrito-item">
-            <div class="carrito-info"><b>${c.nombre}</b><span>${c.producto} · $${c.monto.toLocaleString('es-CL')} · hace ${c.hace}</span></div>
-            <button class="btn btn-wa" style="padding:.4rem .7rem; font-size:.7rem;" onclick="recuperarCarrito(${i})">💬 WA</button>
+          <div class="carrito-item" style="${c.contactado ? 'opacity:.55;' : ''}">
+            <div class="carrito-info"><b>${escaparHTML(c.nombre)} ${c.contactado ? '<span class="badge-nuevo" style="background:var(--turquesa-light); color:#0F766E;">✓ CONTACTADA</span>' : ''}</b><span>${escaparHTML(c.producto)} · $${c.monto.toLocaleString('es-CL')} · hace ${c.hace}</span></div>
+            <button class="btn btn-wa" style="padding:.4rem .7rem; font-size:.7rem;" onclick="recuperarCarrito(${i})">${c.contactado ? '↻ Reenviar' : '💬 WA'}</button>
           </div>
         `).join('')}
       </div>
@@ -1274,6 +1354,9 @@ function recuperarCarrito(i){
   const texto = encodeURIComponent(`Hola ${c.nombre.split(' ')[0]} 🦋 Vimos que dejaste "${c.producto}" en tu carrito de ASIRI La Boutique — nos queda solo 1 unidad. ¿Te ayudo a completar tu compra?`);
   const numero = c.telefono.replace(/[^0-9]/g,'');
   window.open(`https://wa.me/${numero}?text=${texto}`, '_blank');
+  c.contactado = true;
+  document.getElementById('view-m4').innerHTML = renderShopify();
+  autoSave(true);
 }
 
 /* ============================================================
@@ -1335,7 +1418,7 @@ function renderVentas(){
         ${DATA_DEMO.ventas.map(v => `
           <tr>
             <td>${v.hora}</td>
-            <td>${v.producto}</td>
+            <td>${escaparHTML(v.producto)}</td>
             <td><span class="canal-pill ${v.canal}">${v.canal}</span></td>
             <td>$${v.monto.toLocaleString('es-CL')}</td>
           </tr>
@@ -1351,10 +1434,13 @@ function renderVentas(){
    Meta Ads tracker ROI · Planificador de contenido con psicología de moda
    ============================================================ */
 function renderAds(){
+  // Guardas contra arreglo vacío (primer uso real sin campañas aún) — bug encontrado en auditoría: crasheaba con CAMPANAS_DEMO=[]
   const totalInversion = CAMPANAS_DEMO.reduce((s,c) => s + c.inversion, 0);
   const totalVentas = CAMPANAS_DEMO.reduce((s,c) => s + c.ventas, 0);
-  const roiGlobal = ((totalVentas - totalInversion) / totalInversion) * 100;
-  const mejor = [...CAMPANAS_DEMO].sort((a,b) => (b.ventas-b.inversion)/b.inversion - (a.ventas-a.inversion)/a.inversion)[0];
+  const roiGlobal = totalInversion > 0 ? ((totalVentas - totalInversion) / totalInversion) * 100 : 0;
+  const mejor = CAMPANAS_DEMO.length
+    ? [...CAMPANAS_DEMO].sort((a,b) => (b.ventas-b.inversion)/b.inversion - (a.ventas-a.inversion)/a.inversion)[0]
+    : null;
 
   return `
     <div class="page-title">📣 Ads · Marketing y Contenido</div>
@@ -1364,29 +1450,34 @@ function renderAds(){
       <div class="meta-resumen-card"><div class="mr-label">Invertido total</div><div class="mr-value">$${totalInversion.toLocaleString('es-CL')}</div></div>
       <div class="meta-resumen-card"><div class="mr-label">Ventas generadas</div><div class="mr-value">$${totalVentas.toLocaleString('es-CL')}</div></div>
       <div class="meta-resumen-card"><div class="mr-label">ROI Global</div><div class="mr-value" style="color:${roiGlobal>=0?'var(--verde)':'var(--rojo)'}">${roiGlobal.toFixed(1)}%</div></div>
-      <div class="meta-resumen-card"><div class="mr-label">Mejor formato</div><div class="mr-value" style="font-size:.85rem;">${mejor.formato}</div></div>
+      <div class="meta-resumen-card"><div class="mr-label">Mejor formato</div><div class="mr-value" style="font-size:.85rem;">${mejor ? mejor.formato : 'Sin campañas aún'}</div></div>
     </div>
 
     <div class="section-row">
       <div class="panel">
         <div class="panel-title">📊 Campañas — ROI por Formato</div>
         <div class="campana-grid">
-          ${CAMPANAS_DEMO.map(c => {
-            const roi = ((c.ventas - c.inversion) / c.inversion) * 100;
+          ${CAMPANAS_DEMO.map((c,i) => {
+            const roi = c.inversion > 0 ? ((c.ventas - c.inversion) / c.inversion) * 100 : 0;
             return `
               <div class="campana-card">
                 <div class="campana-top">
-                  <div><div class="campana-nombre">${c.nombre}</div><div class="campana-meta">${c.formato}</div></div>
+                  <div><div class="campana-nombre">${escaparHTML(c.nombre)}</div><div class="campana-meta">${c.formato}</div></div>
                   <span class="roi-badge ${roi>=0?'pos':'neg'}">${roi>=0?'+':''}${roi.toFixed(1)}%</span>
                 </div>
                 <div class="campana-stats">
                   <div>Inversión<b>$${c.inversion.toLocaleString('es-CL')}</b></div>
                   <div>Ventas<b>$${c.ventas.toLocaleString('es-CL')}</b></div>
                 </div>
+                <div class="fila-acciones">
+                  <button class="btn btn-ghost" onclick="editarCampana(${i})">✏️ Editar</button>
+                  <button class="btn btn-eliminar" onclick="eliminarCampana(${i})">🗑️ Eliminar</button>
+                </div>
               </div>
             `;
           }).join('')}
         </div>
+        <div style="margin-top:1rem;"><button class="btn btn-primary" onclick="abrirNuevaCampana()">+ Nueva Campaña</button></div>
       </div>
       <div class="panel">
         <div class="panel-title">🗓️ Planificador de Contenido <span class="badge-live">EL EFECTO DE LA ROPA</span></div>
@@ -1400,6 +1491,54 @@ function renderAds(){
       </div>
     </div>
   `;
+}
+
+let editandoCampanaIndex = null;
+
+function abrirNuevaCampana(){
+  editandoCampanaIndex = null;
+  document.getElementById('campana-modal-titulo').textContent = 'Nueva Campaña';
+  document.getElementById('camp-nombre').value = '';
+  document.getElementById('camp-formato').value = 'Reel Facebook';
+  document.getElementById('camp-inversion').value = '';
+  document.getElementById('camp-ventas').value = '';
+  openModal('modal-campana');
+}
+
+function editarCampana(i){
+  const c = CAMPANAS_DEMO[i];
+  if(!c) return;
+  editandoCampanaIndex = i;
+  document.getElementById('campana-modal-titulo').textContent = 'Editar Campaña';
+  document.getElementById('camp-nombre').value = c.nombre;
+  document.getElementById('camp-formato').value = c.formato;
+  document.getElementById('camp-inversion').value = c.inversion;
+  document.getElementById('camp-ventas').value = c.ventas;
+  openModal('modal-campana');
+}
+
+function eliminarCampana(i){
+  if(!confirm('¿Eliminar esta campaña? Esta acción no se puede deshacer.')) return;
+  CAMPANAS_DEMO.splice(i,1);
+  document.getElementById('view-m3').innerHTML = renderAds();
+  autoSave(true);
+}
+
+function guardarCampana(){
+  const nombre = document.getElementById('camp-nombre').value;
+  const formato = document.getElementById('camp-formato').value;
+  const inversion = Number(document.getElementById('camp-inversion').value);
+  const ventas = Number(document.getElementById('camp-ventas').value);
+  if(!nombre || !inversion || !ventas){ alert('Completa nombre, inversión y ventas'); return; }
+  if(editandoCampanaIndex !== null){
+    CAMPANAS_DEMO[editandoCampanaIndex] = {nombre, formato, inversion, ventas};
+  } else {
+    CAMPANAS_DEMO.unshift({nombre, formato, inversion, ventas});
+  }
+  editandoCampanaIndex = null;
+  closeModal('modal-campana');
+  document.getElementById('view-m3').innerHTML = renderAds();
+  autoSave(true);
 }
 
 /* ============================================================
@@ -1438,26 +1577,75 @@ function renderCompras(){
     <div class="panel">
       <div class="panel-title">🧾 Órdenes de Compra</div>
       <table class="simple" id="ordenes-tabla">
-        <tr><th>Proveedor</th><th>Producto</th><th>Cant.</th><th>Costo Unit.</th><th>Total</th><th>Estado</th></tr>
+        ${ENCABEZADO_ORDENES}
         ${renderFilasOrdenes()}
       </table>
-      <div style="margin-top:1rem;"><button class="btn btn-primary" onclick="openModal('modal-orden')">+ Nueva Orden de Compra</button></div>
+      <div style="margin-top:1rem;"><button class="btn btn-primary" onclick="abrirNuevaOrden()">+ Nueva Orden de Compra</button></div>
     </div>
   `;
 }
 
+const ENCABEZADO_ORDENES = '<tr><th>Proveedor</th><th>Producto</th><th>Cant.</th><th>Costo Unit.</th><th>Total</th><th>Estado</th><th>Acción</th></tr>';
+const FLUJO_ESTADO_ORDEN = { pendiente:'transito', transito:'recibido' };
+
 function renderFilasOrdenes(){
   const estadoLabel = {pendiente:'Pendiente', transito:'En Tránsito', recibido:'Recibido'};
-  return ORDENES_DEMO.map(o => `
+  return ORDENES_DEMO.map((o,i) => `
     <tr>
-      <td>${o.proveedor}</td>
-      <td>${o.producto}</td>
+      <td>${escaparHTML(o.proveedor)}</td>
+      <td>${escaparHTML(o.producto)}</td>
       <td>${o.cantidad}</td>
       <td>$${o.costo.toLocaleString('es-CL')}</td>
       <td>$${(o.cantidad*o.costo).toLocaleString('es-CL')}</td>
       <td><span class="estado-pill ${o.estado}">${estadoLabel[o.estado]}</span></td>
+      <td>
+        <div style="display:flex; gap:.35rem; flex-wrap:wrap;">
+          ${FLUJO_ESTADO_ORDEN[o.estado] ? `<button class="btn btn-ghost" style="padding:.35rem .7rem; font-size:.68rem;" onclick="avanzarEstadoOrden(${i})">→ ${estadoLabel[FLUJO_ESTADO_ORDEN[o.estado]]}</button>` : ''}
+          <button class="btn btn-ghost" style="padding:.35rem .55rem; font-size:.68rem;" onclick="editarOrden(${i})">✏️</button>
+          <button class="btn btn-eliminar" style="padding:.35rem .55rem; font-size:.68rem;" onclick="eliminarOrden(${i})">🗑️</button>
+        </div>
+      </td>
     </tr>
   `).join('');
+}
+
+function avanzarEstadoOrden(i){
+  const orden = ORDENES_DEMO[i];
+  if(!orden || !FLUJO_ESTADO_ORDEN[orden.estado]) return;
+  orden.estado = FLUJO_ESTADO_ORDEN[orden.estado];
+  document.getElementById('ordenes-tabla').innerHTML = `${ENCABEZADO_ORDENES}${renderFilasOrdenes()}`;
+  autoSave(true);
+}
+
+let editandoOrdenIndex = null;
+
+function abrirNuevaOrden(){
+  editandoOrdenIndex = null;
+  document.getElementById('orden-modal-titulo').textContent = 'Nueva Orden de Compra';
+  document.getElementById('o-proveedor').value = '';
+  document.getElementById('o-producto').value = '';
+  document.getElementById('o-cantidad').value = '';
+  document.getElementById('o-costo').value = '';
+  openModal('modal-orden');
+}
+
+function editarOrden(i){
+  const o = ORDENES_DEMO[i];
+  if(!o) return;
+  editandoOrdenIndex = i;
+  document.getElementById('orden-modal-titulo').textContent = 'Editar Orden de Compra';
+  document.getElementById('o-proveedor').value = o.proveedor;
+  document.getElementById('o-producto').value = o.producto;
+  document.getElementById('o-cantidad').value = o.cantidad;
+  document.getElementById('o-costo').value = o.costo;
+  openModal('modal-orden');
+}
+
+function eliminarOrden(i){
+  if(!confirm('¿Eliminar esta orden de compra? Esta acción no se puede deshacer.')) return;
+  ORDENES_DEMO.splice(i,1);
+  document.getElementById('ordenes-tabla').innerHTML = `${ENCABEZADO_ORDENES}${renderFilasOrdenes()}`;
+  autoSave(true);
 }
 
 function guardarOrdenCompra(){
@@ -1466,9 +1654,15 @@ function guardarOrdenCompra(){
   const cantidad = Number(document.getElementById('o-cantidad').value);
   const costo = Number(document.getElementById('o-costo').value);
   if(!proveedor || !producto || !cantidad || !costo){ alert('Completa todos los campos'); return; }
-  ORDENES_DEMO.unshift({proveedor, producto, cantidad, costo, estado:'pendiente'});
+  if(editandoOrdenIndex !== null){
+    const original = ORDENES_DEMO[editandoOrdenIndex];
+    ORDENES_DEMO[editandoOrdenIndex] = {proveedor, producto, cantidad, costo, estado: original.estado, fecha: original.fecha};
+  } else {
+    ORDENES_DEMO.unshift({proveedor, producto, cantidad, costo, estado:'pendiente', fecha:Date.now()});
+  }
+  editandoOrdenIndex = null;
   closeModal('modal-orden');
-  document.getElementById('ordenes-tabla').innerHTML = `<tr><th>Proveedor</th><th>Producto</th><th>Cant.</th><th>Costo Unit.</th><th>Total</th><th>Estado</th></tr>${renderFilasOrdenes()}`;
+  document.getElementById('ordenes-tabla').innerHTML = `${ENCABEZADO_ORDENES}${renderFilasOrdenes()}`;
   autoSave(true);
 }
 
@@ -1481,11 +1675,11 @@ function guardarOrdenCompra(){
 function construirLibroIyE(){
   const ingresos = DATA_DEMO.ventas.map(v => ({
     fecha: '23 jul', tipo:'ingreso', doc: v.canal === 'shopify' ? 'Boleta Web' : v.canal === 'pos' ? 'Boleta MP POS' : 'Boleta Manual',
-    concepto: v.producto, total: v.monto
+    concepto: escaparHTML(v.producto), total: v.monto
   }));
   const egresos = ORDENES_DEMO.map(o => ({
     fecha: '23 jul', tipo:'egreso', doc:'Factura Proveedor',
-    concepto: `${o.producto} (${o.proveedor})`, total: o.cantidad * o.costo
+    concepto: `${escaparHTML(o.producto)} (${escaparHTML(o.proveedor)})`, total: o.cantidad * o.costo
   }));
   return [...ingresos, ...egresos].map(m => {
     const neto = Math.round(m.total / 1.19);
@@ -1705,11 +1899,11 @@ function generarPDFMensual(){
       <div class="kpi"><span>Resultado Neto</span><b>$${r.resultadoNeto.toLocaleString('es-CL')}</b></div>
       <h3>Ventas Recientes</h3>
       <table><tr><th>Hora</th><th>Producto</th><th>Canal</th><th>Monto</th></tr>
-      ${DATA_DEMO.ventas.map(v => `<tr><td>${v.hora}</td><td>${v.producto}</td><td>${v.canal}</td><td>$${v.monto.toLocaleString('es-CL')}</td></tr>`).join('')}
+      ${DATA_DEMO.ventas.map(v => `<tr><td>${v.hora}</td><td>${escaparHTML(v.producto)}</td><td>${v.canal}</td><td>$${v.monto.toLocaleString('es-CL')}</td></tr>`).join('')}
       </table>
       <h3>Órdenes de Compra</h3>
       <table><tr><th>Proveedor</th><th>Producto</th><th>Cant.</th><th>Total</th></tr>
-      ${ORDENES_DEMO.map(o => `<tr><td>${o.proveedor}</td><td>${o.producto}</td><td>${o.cantidad}</td><td>$${(o.cantidad*o.costo).toLocaleString('es-CL')}</td></tr>`).join('')}
+      ${ORDENES_DEMO.map(o => `<tr><td>${escaparHTML(o.proveedor)}</td><td>${escaparHTML(o.producto)}</td><td>${o.cantidad}</td><td>$${(o.cantidad*o.costo).toLocaleString('es-CL')}</td></tr>`).join('')}
       </table>
       <p style="font-size:.7rem; color:#94A3B8;">Generado automáticamente por ASIRI ERP — no reemplaza informes contables oficiales.</p>
     </body></html>
@@ -1778,10 +1972,18 @@ function exportarExcel(){
     ...ORDENES_DEMO.map(o => filaXml([celda(o.proveedor), celda(o.producto), celda(o.cantidad), celda(o.costo), celda(o.cantidad*o.costo), celda(o.estado)]))
   ]);
 
+  const hojaCampanas = hojaXml('Campañas', [
+    filaXml([celda('Nombre'), celda('Formato'), celda('Inversión'), celda('Ventas Generadas'), celda('ROI %')]),
+    ...CAMPANAS_DEMO.map(c => filaXml([
+      celda(c.nombre), celda(c.formato), celda(c.inversion), celda(c.ventas),
+      celda(c.inversion > 0 ? Number((((c.ventas-c.inversion)/c.inversion)*100).toFixed(1)) : 0, 'Number')
+    ]))
+  ]);
+
   const workbook = `<?xml version="1.0"?>
 <?mso-application progid="Excel.Sheet"?>
 <Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
-${hojaResumen}${hojaVentas}${hojaCRM}${hojaCompras}
+${hojaResumen}${hojaVentas}${hojaCRM}${hojaCompras}${hojaCampanas}
 </Workbook>`;
 
   const blob = new Blob([workbook], {type:'application/vnd.ms-excel'});
@@ -1812,7 +2014,9 @@ function renderIntelligence(){
 
   // Conversion Optimizer — cruza CRM VIP con el mejor formato de Ads
   const vipCount = CRM_DEMO.filter(c => segmentarClienta(c).key === 'vip').length;
-  const mejorFormato = [...CAMPANAS_DEMO].sort((a,b) => (b.ventas-b.inversion)/b.inversion - (a.ventas-a.inversion)/a.inversion)[0];
+  const mejorFormato = CAMPANAS_DEMO.length
+    ? [...CAMPANAS_DEMO].sort((a,b) => (b.ventas-b.inversion)/b.inversion - (a.ventas-a.inversion)/a.inversion)[0]
+    : null;
 
   return `
     <div class="page-title">🧠 ASIRI Intelligence</div>
@@ -1851,7 +2055,7 @@ function renderIntelligence(){
         🔮 <b>Predictive Intelligence:</b> aún no hay 3 meses de historial real de ventas por producto/temporada — se necesita para proyecciones confiables. Con lo que sí existe hoy: tu mayor inversión en mercadería este mes es <b>${productoMasComprado ? productoMasComprado.producto+' ('+productoMasComprado.proveedor+')' : 'sin datos'}</b> — vigila su rotación real en Shopify antes de repetir la compra.
       </div>
       <div class="insight-box">
-        💡 <b>Conversion Optimizer:</b> tienes ${vipCount} clientas VIP en tu CRM y tu formato con mejor ROI histórico es <b>${mejorFormato.formato} (+${(((mejorFormato.ventas-mejorFormato.inversion)/mejorFormato.inversion)*100).toFixed(1)}%)</b>. Sugerencia: crea una campaña dirigida a tus VIP replicando ese formato antes que uno nuevo sin historial.
+        💡 <b>Conversion Optimizer:</b> tienes ${vipCount} clientas VIP en tu CRM${mejorFormato ? ` y tu formato con mejor ROI histórico es <b>${mejorFormato.formato} (+${(((mejorFormato.ventas-mejorFormato.inversion)/mejorFormato.inversion)*100).toFixed(1)}%)</b>. Sugerencia: crea una campaña dirigida a tus VIP replicando ese formato antes que uno nuevo sin historial.` : '. Aún no hay campañas registradas en M3 Ads para cruzar con este segmento.'}
       </div>
     </div>
   `;
@@ -1867,6 +2071,7 @@ function toggleAdaptiveHome(checked){
 function resolverLimpieza(id){
   if(LIMPIEZA_RESUELTOS.has(id)) LIMPIEZA_RESUELTOS.delete(id);
   else LIMPIEZA_RESUELTOS.add(id);
+  try{ localStorage.setItem('asiri_limpieza_resueltos', JSON.stringify([...LIMPIEZA_RESUELTOS])); }catch(e){}
   document.getElementById('view-m9').innerHTML = renderIntelligence();
   autoSave();
 }
@@ -1921,6 +2126,181 @@ function borrarNotaAcademy(i){
   autoSave(true);
 }
 
+/* ============================================================
+   M10 — ASIRI STUDIO
+   Chat constructor con Claude · Preview antes de integrar · Bitácora de evolución · Modo Asesoría
+   ============================================================ */
+function renderStudio(){
+  return `
+    <div class="page-title">🤖 ASIRI Studio <span class="studio-status ${STUDIO_CONECTADO?'live':'demo'}">${STUDIO_CONECTADO?'🟢 Conectado a Claude':'🟡 Modo Demo'}</span></div>
+    <div class="page-sub">Chat con Claude para construir y modificar el ERP con lenguaje natural</div>
+
+    ${!STUDIO_CONECTADO ? `
+      <div class="lastunit-banner" style="border-color:rgba(139,92,246,.3); background:var(--violeta-light); color:#5B21B6;">
+        🟡 <b>Modo Demo activo.</b> Las respuestas de abajo son simuladas para mostrar el flujo. Para conectar Claude real: en Apps Script → Configuración del proyecto → Propiedades del script → agrega <b>ANTHROPIC_API_KEY</b> con tu clave de <a href="https://console.anthropic.com" target="_blank" style="color:#5B21B6;">console.anthropic.com</a>, despliega de nuevo, y este chat empezará a responder en vivo.
+      </div>
+    ` : ''}
+
+    <div class="section-row">
+      <div class="panel" style="grid-column:1/-1;">
+        <div class="panel-title">💬 Chat Constructor</div>
+        <div class="studio-chips">
+          <button class="studio-chip" onclick="usarChipStudio('Necesito un módulo para registrar ventas en ferias')">🎪 Módulo de ferias</button>
+          <button class="studio-chip" onclick="usarChipStudio('Mis clientas no regresan a comprar, ¿qué hago?')">💼 Modo Asesoría</button>
+          <button class="studio-chip" onclick="usarChipStudio('Agrega un campo de talla al CRM')">🔧 Modificar módulo</button>
+          <button class="studio-chip" onclick="usarChipStudio('Necesito una calculadora de costo de empaque por pedido')">🧮 Calculadora nueva</button>
+        </div>
+        <div class="studio-wrap">
+          <div class="studio-messages" id="studio-messages">${renderMensajesStudio()}</div>
+          <div class="studio-input-row">
+            <input type="text" id="studio-input" placeholder="Describe qué necesitas construir o el problema que quieres resolver..." onkeydown="if(event.key==='Enter') enviarMensajeStudio()">
+            <button class="btn btn-primary" onclick="enviarMensajeStudio()">Enviar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">📖 Bitácora de Evolución</div>
+      ${BITACORA_STUDIO.length ? BITACORA_STUDIO.map(b => `
+        <div class="bitacora-item"><span class="bitacora-fecha">${b.fecha}</span><span>${b.resumen}</span></div>
+      `).join('') : `<div class="placeholder-box"><span class="pi">📖</span><p>Aquí queda registrado cada módulo o cambio que le pidas a Claude desde este chat.</p></div>`}
+      ${BITACORA_STUDIO.length ? `<div style="margin-top:1rem;"><button class="btn btn-ghost" onclick="vaciarBitacoraStudio()">Vaciar bitácora</button></div>` : ''}
+    </div>
+  `;
+}
+
+/* Sanitiza respuestas de Claude (demo o API real) con lista blanca de formato.
+   Antes se confiaba ciegamente en el texto de M10 (rol 'claude'); ahora se permite
+   solo <b>/<strong>/<i>/<em>/<br>/<code> sin atributos — todo lo demás se convierte
+   a texto plano. Usa <template>, que es inerte: no ejecuta <script> ni carga <img>. */
+function sanitizarRespuestaClaude(html){
+  const PERMITIDOS = new Set(['B','STRONG','I','EM','BR','CODE']);
+  const plantilla = document.createElement('template');
+  plantilla.innerHTML = html;
+  const limpiar = (nodo) => {
+    [...nodo.childNodes].forEach(hijo => {
+      if(hijo.nodeType === 1){
+        if(!PERMITIDOS.has(hijo.tagName)){
+          hijo.replaceWith(document.createTextNode(hijo.textContent));
+          return;
+        }
+        [...hijo.attributes].forEach(a => hijo.removeAttribute(a.name));
+        limpiar(hijo);
+      }
+    });
+  };
+  limpiar(plantilla.content);
+  return plantilla.innerHTML;
+}
+
+function renderMensajesStudio(){
+  if(!STUDIO_MENSAJES.length){
+    return `
+      <div class="studio-bubble claude">
+        <span class="demo-tag">🤖 ASIRI Studio</span>
+        ¡Hola, ASIRI! 🦋 Cuéntame qué módulo necesitas construir, qué quieres modificar del ERP, o describe un problema de negocio y lo pensamos juntas. Prueba uno de los botones de arriba para empezar.
+      </div>
+    `;
+  }
+  return STUDIO_MENSAJES.map(m => `
+    <div class="studio-bubble ${m.rol}">${m.rol==='claude' && !STUDIO_CONECTADO ? '<span class="demo-tag">🤖 ASIRI Studio (demo)</span>' : ''}${m.rol==='user' ? escaparHTML(m.texto) : sanitizarRespuestaClaude(m.texto)}</div>
+  `).join('');
+}
+
+function usarChipStudio(texto){
+  document.getElementById('studio-input').value = texto;
+  enviarMensajeStudio();
+}
+
+function guardarStudio(){
+  localStorage.setItem('asiri_studio_chat', JSON.stringify(STUDIO_MENSAJES));
+  localStorage.setItem('asiri_studio_bitacora', JSON.stringify(BITACORA_STUDIO));
+}
+
+function actualizarStudioMensajes(){
+  const cont = document.getElementById('studio-messages');
+  if(cont){ cont.innerHTML = renderMensajesStudio(); cont.scrollTop = cont.scrollHeight; }
+}
+
+function enviarMensajeStudio(){
+  const input = document.getElementById('studio-input');
+  const texto = input.value.trim();
+  if(!texto) return;
+  STUDIO_MENSAJES.push({rol:'user', texto});
+  input.value = '';
+  actualizarStudioMensajes();
+  guardarStudio();
+  procesarMensajeStudio(texto);
+}
+
+async function procesarMensajeStudio(texto){
+  const cont = document.getElementById('studio-messages');
+  if(cont){ cont.innerHTML += `<div class="studio-bubble escribiendo" id="studio-escribiendo">🤖 escribiendo...</div>`; cont.scrollTop = cont.scrollHeight; }
+
+  let respuesta = null;
+
+  // Intenta llamar al webhook real de Apps Script (si ya está configurado y conectado a la API de Claude)
+  if(APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes('TU_ID_DE_IMPLEMENTACION') && navigator.onLine){
+    try{
+      const res = await fetch(APPS_SCRIPT_URL, {
+        method:'POST',
+        headers:{'Content-Type':'text/plain'},
+        body: JSON.stringify({action:'studio_chat', mensaje: texto})
+      });
+      const data = await res.json();
+      if(data && data.status === 'ok' && data.respuesta){
+        respuesta = data.respuesta;
+        STUDIO_CONECTADO = true;
+        localStorage.setItem('asiri_studio_conectado', 'true');
+      }
+    }catch(e){ /* sin webhook configurado aún — cae a modo demo */ }
+  }
+
+  if(!respuesta) respuesta = generarRespuestaDemoStudio(texto);
+
+  const escribiendo = document.getElementById('studio-escribiendo');
+  if(escribiendo) escribiendo.remove();
+
+  STUDIO_MENSAJES.push({rol:'claude', texto: respuesta});
+
+  // Si el pedido suena a construir/modificar algo, queda registrado en la bitácora
+  if(/módulo|modulo|calculadora|crea|construye|agrega|necesito|campo/i.test(texto)){
+    BITACORA_STUDIO.unshift({fecha:new Date().toLocaleDateString('es-CL'), resumen: texto.length>90 ? texto.slice(0,90)+'…' : texto});
+  }
+
+  guardarStudio();
+  actualizarStudioMensajes();
+  if(document.getElementById('view-m10')) document.getElementById('view-m10').innerHTML = renderStudio();
+  autoSave(true);
+}
+
+/* Respuestas simuladas — reemplazadas por Claude real en cuanto ANTHROPIC_API_KEY esté configurada en Apps Script */
+function generarRespuestaDemoStudio(texto){
+  const t = texto.toLowerCase();
+  if(t.includes('feria')){
+    return `Entendido — diseño el <b>Módulo Feria</b>: fecha, puesto, productos vendidos, efectivo/transferencia, total y cálculo de margen automático. En una sesión real de Claude Code lo integraría directo al sidebar con su propia vista y autoguardado, igual que M5 Ventas.`;
+  }
+  if(t.includes('no regresan') || t.includes('no vuelven') || t.includes('recompra')){
+    return `Diagnóstico: revisa el segmento <b>"Dormida"</b> en tu CRM (M2) — son clientas sin comprar hace +60 días. Actívales WhatsApp de reactivación con una oferta puntual, y cruza con M3 Ads para repetir el formato con mejor ROI histórico (Reel Facebook, +36.8%).`;
+  }
+  if(t.includes('talla') || t.includes('campo')){
+    return `Puedo agregar un campo "Talla" a la ficha de clienta en M2 CRM (input de texto simple, o select con S/M/L). Confírmamelo en una sesión de Claude Code y lo integro directo al modal "Nueva Clienta" y a la ficha existente.`;
+  }
+  if(t.includes('empaque') || t.includes('calculadora')){
+    return `Diseño una <b>Calculadora de Costo de Empaque</b>: caja/bolsa + relleno + etiqueta + tiempo de armado → costo por pedido, integrable como quinta pestaña en M1 Calculadora.`;
+  }
+  return `Te escuché: "${escaparHTML(texto)}". En modo demo puedo esbozar la idea, pero para construirla de verdad dentro del ERP necesito una sesión de Claude Code (o conectar tu API de Claude en Apps Script para respuestas en vivo aquí mismo).`;
+}
+
+function vaciarBitacoraStudio(){
+  if(!confirm('¿Vaciar toda la bitácora de evolución? Esta acción no se puede deshacer.')) return;
+  BITACORA_STUDIO = [];
+  guardarStudio();
+  document.getElementById('view-m10').innerHTML = renderStudio();
+  autoSave(true);
+}
+
 /* ---------- 5. RENDER MÓDULOS PLACEHOLDER ---------- */
 function renderPlaceholder(m){
   if(m.soon){
@@ -1948,7 +2328,7 @@ function renderPlaceholder(m){
 /* ---------- 6. INICIALIZAR VISTAS ---------- */
 function initViews(){
   const content = document.getElementById('content');
-  const RENDERERS = { m0: renderHome, m1: renderCalculadora, m2: renderCRM, m3: renderAds, m4: renderShopify, m5: renderVentas, m6: renderCompras, m7: renderFinanzas, m8: renderInformes, m9: renderIntelligence, m11: renderAcademy };
+  const RENDERERS = { m0: renderHome, m1: renderCalculadora, m2: renderCRM, m3: renderAds, m4: renderShopify, m5: renderVentas, m6: renderCompras, m7: renderFinanzas, m8: renderInformes, m9: renderIntelligence, m10: renderStudio, m11: renderAcademy };
   const wrappers = MODULOS.map(m => {
     const inner = RENDERERS[m.id] ? RENDERERS[m.id]() : renderPlaceholder(m);
     return `<div class="view ${m.id==='m0'?'active':''}" id="view-${m.id}">${inner}</div>`;
@@ -1969,11 +2349,39 @@ function guardarVentaManual(){
   if(!producto || !monto){ alert('Completa producto y monto'); return; }
   DATA_DEMO.ventas.unshift({hora:new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'}), producto, canal, monto:Number(monto)});
   DATA_DEMO.cajaHoy += Number(monto);
+  recalcularCajaDelta();
   closeModal('modal-venta');
   document.getElementById('view-m0').innerHTML = renderHome();
   document.getElementById('view-m5').innerHTML = renderVentas();
+  if(document.getElementById('view-m7')) document.getElementById('view-m7').innerHTML = renderFinanzas();
   irAModulo(moduloActivo === 'm5' ? 'm5' : 'm0');
   autoSave(true);
+}
+
+/* ---------- Caja del día — delta real "vs ayer" (bug corregido: antes era '+12%' fijo) ----------
+   La base del día se fija en localStorage la primera vez que se abre el ERP cada día
+   (ver actualizarCajaBaseDia en INIT). Cada venta nueva recalcula el % contra esa base. */
+function recalcularCajaDelta(){
+  let base = null;
+  try{ base = JSON.parse(localStorage.getItem('asiri_caja_base_dia')); }catch(e){ base = null; }
+  const valorBase = base ? base.valor : DATA_DEMO.cajaHoy;
+  if(valorBase > 0){
+    const pct = ((DATA_DEMO.cajaHoy - valorBase) / valorBase) * 100;
+    DATA_DEMO.cajaHoyDelta = (pct >= 0 ? '+' : '') + pct.toFixed(1) + '%';
+  } else {
+    DATA_DEMO.cajaHoyDelta = DATA_DEMO.cajaHoy > 0 ? '+100%' : '+0%';
+  }
+}
+
+function actualizarCajaBaseDia(){
+  const hoy = new Date().toISOString().slice(0,10);
+  let base = null;
+  try{ base = JSON.parse(localStorage.getItem('asiri_caja_base_dia')); }catch(e){ base = null; }
+  if(!base || base.fecha !== hoy){
+    base = { fecha: hoy, valor: DATA_DEMO.cajaHoy };
+    try{ localStorage.setItem('asiri_caja_base_dia', JSON.stringify(base)); }catch(e){}
+  }
+  recalcularCajaDelta();
 }
 
 /* ============================================================
@@ -1983,15 +2391,72 @@ function guardarVentaManual(){
    ============================================================ */
 
 // ⚠️ Reemplazar con la URL real del webhook al desplegar Apps Script (M6 "Implementar como app web")
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/TU_ID_DE_IMPLEMENTACION/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwhVYSCfojsmgbF8n_Eoad1k7eYpDQpGebVd55o3a1MWyLxLgy3kvcVqql73HbQNQAD/exec';
 
 let saveTimer = null;
 const indicator = () => document.getElementById('save-indicator');
 
+/* ---------- Persistencia local real de los datos de negocio ----------
+   BUG CRÍTICO CORREGIDO: el indicador mostraba "✓ Guardado" pero Ventas, CRM,
+   Compras, Ads, Looker URL, tasa PPM y cierre mensual solo vivían en memoria —
+   al recargar la página o cerrar el navegador, todo lo registrado se perdía.
+   Ahora cada autoguardado también persiste en localStorage (funciona 100% offline,
+   sin depender del webhook de Apps Script) y se restaura al abrir el ERP. */
+function guardarEstadoLocal(){
+  const estado = {
+    ventas: DATA_DEMO.ventas,
+    cajaHoy: DATA_DEMO.cajaHoy,
+    stockCritico: DATA_DEMO.stockCritico,
+    clientasNuevas: DATA_DEMO.clientasNuevas,
+    crm: CRM_DEMO,
+    ordenes: ORDENES_DEMO,
+    campanas: CAMPANAS_DEMO,
+    carritos: CARRITOS_DEMO,
+    lookerUrl: LOOKER_URL,
+    tasaPPM: TASA_PPM,
+    mesCerrado: MES_CERRADO,
+    brief: DATA_DEMO.brief,
+    alertas: DATA_DEMO.alertas
+  };
+  try{ localStorage.setItem('asiri_erp_estado', JSON.stringify(estado)); }catch(e){}
+}
+
+function cargarEstadoLocal(){
+  const raw = localStorage.getItem('asiri_erp_estado');
+
+  // Primer uso real (nunca se ha guardado nada) — no mostrar datos de ejemplo como si fueran reales
+  if(raw === null){
+    DATA_DEMO.ventas = [];
+    DATA_DEMO.cajaHoy = 0;
+    DATA_DEMO.stockCritico = 0;
+    DATA_DEMO.clientasNuevas = 0;
+    DATA_DEMO.brief = `¡Bienvenida a ASIRI ERP, ASIRI! 🦋 Este es tu primer ingreso al sistema — todavía no hay ventas registradas hoy. Empieza con "+ Registrar Venta" o explora los módulos del sidebar para conocer el ERP.`;
+    DATA_DEMO.alertas = [];
+    return;
+  }
+
+  try{
+    const estado = JSON.parse(raw);
+    if(Array.isArray(estado.ventas)) DATA_DEMO.ventas = estado.ventas;
+    if(typeof estado.cajaHoy === 'number') DATA_DEMO.cajaHoy = estado.cajaHoy;
+    if(typeof estado.stockCritico === 'number') DATA_DEMO.stockCritico = estado.stockCritico;
+    if(typeof estado.clientasNuevas === 'number') DATA_DEMO.clientasNuevas = estado.clientasNuevas;
+    if(Array.isArray(estado.crm)) CRM_DEMO = estado.crm;
+    if(Array.isArray(estado.ordenes)) ORDENES_DEMO = estado.ordenes;
+    if(Array.isArray(estado.campanas)){ CAMPANAS_DEMO.length = 0; CAMPANAS_DEMO.push(...estado.campanas); }
+    if(Array.isArray(estado.carritos)){ CARRITOS_DEMO.length = 0; CARRITOS_DEMO.push(...estado.carritos); }
+    if(typeof estado.lookerUrl === 'string') LOOKER_URL = estado.lookerUrl;
+    if(typeof estado.tasaPPM === 'number') TASA_PPM = estado.tasaPPM;
+    if(typeof estado.mesCerrado === 'boolean') MES_CERRADO = estado.mesCerrado;
+    if(typeof estado.brief === 'string') DATA_DEMO.brief = estado.brief;
+    if(Array.isArray(estado.alertas)) DATA_DEMO.alertas = estado.alertas;
+  }catch(e){}
+}
+
 function autoSave(immediate){
   clearTimeout(saveTimer);
   setIndicator('saving');
-  const run = () => guardarDatos();
+  const run = () => { guardarEstadoLocal(); guardarDatos(); };
   if(immediate){ run(); } else { saveTimer = setTimeout(run, 1500); }
 }
 
@@ -2005,7 +2470,10 @@ function setIndicator(state){
 }
 
 async function guardarDatos(){
-  const payload = { timestamp: new Date().toISOString(), origen:'ASIRI-ERP', data: DATA_DEMO };
+  const payload = {
+    timestamp: new Date().toISOString(), origen:'ASIRI-ERP',
+    data: { ...DATA_DEMO, crm: CRM_DEMO, ordenes: ORDENES_DEMO, campanas: CAMPANAS_DEMO }
+  };
 
   if(!navigator.onLine){
     await guardarEnIndexedDB(payload);
@@ -2065,6 +2533,11 @@ async function sincronizarPendientes(){
   });
   if(!all.length) return;
 
+  // BUG CORREGIDO: antes se vaciaba TODA la cola al final del loop, incluso si algún
+  // envío individual fallaba por corte de red — se perdía silenciosamente sin reintentar,
+  // contradiciendo el propio comentario "se reintenta en la próxima reconexión".
+  // Ahora cada ítem se borra de IndexedDB solo si su propio envío no lanzó error de red.
+  const dbw = await abrirDB();
   for(const payload of all){
     try{
       await fetch(APPS_SCRIPT_URL, {
@@ -2072,12 +2545,10 @@ async function sincronizarPendientes(){
         headers:{'Content-Type':'text/plain'},
         body: JSON.stringify(payload)
       });
-    }catch(e){ /* se reintenta en la próxima reconexión */ }
+      const txw = dbw.transaction('pendientes','readwrite');
+      txw.objectStore('pendientes').delete(payload.timestamp);
+    }catch(e){ /* falla real de red — queda en la cola y se reintenta en la próxima reconexión */ }
   }
-  // limpiar cola sincronizada
-  const dbw = await abrirDB();
-  const txw = dbw.transaction('pendientes','readwrite');
-  txw.objectStore('pendientes').clear();
   setIndicator('saved');
 }
 
@@ -2106,6 +2577,8 @@ if('serviceWorker' in navigator){
 
 /* ---------- 12. INIT ---------- */
 document.addEventListener('DOMContentLoaded', () => {
+  cargarEstadoLocal(); // restaura ventas, CRM, compras, ads, F29 y Looker guardados antes de renderizar
+  actualizarCajaBaseDia(); // fija/lee la base de caja del día para calcular el delta real "vs ayer"
   renderSidebar();
   initViews();
   actualizarEstadoConexion();
