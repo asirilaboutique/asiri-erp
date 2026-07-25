@@ -681,6 +681,8 @@ function escaparHTML(valor){
 }
 
 /* ---------- 3. DATOS DE EJEMPLO (se reemplazan con datos reales via Apps Script) ---------- */
+const DATA_LOAD_VERSION = 'carga-inicial-2026-07-25'; // sube esta fecha cada vez que se recarguen CRM_DEMO/ORDENES_DEMO en el código, para que no queden pisados por un localStorage viejo
+
 const DATA_DEMO = {
   cajaHoy: 0,
   cajaHoyDelta: '+0%',
@@ -2628,7 +2630,8 @@ function guardarEstadoLocal(){
     tasaPPM: TASA_PPM,
     mesCerrado: MES_CERRADO,
     brief: DATA_DEMO.brief,
-    alertas: DATA_DEMO.alertas
+    alertas: DATA_DEMO.alertas,
+    dataLoadVersion: DATA_LOAD_VERSION
   };
   try{ localStorage.setItem('asiri_erp_estado', JSON.stringify(estado)); }catch(e){}
 }
@@ -2653,8 +2656,12 @@ function cargarEstadoLocal(){
     if(typeof estado.cajaHoy === 'number') DATA_DEMO.cajaHoy = estado.cajaHoy;
     if(typeof estado.stockCritico === 'number') DATA_DEMO.stockCritico = estado.stockCritico;
     if(typeof estado.clientasNuevas === 'number') DATA_DEMO.clientasNuevas = estado.clientasNuevas;
-    if(Array.isArray(estado.crm)) CRM_DEMO = estado.crm;
-    if(Array.isArray(estado.ordenes)) ORDENES_DEMO = estado.ordenes;
+    // CRM_DEMO y ORDENES_DEMO solo se restauran si el localStorage es de la misma carga inicial —
+    // así una carga de datos reales en el código nunca queda pisada por un guardado viejo (ej. limpieza demo previa)
+    if(estado.dataLoadVersion === DATA_LOAD_VERSION){
+      if(Array.isArray(estado.crm)) CRM_DEMO = estado.crm;
+      if(Array.isArray(estado.ordenes)) ORDENES_DEMO = estado.ordenes;
+    }
     if(Array.isArray(estado.campanas)){ CAMPANAS_DEMO.length = 0; CAMPANAS_DEMO.push(...estado.campanas); }
     if(Array.isArray(estado.carritos)){ CARRITOS_DEMO.length = 0; CARRITOS_DEMO.push(...estado.carritos); }
     if(typeof estado.lookerUrl === 'string') LOOKER_URL = estado.lookerUrl;
