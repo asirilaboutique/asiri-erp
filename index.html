@@ -9,9 +9,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ASIRI ERP">
 <meta name="description" content="ASIRI ERP — Sistema de gestión completo para ASIRI La Boutique">
-<title>ASIRI ERP 🦋</title>
+<title>ASIRI ERP</title>
 <link rel="manifest" href="manifest.json">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A6%8B%3C/text%3E%3C/svg%3E">
+<link rel="icon" type="image/svg+xml" href="icon-192.svg">
 <link rel="apple-touch-icon" href="icon-192.svg">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
@@ -42,7 +42,7 @@
     padding:1.2rem 1.4rem; display:flex; align-items:center; gap:.6rem;
     border-bottom:1px solid rgba(255,255,255,.08);
   }
-  .sb-brand .butterfly{font-size:1.4rem;}
+  .sb-brand .butterfly{display:block; flex-shrink:0;}
   .sb-brand-text{font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:600;letter-spacing:.03em;}
   .sb-brand-text span{color:var(--turquesa);}
   .sb-nav{flex:1; padding:.8rem .6rem; display:flex; flex-direction:column; gap:.2rem;}
@@ -73,6 +73,7 @@
   .hdr-left{display:flex; align-items:center; gap:1rem;}
   #menu-toggle{display:none; background:none; border:none; font-size:1.3rem; cursor:pointer; color:var(--negro);}
   .hdr-logo{font-family:'Cormorant Garamond',serif; font-size:1.1rem; font-weight:600; display:flex; align-items:center; gap:.4rem;}
+  .hdr-logo img{flex-shrink:0; display:block;}
   .hdr-right{display:flex; align-items:center; gap:1rem;}
   #save-indicator{
     font-size:.72rem; font-weight:600; padding:.35rem .8rem; border-radius:20px;
@@ -499,7 +500,7 @@
   <!-- ===== SIDEBAR ===== -->
   <aside id="sidebar">
     <div class="sb-brand">
-      <span class="butterfly">🦋</span>
+      <img class="butterfly" src="asiri-mark-light.svg" alt="ASIRI" width="26" height="26">
       <span class="sb-brand-text">ASIRI <span>ERP</span></span>
     </div>
     <nav class="sb-nav" id="sb-nav">
@@ -514,7 +515,7 @@
     <header>
       <div class="hdr-left">
         <button id="menu-toggle" onclick="toggleSidebar()">☰</button>
-        <div class="hdr-logo"><span>🦋</span><span class="full">ASIRI ERP</span></div>
+        <div class="hdr-logo"><img src="asiri-mark-dark.svg" alt="ASIRI" width="20" height="20"><span class="full">ASIRI ERP</span></div>
       </div>
       <div class="hdr-right">
         <span id="save-indicator" class="saved">✓ Guardado</span>

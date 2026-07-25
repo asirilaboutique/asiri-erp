@@ -1,10 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#14B8A6"/>
-      <stop offset="100%" stop-color="#EC4899"/>
-    </linearGradient>
-  </defs>
-  <rect width="512" height="512" rx="110" fill="url(#bg)"/>
-  <text x="256" y="340" font-size="280" text-anchor="middle" font-family="Segoe UI Emoji, Apple Color Emoji, sans-serif">🦋</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="512" height="512">
+  <rect width="200" height="200" fill="#FFFFFF"/>
+  <circle cx="100" cy="100" r="92" fill="none" stroke="#0F172A" stroke-width="3.2"/>
+  <g fill="none" stroke="#0F172A" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M99,68 C86,50 64,36 52,44 C41,51 46,68 60,74 C72,79 88,75 99,68 Z"/>
+    <path d="M99,68 C102,42 114,18 128,20 C142,22 143,44 128,58 C116,69 105,70 99,68 Z"/>
+    <path d="M99,70 C90,84 74,92 65,88 C57,85 58,75 68,73 C80,71 92,70 99,70 Z"/>
+    <path d="M99,70 C106,86 118,96 126,91 C133,87 130,78 120,75 C111,72 104,70 99,70 Z"/>
+    <path d="M99,66 L100,96"/>
+    <path d="M100,96 C108,100 118,100 122,94"/>
+    <path d="M100,96 C96,106 96,116 104,118"/>
+    <path d="M100,96 C110,102 118,104 123,98 C126,95 124,91 120,93"/>
+  </g>
+  <text x="100" y="150" text-anchor="middle" font-family="Georgia, 'Cormorant Garamond', serif" font-weight="700" font-size="36" letter-spacing="1" fill="#0F172A">ASIRI</text>
+  <text x="100" y="168" text-anchor="middle" font-family="Arial, sans-serif" font-weight="600" font-size="12" letter-spacing="3.2" fill="#0F172A">LA BOUTIQUE</text>
 </svg>
