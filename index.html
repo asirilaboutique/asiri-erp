@@ -112,9 +112,9 @@
   .kpi-delta.down{color:var(--rojo);}
 
   /* ===== SECTIONS ===== */
-  .section-row{display:grid; grid-template-columns:1.3fr 1fr; gap:1.2rem; margin-bottom:1.2rem;}
+  .section-row{display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,1fr); gap:1.2rem; margin-bottom:1.2rem;}
   @media (max-width:900px){.section-row{grid-template-columns:1fr;}}
-  .panel{background:white; border:1px solid rgba(15,23,42,.07); border-radius:18px; padding:1.4rem;}
+  .panel{background:white; border:1px solid rgba(15,23,42,.07); border-radius:18px; padding:1.4rem; min-width:0;}
   .panel-title{font-weight:700; font-size:.95rem; margin-bottom:1rem; display:flex; align-items:center; gap:.5rem;}
   .panel-title .badge-live{font-size:.6rem; background:var(--turquesa-light); color:#0F766E; padding:.15rem .5rem; border-radius:8px; font-weight:700; letter-spacing:.05em;}
 
