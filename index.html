@@ -141,10 +141,34 @@
   .alert-text span{color:var(--gris); font-size:.75rem;}
 
   /* Tabla ventas */
-  table.simple{width:100%; border-collapse:collapse; font-size:.82rem;}
-  table.simple th{text-align:left; padding:.6rem .5rem; color:var(--gris); font-weight:600; font-size:.7rem; text-transform:uppercase; letter-spacing:.04em; border-bottom:1px solid rgba(15,23,42,.08);}
-  table.simple td{padding:.65rem .5rem; border-bottom:1px solid rgba(15,23,42,.05);}
+  .table-scroll{overflow-x:auto; -webkit-overflow-scrolling:touch; margin:0 -.2rem;}
+  table.simple{width:100%; min-width:520px; border-collapse:collapse; font-size:.82rem;}
+  table.simple th{text-align:left; padding:.6rem .5rem; color:var(--gris); font-weight:600; font-size:.7rem; text-transform:uppercase; letter-spacing:.04em; border-bottom:1px solid rgba(15,23,42,.08); white-space:nowrap;}
+  table.simple td{padding:.65rem .5rem; border-bottom:1px solid rgba(15,23,42,.05); white-space:nowrap;}
   table.simple tr:last-child td{border-bottom:none;}
+  table.simple tr.total td{font-weight:700; border-top:2px solid rgba(15,23,42,.1);}
+  table.simple.compact{min-width:440px; font-size:.78rem;}
+  table.simple.compact th, table.simple.compact td{padding:.45rem .4rem;}
+
+  /* Compras por proveedor — subtotales expandibles */
+  .proveedor-detalle{border:1px solid rgba(15,23,42,.08); border-radius:12px; margin-bottom:.6rem; overflow:hidden;}
+  .proveedor-detalle:last-of-type{margin-bottom:1rem;}
+  .proveedor-detalle summary{
+    display:flex; align-items:center; gap:.6rem; padding:.75rem .9rem; cursor:pointer;
+    font-size:.83rem; background:var(--gris-light); list-style:none; flex-wrap:wrap;
+  }
+  .proveedor-detalle summary::-webkit-details-marker{display:none;}
+  .proveedor-detalle summary::before{content:'▸'; color:var(--turquesa); font-weight:700; transition:transform .15s; flex-shrink:0;}
+  .proveedor-detalle[open] summary::before{transform:rotate(90deg);}
+  .proveedor-detalle .prov-nombre{font-weight:700; flex:1; min-width:110px;}
+  .proveedor-detalle .prov-meta{font-size:.72rem; color:var(--gris);}
+  .proveedor-detalle .prov-subtotal{font-family:'JetBrains Mono',monospace; font-weight:700; color:var(--turquesa); margin-left:auto;}
+  .proveedor-detalle table{margin:.7rem .9rem 1rem;}
+  @media (max-width:480px){
+    .proveedor-detalle summary{font-size:.78rem;}
+    .proveedor-detalle .prov-nombre{width:100%;}
+    .proveedor-detalle .prov-subtotal{margin-left:0;}
+  }
   .canal-pill{font-size:.65rem; font-weight:700; padding:.15rem .5rem; border-radius:8px;}
   .canal-pill.shopify{background:var(--turquesa-light); color:#0F766E;}
   .canal-pill.pos{background:var(--rosado-light); color:#9D174D;}
@@ -448,8 +472,23 @@
     #sb-overlay.open{display:block;}
   }
   @media (max-width:480px){
-    .kpi-grid{grid-template-columns:1fr 1fr;}
-    .kpi-value{font-size:1.3rem;}
+    .kpi-grid{grid-template-columns:1fr 1fr; gap:.6rem;}
+    .kpi-card{padding:1rem;}
+    .kpi-value{font-size:1.15rem;}
+    .page-title{font-size:1.5rem;}
+    .panel{padding:1rem;}
+    .modal-box{padding:1.2rem; border-radius:16px;}
+    .field-row{grid-template-columns:1fr;}
+    .crm-grid, .proveedor-grid, .campana-grid, .academy-cat-grid, .lastunit-grid{grid-template-columns:1fr;}
+    .quick-grid{grid-template-columns:repeat(3,1fr); gap:.6rem;}
+    .modal-actions{flex-direction:column;}
+    .canal-total-grid, .meta-resumen-grid{grid-template-columns:1fr 1fr;}
+    .clienta-top, .campana-top{flex-wrap:wrap;}
+    header{padding:0 1rem;}
+    .hdr-right{gap:.5rem;}
+    #save-indicator span.txt{display:none;}
+    .funnel-label{width:100px; font-size:.7rem;}
+    .studio-wrap{height:400px;}
   }
 </style>
 </head>
@@ -681,7 +720,7 @@ function escaparHTML(valor){
 }
 
 /* ---------- 3. DATOS DE EJEMPLO (se reemplazan con datos reales via Apps Script) ---------- */
-const DATA_LOAD_VERSION = 'carga-inicial-2026-07-25'; // sube esta fecha cada vez que se recarguen CRM_DEMO/ORDENES_DEMO en el código, para que no queden pisados por un localStorage viejo
+const DATA_LOAD_VERSION = 'carga-inicial-v1.1-2026-07-25'; // sube este identificador cada vez que se recarguen CRM_DEMO/ORDENES_DEMO en el código, para que no queden pisados por un localStorage viejo
 
 const DATA_DEMO = {
   cajaHoy: 0,
@@ -694,14 +733,67 @@ const DATA_DEMO = {
   ventas: []
 };
 
-/* ---------- 3b. CRM — carga inicial real (fuente: CUENTA~1.CSV, cuentas por cobrar reconciliadas jul 2026) ----------
-   Solo 3 clientas identificables en los datos disponibles hasta ahora. LTV = pagado confirmado;
-   lo pendiente de cobro queda en notas para no inflar el LTV con ventas no cerradas. Falta
-   completar teléfono/email — pendiente para Valeria, se puede editar desde M2 cuando quiera. */
+/* ---------- 3b. CRM — carga inicial real v1.1 (fuentes: CUENTA~1.CSV + agenda a lápiz transcrita jul 2026) ----------
+   53 clientas identificadas cruzando cuentas por cobrar (ago-oct 2025) con el detalle línea a línea
+   de la agenda física de Valeria (abril-julio 2026). LTV = suma de ventas registradas; lo pendiente
+   de cobro histórico queda en notas para no inflar el LTV con saldos no cerrados. Nombres con
+   paréntesis (ej. "Sandra (Tía Lore)", "Colega Juliana") son tal como aparecen en la agenda —
+   puede ser la misma persona referida por otra clienta; revisar y fusionar manualmente si corresponde.
+   Falta completar teléfono/email — editable desde M2 cuando Valeria quiera. */
 let CRM_DEMO = [
-  {id:1, nombre:'Tamara', telefono:'', email:'', compras:2, ltv:41990, diasUltimaCompra:294, notas:'Pagado: Joggers ($15.990, 23-08-2025) y Chaqueta Calada ($26.000, 03-10-2025). Pendiente de cobro: Blazer Negro, Chaqueta Mezclilla Botón, Polera Love Blanca ($73.990 total, saldo referencial $67.950 tras abono $25.000 20-oct).'},
-  {id:2, nombre:'Ingrid', telefono:'', email:'', compras:2, ltv:38500, diasUltimaCompra:279, notas:'Pagado completo: Palazo Café ($21.500, 10-10-2025) y Blusón Verde ($17.000, 18-10-2025). Sin pendientes.'},
-  {id:3, nombre:'Marce', telefono:'', email:'', compras:0, ltv:0, diasUltimaCompra:0, notas:'6 prendas apartadas, todas pendientes de pago ($122.980 total): Chaqueta Gamuza, Blusón Fucsia, Polera Broderie Blanca, Chaqueta Mezclilla Cierre (abono $65.000, saldo $57.980), Chaleco Spandex, Polera Limón.'},
+  {id:1, nombre:"Tamara", telefono:"", email:"", compras:7, ltv:277960, diasUltimaCompra:44, notas:"Historico previo (ago-oct 2025): Joggers $15.990 pagado 23-08; Chaqueta Calada $26.000 pagado 03-10; pendiente Blazer Negro, Chaqueta Mezclilla Boton, Polera Love Blanca ($73.990, saldo ref. $67.950 tras abono $25.000 20-oct). Agenda 2026: 13/04 Mezclilla $25000; 18/04 Sobrecamisa+Blusa+Pantalon+2xBody $93990; Sobrecamisa+Chaleco spandex $46990; 04/06 Sobrecamisa fucsia $25990; 11/06 Sobrecamisa+Chaleco $44000."},
+  {id:2, nombre:"Ingrid", telefono:"", email:"", compras:3, ltv:47500, diasUltimaCompra:78, notas:"Historico previo: Palazo Cafe $21.500 pagado 10-10-2025, Bluson Verde $17.000 pagado 18-10-2025. Agenda 2026: 08/05 Panty $9000."},
+  {id:3, nombre:"Marce", telefono:"", email:"", compras:1, ltv:40500, diasUltimaCompra:20, notas:"Pendiente historico: 6 prendas apartadas sin pagar ($122.980 total: Chaqueta Gamuza, Bluson Fucsia, Polera Broderie, Chaqueta Mezclilla Cierre -abono $65.000 saldo $57.980-, Chaleco Spandex, Polera Limon). Agenda 2026 (Marce Ahumada): 05/07 Sastrero negro + Chaqueta gamuza $40500 pagado."},
+  {id:4, nombre:"Janet Castillo", telefono:"", email:"", compras:3, ltv:114990, diasUltimaCompra:25, notas:"12/06/2026 1x Gamulán café + 1x Chaleco negro $54990; 22/06/2026 1x Suéter gris + 1x Suéter naranjo $40000; 30/06/2026 1x Suéter café $20000"},
+  {id:5, nombre:"Trisa", telefono:"", email:"", compras:1, ltv:97960, diasUltimaCompra:999, notas:"S/D 1x Chaleco rayas + 1x Guillette + 1x Chaqueta cordero + 1x Blazer $97960"},
+  {id:6, nombre:"Jesy", telefono:"", email:"", compras:1, ltv:96000, diasUltimaCompra:999, notas:"S/D 1x Sobrecamisa camel + 1x Pantalón gris cotelé + 1x Chaleco flores + 2x Beatle $96000"},
+  {id:7, nombre:"Olga", telefono:"", email:"", compras:3, ltv:85970, diasUltimaCompra:43, notas:"S/D 1x Chaqueta + 1x Guillette burdeo $53980; 08/05/2026 1x Chaleco negro $11990; 12/06/2026 1x Chaleco ♡ café $20000"},
+  {id:8, nombre:"Juliana Brasil", telefono:"", email:"", compras:1, ltv:84000, diasUltimaCompra:31, notas:"24/06/2026 3x Pantalón + 1x Sobrecamisa blanca $84000"},
+  {id:9, nombre:"Moni (Cuñada)", telefono:"", email:"", compras:1, ltv:81990, diasUltimaCompra:68, notas:"18/05/2026 1x Bomber café + 1x Pantalón negro cotelé + 1x Chaqueta cordero $81990"},
+  {id:10, nombre:"Veronica Rojas", telefono:"", email:"", compras:3, ltv:78000, diasUltimaCompra:30, notas:"27/05/2026 1x Pantalón cotelé + 1x Pantalón café $42000; 22/06/2026 1x Pantalón gamuza terracota $20000; 25/06/2026 1x Chaleco rayas $16000"},
+  {id:11, nombre:"Marcia", telefono:"", email:"", compras:2, ltv:75990, diasUltimaCompra:96, notas:"13/04/2026 1x Spandex $20000; 20/04/2026 1x Sobrecamisa + 1x Bomber negra $55990"},
+  {id:12, nombre:"Lore", telefono:"", email:"", compras:1, ltv:66980, diasUltimaCompra:98, notas:"18/04/2026 1x Bomber café + 1x Chaleco rayas + 1x Jeans pinza $66980"},
+  {id:13, nombre:"Carito", telefono:"", email:"", compras:1, ltv:56980, diasUltimaCompra:999, notas:"S/D 1x Trench + 1x Panty + 1x Abrigo fucsia $56980"},
+  {id:14, nombre:"Dani Becerra", telefono:"", email:"", compras:1, ltv:54990, diasUltimaCompra:59, notas:"27/05/2026 1x Chaleco negro con flor + 2x Chaleco rayas $54990"},
+  {id:15, nombre:"Orieta", telefono:"", email:"", compras:1, ltv:53980, diasUltimaCompra:999, notas:"S/D 2x Jeans piedra $53980"},
+  {id:16, nombre:"Jovita", telefono:"", email:"", compras:2, ltv:45990, diasUltimaCompra:68, notas:"08/05/2026 1x Chaleco gris básico $18990; 18/05/2026 1x Abrigo corto paño negro $27000"},
+  {id:17, nombre:"Colega Juliana", telefono:"", email:"", compras:1, ltv:40000, diasUltimaCompra:31, notas:"24/06/2026 1x Chaleco café con ♡ dorado + 1x Pantalón sastrero beige $40000"},
+  {id:18, nombre:"Rebeca", telefono:"", email:"", compras:1, ltv:40000, diasUltimaCompra:999, notas:"S/D 2x Chaleco spandex $40000"},
+  {id:19, nombre:"Jovita (Talca)", telefono:"", email:"", compras:1, ltv:38000, diasUltimaCompra:57, notas:"29/05/2026 1x Blusa verde + 1x Pantalón punto magenta $38000"},
+  {id:20, nombre:"Katy", telefono:"", email:"", compras:1, ltv:38000, diasUltimaCompra:98, notas:"18/04/2026 1x Sastre café + 1x Cardigan negro $38000"},
+  {id:21, nombre:"Valentina", telefono:"", email:"", compras:2, ltv:38000, diasUltimaCompra:92, notas:"24/04/2026 1x Chaleco blanco encaje $19000; S/D 1x Chaleco con encaje blanco $19000"},
+  {id:22, nombre:"Carola", telefono:"", email:"", compras:1, ltv:36900, diasUltimaCompra:20, notas:"05/07/2026 1x Básico café + 1x Spandex rayas $36900"},
+  {id:23, nombre:"Carolina (Viña)", telefono:"", email:"", compras:1, ltv:34990, diasUltimaCompra:999, notas:"S/D 1x Chaqueta chiporro café $34990"},
+  {id:24, nombre:"Fer Neira", telefono:"", email:"", compras:1, ltv:34990, diasUltimaCompra:82, notas:"04/05/2026 1x Aviadora $34990"},
+  {id:25, nombre:"Natalia", telefono:"", email:"", compras:1, ltv:34990, diasUltimaCompra:999, notas:"S/D 1x Aviadora $34990"},
+  {id:26, nombre:"Crishna", telefono:"", email:"", compras:2, ltv:33480, diasUltimaCompra:101, notas:"15/04/2026 1x Tapadito celeste + 1x Bufanda $18990; 15/04/2026 1x Tapadito amarillo + 1x Bufanda $14490"},
+  {id:27, nombre:"Fernanda Neira", telefono:"", email:"", compras:1, ltv:32000, diasUltimaCompra:60, notas:"26/05/2026 1x Chaqueta negra chiporro aviadora $32000"},
+  {id:28, nombre:"Nani", telefono:"", email:"", compras:1, ltv:31980, diasUltimaCompra:44, notas:"11/06/2026 2x Chaleco abierto botón dorado $31980"},
+  {id:29, nombre:"Sandra (Tía Lore)", telefono:"", email:"", compras:1, ltv:31490, diasUltimaCompra:999, notas:"S/D 1x Jogger + 1x Chaleco amarillo $31490"},
+  {id:30, nombre:"Rocio", telefono:"", email:"", compras:1, ltv:26990, diasUltimaCompra:106, notas:"10/04/2026 1x Jeans café piedras $26990"},
+  {id:31, nombre:"Rocio Veliz", telefono:"", email:"", compras:1, ltv:26000, diasUltimaCompra:22, notas:"03/07/2026 1x Polerón cordero crudo $26000"},
+  {id:32, nombre:"Yose Paredes", telefono:"", email:"", compras:1, ltv:25990, diasUltimaCompra:78, notas:"08/05/2026 1x Chaqueta mezclilla $25990"},
+  {id:33, nombre:"Abuel. Ana", telefono:"", email:"", compras:1, ltv:23990, diasUltimaCompra:98, notas:"18/04/2026 1x Abrigo café $23990"},
+  {id:34, nombre:"Eva Marisol", telefono:"", email:"", compras:1, ltv:22990, diasUltimaCompra:35, notas:"20/06/2026 1x Jeans piedras $22990"},
+  {id:35, nombre:"Eva Tapia", telefono:"", email:"", compras:1, ltv:22990, diasUltimaCompra:84, notas:"02/05/2026 1x Blazer verde olivo $22990"},
+  {id:36, nombre:"Tía Lore", telefono:"", email:"", compras:1, ltv:22990, diasUltimaCompra:101, notas:"15/04/2026 1x Jean flare $22990"},
+  {id:37, nombre:"Ana María Nuñez", telefono:"", email:"", compras:1, ltv:22990, diasUltimaCompra:83, notas:"03/05/2026 1x Blazer negro $22990"},
+  {id:38, nombre:"Katherine Frossini", telefono:"", email:"", compras:1, ltv:22000, diasUltimaCompra:58, notas:"28/05/2026 1x Pantalón paño negro c/cint $22000"},
+  {id:39, nombre:"Soli", telefono:"", email:"", compras:1, ltv:22000, diasUltimaCompra:50, notas:"05/06/2026 1x Pantalón gamuza café $22000"},
+  {id:40, nombre:"Marcela Miranda", telefono:"", email:"", compras:1, ltv:21000, diasUltimaCompra:67, notas:"19/05/2026 1x Blusa cuello alto café $21000"},
+  {id:41, nombre:"Ana (Temuco)", telefono:"", email:"", compras:1, ltv:21000, diasUltimaCompra:91, notas:"25/04/2026 1x Blusa $21000"},
+  {id:42, nombre:"Alexis Gómez", telefono:"", email:"", compras:1, ltv:20680, diasUltimaCompra:82, notas:"04/05/2026 1x Pantalón forrado negro c/cint $20680"},
+  {id:43, nombre:"Amanda", telefono:"", email:"", compras:1, ltv:20000, diasUltimaCompra:31, notas:"24/06/2026 1x Pantalón cotelé café $20000"},
+  {id:44, nombre:"Clienta de Juliana", telefono:"", email:"", compras:1, ltv:20000, diasUltimaCompra:22, notas:"03/07/2026 1x Pantalón sastrero L café $20000"},
+  {id:45, nombre:"Soledad", telefono:"", email:"", compras:1, ltv:20000, diasUltimaCompra:999, notas:"S/D 1x Suéter corduela negro $20000"},
+  {id:46, nombre:"Javiera Espinoza", telefono:"", email:"", compras:1, ltv:20000, diasUltimaCompra:23, notas:"02/07/2026 1x Abrigo camel $20000"},
+  {id:47, nombre:"Margarita (Conce)", telefono:"", email:"", compras:1, ltv:20000, diasUltimaCompra:46, notas:"09/06/2026 1x Spandex calipso $20000"},
+  {id:48, nombre:"Jovita Pelarco", telefono:"", email:"", compras:1, ltv:20000, diasUltimaCompra:81, notas:"05/05/2026 1x Pantalón paño negro c/cint $20000"},
+  {id:49, nombre:"Margaret (Talca)", telefono:"", email:"", compras:1, ltv:18990, diasUltimaCompra:38, notas:"17/06/2026 1x Blusa cuello alto burdeo $18990"},
+  {id:50, nombre:"Mami", telefono:"", email:"", compras:1, ltv:18990, diasUltimaCompra:78, notas:"08/05/2026 1x Chaleco negro básico $18990"},
+  {id:51, nombre:"Seba (Regalo Nancy)", telefono:"", email:"", compras:1, ltv:18000, diasUltimaCompra:78, notas:"08/05/2026 1x Blusa larga negra $18000"},
+  {id:52, nombre:"Vale (Regalo)", telefono:"", email:"", compras:1, ltv:18000, diasUltimaCompra:78, notas:"08/05/2026 1x Blusa larga roja $18000"},
+  {id:53, nombre:"Fernanda (Conce)", telefono:"", email:"", compras:1, ltv:10000, diasUltimaCompra:79, notas:"07/05/2026 1x Palazzo $10000"},
 ];
 
 /* Segmentación automática: VIP / Regular / Dormida / Nueva */
@@ -763,201 +855,201 @@ const CONTENIDO_DEMO = [
 const PROVEEDORES_DEMO = [];
 
 let ORDENES_DEMO = [
-  {proveedor:"Ali Pedidos", producto:"CHAQUETA CEBRA CON GORRO", cantidad:2, costo:27000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CHALECO SPANDEX P 25417", cantidad:2, costo:24000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CHALECO SPANDEX FLORES", cantidad:2, costo:24000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CHALECO SPANDEX CORAZONES", cantidad:2, costo:20000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"JOGGERS FLORES", cantidad:2, costo:38000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"BLUSA PRINT", cantidad:2, costo:25000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CHALECO FLORES ALTA GAMA", cantidad:2, costo:31000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"BUFANDA ANIMAL PRINT", cantidad:3, costo:13500, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"BLAZER", cantidad:2, costo:29000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"GILLET MEZCLILLA", cantidad:2, costo:30000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"BLAZER ALLTA GAMA ACEBRADO", cantidad:2, costo:22990, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"GILLET CHALECO BOTON DORADO", cantidad:2, costo:18990, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"GILLET ALTA GAMA LARGO", cantidad:2, costo:18000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CHALECO SPANDEX ESTÁNDAR", cantidad:2, costo:20000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CHALECO SPANDEX ESTÁNDAR", cantidad:2, costo:24000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"JOGGERS MEZCLILLA", cantidad:2, costo:19000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CHALECO FUCSIA Y VERDE", cantidad:2, costo:16000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"POLERA CHERRIES", cantidad:3, costo:27000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"POLERA FRIDA", cantidad:4, costo:36000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"BLUSÓN", cantidad:3, costo:24000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"POLERA MANGA LARGA PRINT", cantidad:2, costo:11000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"POLERA STRONG AND SEXY", cantidad:2, costo:23000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CHALECO  MANGA LARGA ITALIANA CORAZON DORADO", cantidad:2, costo:30000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"POLERA MANGA LARGA OJO", cantidad:2, costo:15800, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CHALECO ALTA GAMA ITALIANO", cantidad:2, costo:33800, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"BLAZER VISCOSA-GABARDINA", cantidad:2, costo:19000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CHALECO SPANDEX", cantidad:2, costo:24000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"POLERA MANGA CORTA", cantidad:4, costo:34000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CAMISA GAMUSA", cantidad:3, costo:39000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CAMISA ITALIANA MANGA 3/4", cantidad:2, costo:32000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CHAQUETA CALADA", cantidad:2, costo:33000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CHAQUETA MEZCLILLA", cantidad:3, costo:57000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"BLUSA CON BOTONES", cantidad:2, costo:23000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CHALECO A RAYAS", cantidad:3, costo:34500, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"POLERA LEOPARDO", cantidad:4, costo:30000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"POLERA ANGELES", cantidad:3, costo:22500, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"BLUSA CON CUELLO", cantidad:2, costo:20000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CHALECO HILO FLOR", cantidad:3, costo:30000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"BLUSÓN", cantidad:4, costo:30000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"KIMONO", cantidad:3, costo:21000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"JEANS", cantidad:4, costo:40800, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CHAQUETA CON BRODERI ABAJO", cantidad:2, costo:26000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CHAQUETA CALADA", cantidad:3, costo:39000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"POLERA TAKE TIME", cantidad:3, costo:22500, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"JEANS PRETINA ADELANTE", cantidad:2, costo:27000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"JEANS SUELTO", cantidad:2, costo:21200, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CHAQUETA MEZCLILLA CON CIERRE", cantidad:2, costo:31000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CHAQUETA MEZCLILLA CON BOTONES", cantidad:4, costo:62000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"BLEIZER LINO", cantidad:3, costo:36000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"GUILLETTE BORDADO", cantidad:4, costo:44000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"PANTALON LINO", cantidad:3, costo:33000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CHALECO FLORES  Y CORAZONES", cantidad:2, costo:19800, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"BLEIZER ALTA GAMA", cantidad:3, costo:45000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"BLUSÓN", cantidad:4, costo:30000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"BLUSA CON CUELLO", cantidad:2, costo:20000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"POLERA MANGA CORTA", cantidad:4, costo:34000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"JEANS  CON ELASTICO", cantidad:3, costo:36000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"PANTALÓN ELASTICO", cantidad:4, costo:43960, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"POLERA BASICA TIRAS", cantidad:4, costo:24000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CHALECO SPANDEX", cantidad:3, costo:32700, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"PANTALON ZARA EXTRA LINDA", cantidad:2, costo:13000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"PALAZZO CINTURON", cantidad:2, costo:25000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CINTURÓN", cantidad:2, costo:7500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CHAQUETA CEBRA CON GORRO", cantidad:2, costo:13500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CHALECO SPANDEX P 25417", cantidad:2, costo:12000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CHALECO SPANDEX FLORES", cantidad:2, costo:12000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CHALECO SPANDEX CORAZONES", cantidad:2, costo:10000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"JOGGERS FLORES", cantidad:2, costo:19000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"BLUSA PRINT", cantidad:2, costo:12500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CHALECO FLORES ALTA GAMA", cantidad:2, costo:15500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"BUFANDA ANIMAL PRINT", cantidad:3, costo:4500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"BLAZER", cantidad:2, costo:14500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"GILLET MEZCLILLA", cantidad:2, costo:15000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"BLAZER ALLTA GAMA ACEBRADO", cantidad:2, costo:14500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"GILLET CHALECO BOTON DORADO", cantidad:2, costo:10500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"GILLET ALTA GAMA LARGO", cantidad:2, costo:9000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CHALECO SPANDEX ESTÁNDAR", cantidad:2, costo:10000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CHALECO SPANDEX ESTÁNDAR", cantidad:2, costo:12000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"JOGGERS MEZCLILLA", cantidad:2, costo:9500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CHALECO FUCSIA Y VERDE", cantidad:2, costo:8000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"POLERA CHERRIES", cantidad:3, costo:9000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"POLERA FRIDA", cantidad:4, costo:9000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"BLUSÓN", cantidad:3, costo:8000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"POLERA MANGA LARGA PRINT", cantidad:2, costo:5500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"POLERA STRONG AND SEXY", cantidad:2, costo:11500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CHALECO  MANGA LARGA ITALIANA CORAZON DORADO", cantidad:2, costo:15000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"POLERA MANGA LARGA OJO", cantidad:2, costo:7900, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CHALECO ALTA GAMA ITALIANO", cantidad:2, costo:16900, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"BLAZER VISCOSA-GABARDINA", cantidad:2, costo:9500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CHALECO SPANDEX", cantidad:2, costo:12000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"POLERA MANGA CORTA", cantidad:4, costo:8500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CAMISA GAMUSA", cantidad:3, costo:13000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CAMISA ITALIANA MANGA 3/4", cantidad:2, costo:16000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CHAQUETA CALADA", cantidad:2, costo:16500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CHAQUETA MEZCLILLA", cantidad:3, costo:19000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"BLUSA CON BOTONES", cantidad:2, costo:11500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CHALECO A RAYAS", cantidad:3, costo:11500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"POLERA LEOPARDO", cantidad:4, costo:7500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"POLERA ANGELES", cantidad:3, costo:7500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"BLUSA CON CUELLO", cantidad:2, costo:10000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CHALECO HILO FLOR", cantidad:3, costo:10000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"BLUSÓN", cantidad:4, costo:7500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"KIMONO", cantidad:3, costo:7000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"JEANS", cantidad:4, costo:10200, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CHAQUETA CON BRODERI ABAJO", cantidad:2, costo:13000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CHAQUETA CALADA", cantidad:3, costo:13000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"POLERA TAKE TIME", cantidad:3, costo:7500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"JEANS PRETINA ADELANTE", cantidad:2, costo:9000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"JEANS SUELTO", cantidad:2, costo:10600, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CHAQUETA MEZCLILLA CON CIERRE", cantidad:2, costo:15500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CHAQUETA MEZCLILLA CON BOTONES", cantidad:4, costo:15500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"BLEIZER LINO", cantidad:3, costo:12000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"GUILLETTE BORDADO", cantidad:4, costo:11000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"PANTALON LINO", cantidad:3, costo:11000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CHALECO FLORES  Y CORAZONES", cantidad:2, costo:9900, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"BLEIZER ALTA GAMA", cantidad:3, costo:15000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"BLUSÓN", cantidad:4, costo:7500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"BLUSA CON CUELLO", cantidad:2, costo:10000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"POLERA MANGA CORTA", cantidad:4, costo:8500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"JEANS  CON ELASTICO", cantidad:3, costo:12000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"PANTALÓN ELASTICO", cantidad:4, costo:10990, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"POLERA BASICA TIRAS", cantidad:4, costo:6000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CHALECO SPANDEX", cantidad:3, costo:10900, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"PANTALON ZARA EXTRA LINDA", cantidad:2, costo:6500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"PALAZZO CINTURON", cantidad:2, costo:12500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CINTURÓN", cantidad:2, costo:3750, estado:"recibido", fecha:Date.now()},
   {proveedor:"Ali Pedidos", producto:"POLERA MANGA CORTA BRODERIE", cantidad:1, costo:8500, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"POLERA LIMON", cantidad:4, costo:30000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"POLERA MANGA CORTA", cantidad:6, costo:48000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"POLERA CALIFORNIA", cantidad:4, costo:18000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"GUILLETE CROCHETE", cantidad:3, costo:22500, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"POLERA ESTAMPADO LOVE", cantidad:4, costo:58000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"PANTALÓN ELASTICO", cantidad:5, costo:54950, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"BLUSON LINO", cantidad:4, costo:30000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"POLERA  BASICA", cantidad:4, costo:26000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"BLUSA CON BROCHES", cantidad:3, costo:38700, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"JOCKEY", cantidad:3, costo:15000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CINTURÓN", cantidad:6, costo:19998, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"POLERA ALGODÓN S/H", cantidad:4, costo:20000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"VESTIDO BOTONES", cantidad:3, costo:40500, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"BLUSA LINO", cantidad:3, costo:23700, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"POLERA LIMON", cantidad:4, costo:7500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"POLERA MANGA CORTA", cantidad:6, costo:8000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"POLERA CALIFORNIA", cantidad:4, costo:4500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"GUILLETE CROCHETE", cantidad:3, costo:7500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"POLERA ESTAMPADO LOVE", cantidad:4, costo:14500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"PANTALÓN ELASTICO", cantidad:5, costo:10990, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"BLUSON LINO", cantidad:4, costo:7500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"POLERA  BASICA", cantidad:4, costo:6500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"BLUSA CON BROCHES", cantidad:3, costo:12900, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"JOCKEY", cantidad:3, costo:5000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CINTURÓN", cantidad:6, costo:3333, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"POLERA ALGODÓN S/H", cantidad:4, costo:5000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"VESTIDO BOTONES", cantidad:3, costo:13500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"BLUSA LINO", cantidad:3, costo:7900, estado:"recibido", fecha:Date.now()},
   {proveedor:"Ali Pedidos", producto:"BLUSA BOTON DORADO", cantidad:1, costo:8900, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CHAQUETA ITALIANA", cantidad:3, costo:48000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"MAXI VESTIDOS", cantidad:3, costo:27000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CROPTOP", cantidad:4, costo:20000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"BLUSA CUELLO V", cantidad:3, costo:17970, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"BODY ZARA", cantidad:3, costo:16500, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"POLERA BRODERIE", cantidad:3, costo:32700, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"POLERA LEOPARDO", cantidad:6, costo:45000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"BLUSA TIRAS CUELLO V", cantidad:4, costo:42000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"ENTERITO", cantidad:4, costo:51600, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"GUILLETTE CON CIERRE", cantidad:3, costo:32700, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"BLUSA VISCOSA", cantidad:3, costo:15000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"POLERA CAIDA", cantidad:3, costo:22500, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"BLUSA BOTON DORADO", cantidad:4, costo:36000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"BODY ZARA", cantidad:5, costo:27500, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"PALAZZO", cantidad:5, costo:27500, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"JOCKEY", cantidad:6, costo:30000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CONJUNTO", cantidad:2, costo:29800, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"PALAZZO", cantidad:3, costo:16500, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"BLUSON", cantidad:4, costo:30000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"JOCKEY", cantidad:4, costo:20000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"PALAZZZO LINO", cantidad:3, costo:24000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CONJUNTO BRODERIE", cantidad:3, costo:44700, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"BODY", cantidad:7, costo:38500, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"BLUSA BOTON DORADO", cantidad:6, costo:54000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CHAQUETA ITALIANA", cantidad:3, costo:16000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"MAXI VESTIDOS", cantidad:3, costo:9000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CROPTOP", cantidad:4, costo:5000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"BLUSA CUELLO V", cantidad:3, costo:5990, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"BODY ZARA", cantidad:3, costo:5500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"POLERA BRODERIE", cantidad:3, costo:10900, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"POLERA LEOPARDO", cantidad:6, costo:7500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"BLUSA TIRAS CUELLO V", cantidad:4, costo:10500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"ENTERITO", cantidad:4, costo:12900, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"GUILLETTE CON CIERRE", cantidad:3, costo:10900, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"BLUSA VISCOSA", cantidad:3, costo:5000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"POLERA CAIDA", cantidad:3, costo:7500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"BLUSA BOTON DORADO", cantidad:4, costo:9000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"BODY ZARA", cantidad:5, costo:5500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"PALAZZO", cantidad:5, costo:5500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"JOCKEY", cantidad:6, costo:5000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CONJUNTO", cantidad:2, costo:14900, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"PALAZZO", cantidad:3, costo:5500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"BLUSON", cantidad:4, costo:7500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"JOCKEY", cantidad:4, costo:5000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"PALAZZZO LINO", cantidad:3, costo:8000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CONJUNTO BRODERIE", cantidad:3, costo:14900, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"BODY", cantidad:7, costo:5500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"BLUSA BOTON DORADO", cantidad:6, costo:9000, estado:"recibido", fecha:Date.now()},
   {proveedor:"Ali Pedidos", producto:"GUILLETE CON CIERRE", cantidad:1, costo:10900, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"BODY LYCRA TIPO ZARA", cantidad:2, costo:11000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"BODY LYCRA TIPO ZARA", cantidad:2, costo:5500, estado:"recibido", fecha:Date.now()},
   {proveedor:"Topaz", producto:"BLUSA RAYAS", cantidad:3, costo:0, estado:"recibido", fecha:Date.now()},
   {proveedor:"Topaz", producto:"CHALECO HILO DORADO", cantidad:2, costo:0, estado:"recibido", fecha:Date.now()},
   {proveedor:"Topaz", producto:"GILLETTE CROCHET", cantidad:3, costo:0, estado:"recibido", fecha:Date.now()},
-  {proveedor:"C. Iturrieta (Santiago)", producto:"BODY CONCHITA", cantidad:12, costo:58800, estado:"recibido", fecha:Date.now()},
-  {proveedor:"C. Iturrieta (Santiago)", producto:"PALAZZO", cantidad:12, costo:66000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"C. Iturrieta (Santiago)", producto:"BODY", cantidad:3, costo:19500, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CHALECO HILO", cantidad:4, costo:42000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"BLUSA BLANCA Y FUCSIA", cantidad:2, costo:17000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"VESTIDO ITALIANO", cantidad:4, costo:31600, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"VESTIDO FLORES", cantidad:3, costo:32700, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CHALECO GUILLETE CERRADO HILO", cantidad:4, costo:30000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"BODY MUSCULOSA", cantidad:6, costo:33000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"PALAZZO", cantidad:6, costo:33000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"GUILLETE PARKA", cantidad:2, costo:19800, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CHELCO HILO", cantidad:2, costo:21800, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CHELCO BOTONES DORADO MANGA", cantidad:3, costo:25500, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"PANTALON GAMUSA", cantidad:3, costo:39000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"SWEATER METALIZADO", cantidad:3, costo:38700, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CHALECO CONCHA", cantidad:4, costo:47600, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CHALECO HILO DORADO", cantidad:3, costo:28500, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CHALECO SPANDEX LARGO", cantidad:4, costo:20000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"BLAZER", cantidad:2, costo:24000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CHALECO LENTEJUELAS FLOR", cantidad:4, costo:59600, estado:"recibido", fecha:Date.now()},
+  {proveedor:"C. Iturrieta (Santiago)", producto:"BODY CONCHITA", cantidad:12, costo:4900, estado:"recibido", fecha:Date.now()},
+  {proveedor:"C. Iturrieta (Santiago)", producto:"PALAZZO", cantidad:12, costo:5500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"C. Iturrieta (Santiago)", producto:"BODY", cantidad:3, costo:6500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CHALECO HILO", cantidad:4, costo:10500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"BLUSA BLANCA Y FUCSIA", cantidad:2, costo:8500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"VESTIDO ITALIANO", cantidad:4, costo:7900, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"VESTIDO FLORES", cantidad:3, costo:10900, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CHALECO GUILLETE CERRADO HILO", cantidad:4, costo:7500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"BODY MUSCULOSA", cantidad:6, costo:5500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"PALAZZO", cantidad:6, costo:5500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"GUILLETE PARKA", cantidad:2, costo:9900, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CHELCO HILO", cantidad:2, costo:10900, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CHELCO BOTONES DORADO MANGA", cantidad:3, costo:8500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"PANTALON GAMUSA", cantidad:3, costo:13000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"SWEATER METALIZADO", cantidad:3, costo:12900, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CHALECO CONCHA", cantidad:4, costo:11900, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CHALECO HILO DORADO", cantidad:3, costo:9500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CHALECO SPANDEX LARGO", cantidad:4, costo:5000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"BLAZER", cantidad:2, costo:12000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CHALECO LENTEJUELAS FLOR", cantidad:4, costo:14900, estado:"recibido", fecha:Date.now()},
   {proveedor:"ISIDORA", producto:"PANTALÓN COTELE", cantidad:1, costo:3990, estado:"recibido", fecha:Date.now()},
-  {proveedor:"ISIDORA", producto:"SWETER SUSAN", cantidad:2, costo:9980, estado:"recibido", fecha:Date.now()},
-  {proveedor:"ISIDORA", producto:"SWETER TITI", cantidad:2, costo:9980, estado:"recibido", fecha:Date.now()},
-  {proveedor:"ISIDORA", producto:"CARDIGAN BLU", cantidad:2, costo:11980, estado:"recibido", fecha:Date.now()},
+  {proveedor:"ISIDORA", producto:"SWETER SUSAN", cantidad:2, costo:4990, estado:"recibido", fecha:Date.now()},
+  {proveedor:"ISIDORA", producto:"SWETER TITI", cantidad:2, costo:4990, estado:"recibido", fecha:Date.now()},
+  {proveedor:"ISIDORA", producto:"CARDIGAN BLU", cantidad:2, costo:5990, estado:"recibido", fecha:Date.now()},
   {proveedor:"ISIDORA", producto:"JEANS TACHAS", cantidad:1, costo:5990, estado:"recibido", fecha:Date.now()},
   {proveedor:"ISIDORA", producto:"SWETER JULIA", cantidad:1, costo:6990, estado:"recibido", fecha:Date.now()},
   {proveedor:"ISIDORA", producto:"TAPADO SOL", cantidad:1, costo:5990, estado:"recibido", fecha:Date.now()},
   {proveedor:"ISIDORA", producto:"CHAQUETA S/MANGAS", cantidad:1, costo:8990, estado:"recibido", fecha:Date.now()},
-  {proveedor:"ISIDORA", producto:"SWETER  MARCELA", cantidad:2, costo:13980, estado:"recibido", fecha:Date.now()},
+  {proveedor:"ISIDORA", producto:"SWETER  MARCELA", cantidad:2, costo:6990, estado:"recibido", fecha:Date.now()},
   {proveedor:"ISIDORA", producto:"SWETER MAITE", cantidad:1, costo:5990, estado:"recibido", fecha:Date.now()},
   {proveedor:"ISIDORA", producto:"CARDIGAN CARMEN", cantidad:1, costo:7990, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"JEANS FLARE", cantidad:3, costo:45000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"BLAZER CUADRILLE", cantidad:2, costo:28000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CHAQUETA JEANS", cantidad:2, costo:41000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"JEANS PIEDRAS", cantidad:3, costo:48000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"GUILLETE RENO", cantidad:4, costo:44000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"AVIADORA FORRADA", cantidad:2, costo:50000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"TAPADITO", cantidad:3, costo:32700, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"PALAZZO CINTURON", cantidad:3, costo:33000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"JEANS FLARE", cantidad:3, costo:15000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"BLAZER CUADRILLE", cantidad:2, costo:14000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CHAQUETA JEANS", cantidad:2, costo:20500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"JEANS PIEDRAS", cantidad:3, costo:16000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"GUILLETE RENO", cantidad:4, costo:11000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"AVIADORA FORRADA", cantidad:2, costo:25000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"TAPADITO", cantidad:3, costo:10900, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"PALAZZO CINTURON", cantidad:3, costo:11000, estado:"recibido", fecha:Date.now()},
   {proveedor:"Ali Pedidos", producto:"TRENCH", cantidad:1, costo:12000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"SOBRECAMISA GAMUZA", cantidad:3, costo:52500, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"ABRIGO LARGO", cantidad:3, costo:41700, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"BLUSA RAYAS", cantidad:3, costo:32700, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CHALECO RAYAS", cantidad:3, costo:22500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"SOBRECAMISA GAMUZA", cantidad:3, costo:17500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"ABRIGO LARGO", cantidad:3, costo:13900, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"BLUSA RAYAS", cantidad:3, costo:10900, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CHALECO RAYAS", cantidad:3, costo:7500, estado:"recibido", fecha:Date.now()},
   {proveedor:"Ali Pedidos", producto:"AVIADORA", cantidad:1, costo:20000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"PANTY", cantidad:3, costo:12600, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"BLUSA CUELO ALTO", cantidad:5, costo:57500, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"BLAZER GAMUZA", cantidad:2, costo:25980, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CHAQUETA GAMUZA", cantidad:2, costo:35980, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"BODY", cantidad:6, costo:42000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"POLERA ENCAJE", cantidad:3, costo:27000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CHAQUETA JEANS", cantidad:2, costo:41000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"JEANS PIEDRAS", cantidad:2, costo:32000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"AVIADORA FORRADA", cantidad:2, costo:50000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"PALAZZO CINTURON", cantidad:3, costo:33000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"SOBRECAMISA GAMUZA", cantidad:3, costo:52500, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"ABRIGO LARGO", cantidad:2, costo:27800, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"AVIADORA", cantidad:2, costo:40000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CHAQUETA GAMUZA", cantidad:2, costo:35980, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"BLAZER", cantidad:2, costo:27000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"POLERA CHERRY", cantidad:3, costo:11970, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"SPANDEX", cantidad:3, costo:23970, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"PANTALON COTELE", cantidad:2, costo:13000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CHAQUETA PAÑO", cantidad:2, costo:33800, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"BEATLE", cantidad:3, costo:16500, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CHALECO FLOR MANGAS", cantidad:3, costo:38700, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"SPANDEX CORAZON", cantidad:2, costo:29000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"PANTALON ALTA GAMA", cantidad:4, costo:48000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"SOBRECAMISA", cantidad:2, costo:20000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"AVIADORA", cantidad:2, costo:35000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"PANTY", cantidad:3, costo:4200, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"BLUSA CUELO ALTO", cantidad:5, costo:11500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"BLAZER GAMUZA", cantidad:2, costo:12990, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CHAQUETA GAMUZA", cantidad:2, costo:17990, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"BODY", cantidad:6, costo:7000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"POLERA ENCAJE", cantidad:3, costo:9000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CHAQUETA JEANS", cantidad:2, costo:20500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"JEANS PIEDRAS", cantidad:2, costo:16000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"AVIADORA FORRADA", cantidad:2, costo:25000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"PALAZZO CINTURON", cantidad:3, costo:11000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"SOBRECAMISA GAMUZA", cantidad:3, costo:17500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"ABRIGO LARGO", cantidad:2, costo:13900, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"AVIADORA", cantidad:2, costo:20000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CHAQUETA GAMUZA", cantidad:2, costo:17990, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"BLAZER", cantidad:2, costo:13500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"POLERA CHERRY", cantidad:3, costo:3990, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"SPANDEX", cantidad:3, costo:7990, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"PANTALON COTELE", cantidad:2, costo:6500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CHAQUETA PAÑO", cantidad:2, costo:16900, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"BEATLE", cantidad:3, costo:5500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CHALECO FLOR MANGAS", cantidad:3, costo:12900, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"SPANDEX CORAZON", cantidad:2, costo:14500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"PANTALON ALTA GAMA", cantidad:4, costo:12000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"SOBRECAMISA", cantidad:2, costo:10000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"AVIADORA", cantidad:2, costo:17500, estado:"recibido", fecha:Date.now()},
   {proveedor:"Ali Pedidos", producto:"AVIADORA FORRADA", cantidad:1, costo:14000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CHAQUETA AVIADORA CAMEL", cantidad:2, costo:30000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"PANTALON COTELE FORRADO", cantidad:3, costo:19500, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"PANTALON GAMUZA", cantidad:3, costo:37500, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CHALECO CERRADO", cantidad:3, costo:28500, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"SOBRECAMISA PAñO", cantidad:3, costo:31500, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CHALECO SPANDEX LARGO", cantidad:4, costo:43600, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"PANTALON POLIESTER", cantidad:4, costo:34800, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CHALECO LANA BOTONES", cantidad:2, costo:15980, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"SWEATER CORAZON", cantidad:3, costo:29400, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"SASTRERO POLIESTER", cantidad:6, costo:52200, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CHALECO ABIERTO CORAZON", cantidad:4, costo:32000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"POLERA BASICA MANGA LARGA", cantidad:4, costo:26000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"PANTALON SASTRERO", cantidad:6, costo:72000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CHALECO RAYAS", cantidad:4, costo:40000, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CHALECO BASICO CERRADO", cantidad:4, costo:35600, estado:"recibido", fecha:Date.now()},
-  {proveedor:"Ali Pedidos", producto:"CHALECO RAYAS BOTON  CORAZON", cantidad:3, costo:31500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CHAQUETA AVIADORA CAMEL", cantidad:2, costo:15000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"PANTALON COTELE FORRADO", cantidad:3, costo:6500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"PANTALON GAMUZA", cantidad:3, costo:12500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CHALECO CERRADO", cantidad:3, costo:9500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"SOBRECAMISA PAñO", cantidad:3, costo:10500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CHALECO SPANDEX LARGO", cantidad:4, costo:10900, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"PANTALON POLIESTER", cantidad:4, costo:8700, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CHALECO LANA BOTONES", cantidad:2, costo:7990, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"SWEATER CORAZON", cantidad:3, costo:9800, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"SASTRERO POLIESTER", cantidad:6, costo:8700, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CHALECO ABIERTO CORAZON", cantidad:4, costo:8000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"POLERA BASICA MANGA LARGA", cantidad:4, costo:6500, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"PANTALON SASTRERO", cantidad:6, costo:12000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CHALECO RAYAS", cantidad:4, costo:10000, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CHALECO BASICO CERRADO", cantidad:4, costo:8900, estado:"recibido", fecha:Date.now()},
+  {proveedor:"Ali Pedidos", producto:"CHALECO RAYAS BOTON  CORAZON", cantidad:3, costo:10500, estado:"recibido", fecha:Date.now()},
   {proveedor:"Ali Pedidos", producto:"TRANSPORTE ALI", cantidad:1, costo:1000, estado:"recibido", fecha:Date.now()}
 ];
 
@@ -971,9 +1063,10 @@ const HISTORICO_VENTAS_MENSUAL = [
   {periodo:"2026-01", mes:"Enero 2026", ventas:425600, compras:0, gastos:0, margen:425600},
   {periodo:"2026-02", mes:"Febrero 2026", ventas:380400, compras:0, gastos:4370, margen:376030},
   {periodo:"2026-03", mes:"Marzo 2026", ventas:415000, compras:91850, gastos:39476, margen:283674},
-  {periodo:"2026-04", mes:"Abril 2026", ventas:850300, compras:1114502, gastos:78530, margen:-342732},
-  {periodo:"2026-05", mes:"Mayo 2026", ventas:745000, compras:263585, gastos:122619, margen:358796},
-  {periodo:"2026-06", mes:"Junio 2026", ventas:485000, compras:424468, gastos:70720, margen:-10188}
+  {periodo:"2026-04", mes:"Abril 2026", ventas:905280, compras:1114502, gastos:82530, margen:-291752},
+  {periodo:"2026-05", mes:"Mayo 2026", ventas:749570, compras:263585, gastos:122119, margen:363866},
+  {periodo:"2026-06", mes:"Junio 2026", ventas:500940, compras:424468, gastos:80720, margen:-4248},
+  {periodo:"2026-07", mes:"Julio 2026", ventas:163400, compras:0, gastos:0, margen:163400}
 ];
 
 /* ---------- 3f. ESTADO M7 FINANZAS ---------- */
@@ -1131,7 +1224,7 @@ function renderHome(){
     <div class="section-row">
       <div class="panel">
         <div class="panel-title">🧾 Últimas Ventas</div>
-        <table class="simple">
+        <div class="table-scroll"><table class="simple">
           <tr><th>Hora</th><th>Producto</th><th>Canal</th><th>Monto</th></tr>
           ${DATA_DEMO.ventas.map(v => `
             <tr>
@@ -1141,7 +1234,7 @@ function renderHome(){
               <td>$${v.monto.toLocaleString('es-CL')}</td>
             </tr>
           `).join('')}
-        </table>
+        </table></div>
         <div style="margin-top:1rem;"><button class="btn btn-primary" onclick="openModal('modal-venta')">+ Registrar Venta</button></div>
       </div>
       <div class="panel">
@@ -1603,7 +1696,7 @@ function renderVentas(){
 
     <div class="panel">
       <div class="panel-title">🧾 Todas las Ventas de Hoy</div>
-      <table class="simple">
+      <div class="table-scroll"><table class="simple">
         <tr><th>Hora</th><th>Producto</th><th>Canal</th><th>Monto</th></tr>
         ${DATA_DEMO.ventas.map(v => `
           <tr>
@@ -1613,7 +1706,7 @@ function renderVentas(){
             <td>$${v.monto.toLocaleString('es-CL')}</td>
           </tr>
         `).join('')}
-      </table>
+      </table></div>
       <div style="margin-top:1rem;"><button class="btn btn-primary" onclick="openModal('modal-venta')">+ Registrar Venta</button></div>
     </div>
   `;
@@ -1766,10 +1859,10 @@ function renderCompras(){
 
     <div class="panel">
       <div class="panel-title">🧾 Órdenes de Compra</div>
-      <table class="simple" id="ordenes-tabla">
+      <div class="table-scroll"><table class="simple" id="ordenes-tabla">
         ${ENCABEZADO_ORDENES}
         ${renderFilasOrdenes()}
-      </table>
+      </table></div>
       <div style="margin-top:1rem;"><button class="btn btn-primary" onclick="abrirNuevaOrden()">+ Nueva Orden de Compra</button></div>
     </div>
   `;
@@ -1889,6 +1982,47 @@ function calcularF29(){
   return { libro, ivaDebito, ivaCredito, ventasNetas, ivaDeterminado, ppm, totalAPagar };
 }
 
+function renderComprasPorProveedor(){
+  const grupos = {};
+  ORDENES_DEMO.forEach(o => {
+    if(!grupos[o.proveedor]) grupos[o.proveedor] = { items: [], subtotal: 0, unidades: 0 };
+    const totalLinea = o.cantidad * o.costo;
+    grupos[o.proveedor].items.push(o);
+    grupos[o.proveedor].subtotal += totalLinea;
+    grupos[o.proveedor].unidades += o.cantidad;
+  });
+  const proveedores = Object.keys(grupos).sort((a,b) => grupos[b].subtotal - grupos[a].subtotal);
+  const granTotal = proveedores.reduce((s,p) => s + grupos[p].subtotal, 0);
+
+  return `
+    <div class="panel">
+      <div class="panel-title">📦 Compras por Proveedor <span class="badge-live">${ORDENES_DEMO.length} órdenes</span></div>
+      ${proveedores.map(p => `
+        <details class="proveedor-detalle">
+          <summary>
+            <span class="prov-nombre">${escaparHTML(p)}</span>
+            <span class="prov-meta">${grupos[p].items.length} ítems · ${grupos[p].unidades} unid.</span>
+            <span class="prov-subtotal">$${grupos[p].subtotal.toLocaleString('es-CL')}</span>
+          </summary>
+          <div class="table-scroll"><table class="simple compact">
+            <tr><th>Producto</th><th>Cant.</th><th>Costo unit.</th><th>Total</th><th>Estado</th></tr>
+            ${grupos[p].items.map(o => `
+              <tr>
+                <td>${escaparHTML(o.producto)}</td>
+                <td>${o.cantidad}</td>
+                <td>$${o.costo.toLocaleString('es-CL')}</td>
+                <td>$${(o.cantidad*o.costo).toLocaleString('es-CL')}</td>
+                <td><span class="tipo-pill ${o.estado==='recibido'?'ingreso':'egreso'}">${escaparHTML(o.estado)}</span></td>
+              </tr>
+            `).join('')}
+          </table></div>
+        </details>
+      `).join('')}
+      <div class="f29-row total"><span class="lbl">Total Compras (todos los proveedores)</span><span class="val">$${granTotal.toLocaleString('es-CL')}</span></div>
+    </div>
+  `;
+}
+
 function renderFinanzas(){
   const f29 = calcularF29();
   const egresosTotal = f29.libro.filter(m => m.tipo === 'egreso').reduce((s,m) => s + m.total, 0);
@@ -1928,7 +2062,7 @@ function renderFinanzas(){
 
     <div class="panel">
       <div class="panel-title">📖 Libro de Ingresos y Egresos</div>
-      <table class="simple">
+      <div class="table-scroll"><table class="simple">
         <tr><th>Fecha</th><th>Tipo</th><th>Documento</th><th>Concepto</th><th>Neto</th><th>IVA</th><th>Total</th></tr>
         ${f29.libro.map(m => `
           <tr>
@@ -1941,13 +2075,15 @@ function renderFinanzas(){
             <td>$${m.total.toLocaleString('es-CL')}</td>
           </tr>
         `).join('')}
-      </table>
+      </table></div>
       <div style="margin-top:1rem;"><button class="btn btn-primary" onclick="abrirCierreMensual()">🔒 Cerrar Mes</button></div>
     </div>
 
+    ${renderComprasPorProveedor()}
+
     <div class="panel">
-      <div class="panel-title">📈 Histórico de Ventas Mensuales <span class="badge-live">Ago 2025 → Jun 2026</span></div>
-      <table class="simple">
+      <div class="panel-title">📈 Histórico de Ventas Mensuales <span class="badge-live">v1.1 · Ago 2025 → Jul 2026</span></div>
+      <div class="table-scroll"><table class="simple">
         <tr><th>Mes</th><th>Ventas</th><th>Compras</th><th>Gastos</th><th>Margen</th></tr>
         ${HISTORICO_VENTAS_MENSUAL.map(m => `
           <tr>
@@ -1965,7 +2101,7 @@ function renderFinanzas(){
           <td>$${HISTORICO_VENTAS_MENSUAL.reduce((s,m)=>s+m.gastos,0).toLocaleString('es-CL')}</td>
           <td>$${HISTORICO_VENTAS_MENSUAL.reduce((s,m)=>s+m.margen,0).toLocaleString('es-CL')}</td>
         </tr>
-      </table>
+      </table></div>
       <div class="calc-note">Carga inicial de puesta en marcha — historial reconstruido a partir de registros manuales de ASIRI. Las ventas del día de hoy en adelante se registran en M5 Ventas.</div>
     </div>
   `;
