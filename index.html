@@ -1065,18 +1065,18 @@ let ORDENES_DEMO = [
 
 /* ---------- 3f. Histórico Ventas Mensuales — carga inicial (ago 2025 → jun 2026) ---------- */
 const HISTORICO_VENTAS_MENSUAL = [
-  {periodo:"2025-08", mes:"Agosto 2025", ventas:435500, compras:0, gastos:0, margen:435500},
-  {periodo:"2025-09", mes:"Septiembre 2025", ventas:589450, compras:0, gastos:0, margen:589450},
-  {periodo:"2025-10", mes:"Octubre 2025", ventas:680200, compras:0, gastos:0, margen:680200},
-  {periodo:"2025-11", mes:"Noviembre 2025", ventas:752410, compras:0, gastos:25000, margen:727410},
-  {periodo:"2025-12", mes:"Diciembre 2025", ventas:916480, compras:0, gastos:0, margen:916480},
-  {periodo:"2026-01", mes:"Enero 2026", ventas:425600, compras:0, gastos:0, margen:425600},
-  {periodo:"2026-02", mes:"Febrero 2026", ventas:380400, compras:0, gastos:4370, margen:376030},
-  {periodo:"2026-03", mes:"Marzo 2026", ventas:415000, compras:91850, gastos:39476, margen:283674},
-  {periodo:"2026-04", mes:"Abril 2026", ventas:905280, compras:1114502, gastos:82530, margen:-291752},
-  {periodo:"2026-05", mes:"Mayo 2026", ventas:749570, compras:263585, gastos:122119, margen:363866},
-  {periodo:"2026-06", mes:"Junio 2026", ventas:500940, compras:424468, gastos:80720, margen:-4248},
-  {periodo:"2026-07", mes:"Julio 2026", ventas:163400, compras:0, gastos:0, margen:163400}
+  {periodo:"2025-08", mes:"Agosto 2025", ventas:435500, compras:621100, gastos:0, margen:-185600},
+  {periodo:"2025-09", mes:"Septiembre 2025", ventas:589450, compras:511470, gastos:0, margen:77980},
+  {periodo:"2025-10", mes:"Octubre 2025", ventas:680200, compras:586300, gastos:0, margen:93900},
+  {periodo:"2025-11", mes:"Noviembre 2025", ventas:752410, compras:350460, gastos:25000, margen:376950},
+  {periodo:"2025-12", mes:"Diciembre 2025", ventas:916480, compras:261450, gastos:0, margen:655030},
+  {periodo:"2026-01", mes:"Enero 2026", ventas:425600, compras:802820, gastos:0, margen:-377220},
+  {periodo:"2026-02", mes:"Febrero 2026", ventas:380400, compras:249600, gastos:4370, margen:126430},
+  {periodo:"2026-03", mes:"Marzo 2026", ventas:415000, compras:696200, gastos:39476, margen:-320676},
+  {periodo:"2026-04", mes:"Abril 2026", ventas:905280, compras:103600, gastos:82530, margen:719150},
+  {periodo:"2026-05", mes:"Mayo 2026", ventas:749570, compras:571160, gastos:122119, margen:56291},
+  {periodo:"2026-06", mes:"Junio 2026", ventas:500940, compras:622720, gastos:80720, margen:-202500},
+  {periodo:"2026-07", mes:"Julio 2026", ventas:163400, compras:155280, gastos:0, margen:8120}
 ];
 
 /* ---------- 3f. ESTADO M7 FINANZAS ---------- */
@@ -2094,7 +2094,7 @@ function renderFinanzas(){
     ${renderComprasPorProveedor()}
 
     <div class="panel">
-      <div class="panel-title">📈 Histórico de Ventas Mensuales <span class="badge-live">v1.1 · Ago 2025 → Jul 2026</span></div>
+      <div class="panel-title">📈 Histórico de Ventas Mensuales <span class="badge-live">v1.3 · Ago 2025 → Jul 2026</span></div>
       <div class="table-scroll"><table class="simple">
         <tr><th>Mes</th><th>Ventas</th><th>Compras</th><th>Gastos</th><th>Margen</th></tr>
         ${HISTORICO_VENTAS_MENSUAL.map(m => `
@@ -2114,7 +2114,7 @@ function renderFinanzas(){
           <td>$${HISTORICO_VENTAS_MENSUAL.reduce((s,m)=>s+m.margen,0).toLocaleString('es-CL')}</td>
         </tr>
       </table></div>
-      <div class="calc-note">Carga inicial de puesta en marcha — historial reconstruido a partir de registros manuales de ASIRI. Las ventas del día de hoy en adelante se registran en M5 Ventas.</div>
+      <div class="calc-note">Carga inicial de puesta en marcha — historial reconstruido a partir de registros manuales de ASIRI. Columna Compras recalculada según las fechas reales de cada orden en M6 (ver "Compras por Proveedor"); esas fechas son estimadas/distribuidas, no exactas, así que este desglose mensual también es referencial. Las ventas del día de hoy en adelante se registran en M5 Ventas.</div>
     </div>
   `;
 }
