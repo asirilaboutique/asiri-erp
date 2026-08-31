@@ -384,6 +384,30 @@
   .f29-tasa{display:flex; align-items:center; gap:.5rem; font-size:.8rem;}
   .f29-tasa input{width:70px; padding:.35rem .5rem; border:1px solid rgba(15,23,42,.15); border-radius:8px; font-size:.8rem;}
 
+  /* ===== M4 — DIAGNÓSTICO DE CONVERSIÓN ===== */
+  .diag-hero{background:linear-gradient(135deg, rgba(239,68,68,.08), rgba(236,72,153,.06)); border:1px solid rgba(239,68,68,.2); border-radius:16px; padding:1.2rem 1.4rem; margin-bottom:1.2rem;}
+  .diag-hero .dh-title{font-size:.72rem; font-weight:800; letter-spacing:.05em; color:var(--rojo); text-transform:uppercase; margin-bottom:.4rem;}
+  .diag-hero .dh-body{font-size:.95rem; line-height:1.5;}
+  .diag-hero .dh-body b{color:var(--rojo);}
+  .hallazgo-item{display:flex; gap:.7rem; align-items:flex-start; padding:.65rem 0; border-bottom:1px solid rgba(15,23,42,.06); font-size:.82rem; line-height:1.45;}
+  .hallazgo-item:last-child{border-bottom:none;}
+  .hallazgo-badge{flex-shrink:0; font-size:.6rem; font-weight:800; padding:.2rem .5rem; border-radius:8px; letter-spacing:.03em; white-space:nowrap; text-transform:uppercase;}
+  .hallazgo-badge.resuelto{background:rgba(5,150,105,.12); color:var(--verde);}
+  .hallazgo-badge.descartado{background:rgba(15,23,42,.08); color:var(--gris);}
+  .hallazgo-badge.estructural{background:var(--dorado-light); color:#92400E;}
+  .hallazgo-badge.activo{background:rgba(239,68,68,.1); color:var(--rojo);}
+  .hallazgo-badge.atencion{background:var(--rosado-light); color:#9D174D;}
+  .escenario-table{width:100%; border-collapse:collapse; font-size:.8rem;}
+  .escenario-table th{text-align:left; padding:.5rem .6rem; font-size:.65rem; text-transform:uppercase; letter-spacing:.04em; color:var(--gris); border-bottom:2px solid rgba(15,23,42,.08);}
+  .escenario-table td{padding:.6rem; border-bottom:1px solid rgba(15,23,42,.06);}
+  .escenario-table tr.recomendado{background:rgba(20,184,166,.06);}
+  .escenario-table tr.recomendado td:first-child{font-weight:700; color:#0F766E;}
+  .decision-item{display:flex; gap:.7rem; padding:.6rem 0; border-bottom:1px solid rgba(15,23,42,.06); font-size:.8rem; align-items:baseline;}
+  .decision-item:last-child{border-bottom:none;}
+  .decision-fecha{font-family:'JetBrains Mono',monospace; font-weight:700; color:var(--turquesa); flex-shrink:0; white-space:nowrap;}
+  .decision-fecha.pasada{color:var(--gris); text-decoration:line-through;}
+  .decision-dias{font-size:.62rem; font-weight:700; padding:.1rem .4rem; border-radius:6px; background:var(--dorado-light); color:#92400E; margin-left:.4rem;}
+
   .flujo-bar-row{display:flex; align-items:center; gap:.6rem; margin-bottom:.55rem;}
   .flujo-label{width:60px; font-size:.72rem; color:var(--gris); font-family:'JetBrains Mono',monospace; flex-shrink:0;}
   .flujo-bar-bg{flex:1; height:20px; background:var(--gris-light); border-radius:6px; overflow:hidden;}
@@ -549,6 +573,12 @@
         <option value="shopify">Shopify</option>
       </select>
     </div>
+    <div class="field">
+      <label style="display:flex; align-items:center; gap:.5rem; cursor:pointer;">
+        <input type="checkbox" id="f-prueba" style="width:auto;">
+        Es una venta de prueba interna (no contar en métricas reales)
+      </label>
+    </div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal('modal-venta')">Cancelar</button>
       <button class="btn btn-primary" onclick="guardarVentaManual()">Guardar Venta</button>
@@ -637,6 +667,10 @@
     <div class="field-row">
       <div class="field"><label>Cantidad</label><input type="number" id="o-cantidad" placeholder="10" oninput="autoSave()"></div>
       <div class="field"><label>Costo unitario (CLP)</label><input type="number" id="o-costo" placeholder="9000" oninput="autoSave()"></div>
+    </div>
+    <div class="field">
+      <label>Tallas disponibles <span style="font-weight:400; opacity:.65;">(opcional — ej: S, M, L)</span></label>
+      <input type="text" id="o-talla" placeholder="Ej: S, M, L" oninput="autoSave()">
     </div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal('modal-orden')">Cancelar</button>
@@ -807,13 +841,88 @@ function segmentarClienta(c){
 
 let filtroCRM = localStorage.getItem('asiri_crm_filtro') || 'all';
 
-/* ---------- 3c. DATOS REALES SHOPIFY — vía Shopify Admin API (asirilaboutique.com) ----------
-   Reconsultado en vivo el 24-jul-2026: 0 órdenes en los últimos 30 días. Catálogo revisado
-   (primeros 30 productos activos): 20 con inventario = 1 unidad — el inventario rotó desde
-   la primera consulta. SHOPIFY_SESIONES_30D queda con el último dato conocido (memoria del
-   negocio) porque las sesiones no se pueden reconsultar con las herramientas disponibles aquí. */
-const SHOPIFY_ORDENES_30D = 0;
-const SHOPIFY_SESIONES_30D = 1439;
+/* ---------- 3c. DIAGNÓSTICO DE CONVERSIÓN — datos reales, consultados en vivo 31-ago-2026 vía ShopifyQL ----------
+   Reemplaza la versión anterior (24-jul-2026, 1.439 sesiones y funnel estimado con % de benchmark
+   genérico). Consulta real: FROM sessions SHOW sessions, sessions_with_cart_additions,
+   sessions_that_reached_checkout, sessions_that_completed_checkout WHERE human_or_bot_session='human'
+   SINCE -30d UNTIL today.
+   OJO — lección de la auditoría del 30-ago (ver memoria asiri_plan_septiembre_2026-08-30): los
+   carritos/checkouts de agosto NO están limpios de pruebas propias (valeria.inzunza@gmail.com,
+   test-auditoria@asirilaboutique.com, prueba.asiri@gmail.com). El único pedido histórico (#1001)
+   es de Nancy Ferreira, mamá de Valeria. En 12+ meses de tienda, ASIRI nunca le ha vendido a una
+   clienta desconocida por la web — no es que "dejó de vender", es que aún no ha empezado. */
+const DIAG_SHOPIFY_LIVE = {
+  fechaConsulta: '2026-08-31',
+  sesiones30d: 2423,
+  carritos30d: 18,
+  checkoutsIniciados30d: 17,
+  checkoutsCompletados30d: 0,
+  ultimaOrdenFecha: '2026-07-29',
+  ultimaOrdenMonto: 16190,
+  ultimaOrdenCliente: 'Nancy Ferreira — mamá de Valeria (prueba interna, no clienta real)'
+};
+const SHOPIFY_ORDENES_30D = DIAG_SHOPIFY_LIVE.checkoutsCompletados30d;
+const SHOPIFY_SESIONES_30D = DIAG_SHOPIFY_LIVE.sesiones30d;
+
+/* Embudo completo de agosto 2026, medido el 30-ago cruzando Meta Ads Manager + Shopify + Microsoft
+   Clarity. Es el dato que reordenó todo el diagnóstico: el quiebre real está en vitrina→ficha de
+   producto (4,3%), NO en carrito→checkout (94%, ya está bien) ni en el pago (Webpay activo desde
+   el 29-ago, sin oportunidad de fallar todavía). */
+const DIAG_AGOSTO = {
+  impresionesMeta: 59573,
+  clicsMeta: 2849,
+  visitasWeb: 1918,
+  sesionesHumanas: 2417,
+  sesionesBot: 778,
+  vistasVitrina: 1311,
+  vistasFicha: 57,
+  carritos: 17,
+  checkouts: 16,
+  compras: 0,
+  carritosSocialLimpioPct: 0.19 // tráfico social humano real, excluyendo las 3 pruebas internas
+};
+
+/* Aritmética del inventario — hallazgo estructural del 30-ago: con este catálogo, Meta NUNCA
+   puede salir de fase de aprendizaje con objetivo Compra (necesita ~200 compras/mes). No es un
+   bug de código, es una restricción de negocio real. */
+const DIAG_INVENTARIO = {
+  fechaConsulta: '2026-08-30',
+  productosActivos: 63,
+  unidadesTotales: 76,
+  productosAgotados: 12,
+  productosUnaUnidad: 33,
+  productosConTallaYStock: 7,
+  precioPromedio: 17219,
+  metaComprasMesParaAprender: 200
+};
+
+const HALLAZGOS_PROBADOS = [
+  {estado:'resuelto', texto:'Webpay activo en el checkout desde el 29-ago — la hipótesis "solo acepta Mercado Pago" ya no aplica.'},
+  {estado:'resuelto', texto:'Retiro en tienda Concepción (Chiguayante) + Pickup nativo de Shopify activado, además de Talca.'},
+  {estado:'descartado', texto:'"~20 scripts de terceros saturan el WebView de Instagram" — descartado: de ~66 scripts que carga el home, solo 3 son de terceros.'},
+  {estado:'estructural', texto:`Solo ${DIAG_INVENTARIO.unidadesTotales} unidades de inventario total (${(DIAG_INVENTARIO.unidadesTotales/DIAG_INVENTARIO.productosActivos).toFixed(1)} por producto) — Meta necesita ~${DIAG_INVENTARIO.metaComprasMesParaAprender} compras/mes para salir de fase de aprendizaje. No se arregla con código: se arregla con más stock o bajando el objetivo de campaña.`},
+  {estado:'activo', texto:`El tapón real medido en agosto: vitrina→ficha de producto ${((DIAG_AGOSTO.vistasFicha/DIAG_AGOSTO.vistasVitrina)*100).toFixed(1)}% (${DIAG_AGOSTO.vistasVitrina.toLocaleString('es-CL')}→${DIAG_AGOSTO.vistasFicha} vistas). Ahí se corta el embudo, no en carrito→checkout (~94%, saludable).`},
+  {estado:'atencion', texto:'Instagram publicó solo historias en la última semana medida (0 publicaciones de feed en IG y Facebook) — sin nada permanente en el perfil, el 98,6% del alcance es de no seguidores.'},
+  {estado:'atencion', texto:`Envío gratis desde $34.990 equivale a ${(34990/DIAG_INVENTARIO.precioPromedio).toFixed(2)} prendas al precio promedio — con piezas únicas casi nadie lo alcanza.`}
+];
+
+/* Plan de septiembre — 3 escenarios entregados el 30-ago. Ventana real de venta: 5-16 sept
+   (quincena de sueldos/aguinaldos); después del 18 la demanda se desploma. */
+const PLAN_SEPTIEMBRE = {
+  ventanaInicio: '2026-09-05',
+  ventanaFin: '2026-09-16',
+  metaDelMes: 'UNA venta a una clienta desconocida — no un monto en pesos.',
+  escenarios: [
+    {nombre:'A — Repetir agosto', inversion:85000, resultadoTexto:'≈ $27.000 en ingresos → resultado neto −$58.000', recomendado:false},
+    {nombre:'B — Cero pauta, todo por DM', inversion:0, resultadoTexto:'≈ $101.000 en ingresos → resultado neto +$101.000', recomendado:false},
+    {nombre:'C — Retargeting quirúrgico', inversion:30000, resultadoTexto:'$170.000–$310.000 en ingresos → resultado neto +$140.000 a +$280.000', recomendado:true}
+  ],
+  puntosDecision: [
+    {fecha:'2026-09-04', texto:'Si la deuda de $20.002 con Meta no se paga antes de esta fecha, el Escenario C deja de ser ejecutable — pasar directo a Escenario B.'},
+    {fecha:'2026-09-10', texto:'Si las vistas de ficha de producto acumuladas son menos de 60, el problema no era la talla — apagar la pauta e investigar con grabaciones de sesión (Clarity).'},
+    {fecha:'2026-09-30', texto:'Si hay 0 ventas a una clienta desconocida por segundo mes consecutivo, la web funciona como catálogo, no como checkout — octubre pasa a venta asistida por DM.'}
+  ]
+};
 
 const SHOPIFY_ULTIMA_UNIDAD = [
   {nombre:'Blusa Valentina', precio:18990, img:'https://cdn.shopify.com/s/files/1/0593/7892/5697/files/rn-image_picker_lib_temp_a22ee696-fa87-4e9d-adc9-5ae9b0138a0a.jpg'},
@@ -1202,7 +1311,7 @@ function renderHome(){
         <span class="kpi-icon">🎯</span>
         <div class="kpi-label">Conversión Shopify</div>
         <div class="kpi-value alert">${DATA_DEMO.conversion}%</div>
-        <div class="kpi-delta down">1.439 sesiones / 0 ventas</div>
+        <div class="kpi-delta down">${SHOPIFY_SESIONES_30D.toLocaleString('es-CL')} sesiones / ${DIAG_SHOPIFY_LIVE.checkoutsCompletados30d} ventas (30d)</div>
       </div>
       <div class="kpi-card">
         <span class="kpi-icon">💎</span>
@@ -1217,7 +1326,7 @@ function renderHome(){
         <div class="panel-title">🤖 Brief Claude · 8am <span class="badge-live">HOY</span></div>
         <div class="brief-box">
           ${DATA_DEMO.brief}
-          <span class="brief-time">Generado automáticamente · 21 jul 2026, 08:00</span>
+          <span class="brief-time">Generado automáticamente · ${new Date().toLocaleDateString('es-CL',{day:'numeric',month:'short',year:'numeric'})}, ${new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'})}</span>
         </div>
       </div>
       <div class="panel">
@@ -1502,7 +1611,11 @@ function filtrarCRM(seg){
   document.getElementById('view-m2').innerHTML = renderCRM();
 }
 
+let editandoClientaId = null;
+
 function abrirNuevaClienta(){
+  editandoClientaId = null;
+  document.querySelector('#modal-clienta h3').textContent = 'Nueva Clienta ASIRI';
   document.getElementById('c-nombre').value = '';
   document.getElementById('c-telefono').value = '';
   document.getElementById('c-email').value = '';
@@ -1510,20 +1623,41 @@ function abrirNuevaClienta(){
   openModal('modal-clienta');
 }
 
+function abrirEditarClienta(id){
+  const c = CRM_DEMO.find(x => x.id === id);
+  if(!c) return;
+  editandoClientaId = id;
+  closeModal('modal-ficha');
+  document.querySelector('#modal-clienta h3').textContent = 'Editar Clienta';
+  document.getElementById('c-nombre').value = c.nombre;
+  document.getElementById('c-telefono').value = c.telefono;
+  document.getElementById('c-email').value = c.email;
+  document.getElementById('c-notas').value = c.notas;
+  openModal('modal-clienta');
+}
+
 function guardarClienta(){
   const nombre = document.getElementById('c-nombre').value;
   const telefono = document.getElementById('c-telefono').value;
   if(!nombre || !telefono){ alert('Completa nombre y teléfono'); return; }
-  CRM_DEMO.unshift({
-    id: Date.now(),
-    nombre, telefono,
-    email: document.getElementById('c-email').value,
-    compras: 0, ltv: 0, diasUltimaCompra: 0,
-    notas: document.getElementById('c-notas').value
-  });
+  const email = document.getElementById('c-email').value;
+  const notas = document.getElementById('c-notas').value;
+  if(editandoClientaId !== null){
+    const c = CRM_DEMO.find(x => x.id === editandoClientaId);
+    if(c){ c.nombre = nombre; c.telefono = telefono; c.email = email; c.notas = notas; }
+  } else {
+    CRM_DEMO.unshift({
+      id: Date.now(),
+      nombre, telefono, email,
+      compras: 0, ltv: 0, diasUltimaCompra: 0,
+      notas
+    });
+  }
+  editandoClientaId = null;
   closeModal('modal-clienta');
   document.getElementById('view-m2').innerHTML = renderCRM();
   autoSave(true);
+  sincronizarNubeCRM();
 }
 
 function abrirFicha(id){
@@ -1540,6 +1674,7 @@ function abrirFicha(id){
     <div class="ficha-row"><span>Notas</span><span>${escaparHTML(c.notas) || '—'}</span></div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal('modal-ficha')">Cerrar</button>
+      <button class="btn btn-ghost" onclick="abrirEditarClienta(${c.id})">✏️ Editar</button>
       <button class="btn btn-wa" onclick="abrirWhatsApp(${c.id})">💬 WhatsApp</button>
     </div>
   `;
@@ -1566,40 +1701,46 @@ function abrirWhatsApp(id){
    Órdenes RT · Funnel de conversión · Carritos abandonados · Alerta última unidad
    ============================================================ */
 function renderShopify(){
-  // Funnel estimado a partir de benchmarks moda ecommerce Chile, aplicado a las 1.439 sesiones reales
   const sesiones = SHOPIFY_SESIONES_30D;
-  const vistaProducto = Math.round(sesiones * 0.43);
-  const agregoCarrito = Math.round(vistaProducto * 0.22);
-  const iniciCheckout = Math.round(agregoCarrito * 0.36);
-  const compra = SHOPIFY_ORDENES_30D;
-  const pasos = [
-    {label:'Sesiones', valor:sesiones, base:sesiones},
-    {label:'Vio un producto', valor:vistaProducto, base:sesiones},
-    {label:'Agregó al carrito', valor:agregoCarrito, base:sesiones},
-    {label:'Inició checkout', valor:iniciCheckout, base:sesiones},
-    {label:'Compró', valor:compra, base:sesiones},
+  const pasosAgosto = [
+    {label:'Sesiones humanas', valor:DIAG_AGOSTO.sesionesHumanas, base:DIAG_AGOSTO.sesionesHumanas},
+    {label:'Vio la vitrina (Clarity)', valor:DIAG_AGOSTO.vistasVitrina, base:DIAG_AGOSTO.sesionesHumanas},
+    {label:'Vio una ficha de producto', valor:DIAG_AGOSTO.vistasFicha, base:DIAG_AGOSTO.sesionesHumanas},
+    {label:'Agregó al carrito', valor:DIAG_AGOSTO.carritos, base:DIAG_AGOSTO.sesionesHumanas},
+    {label:'Inició checkout', valor:DIAG_AGOSTO.checkouts, base:DIAG_AGOSTO.sesionesHumanas},
+    {label:'Compró', valor:DIAG_AGOSTO.compras, base:DIAG_AGOSTO.sesionesHumanas},
   ];
 
+  // Cuenta regresiva real a los puntos de decisión del Plan de Septiembre — calculada con la fecha
+  // real del dispositivo, no hardcodeada, para que siga vigente sesión tras sesión.
+  const hoy = new Date();
+  const diasHasta = (fechaISO) => Math.ceil((new Date(fechaISO+'T00:00:00') - hoy) / 86400000);
+
   return `
-    <div class="page-title">🛍 Shopify · Tienda Online</div>
-    <div class="page-sub">asirilaboutique.com — datos en vivo vía Shopify Admin API</div>
+    <div class="page-title">🛍 Shopify · Diagnóstico de Conversión</div>
+    <div class="page-sub">asirilaboutique.com — datos reales vía Shopify Admin API/ShopifyQL, consultados ${new Date(DIAG_SHOPIFY_LIVE.fechaConsulta+'T00:00:00').toLocaleDateString('es-CL')}</div>
+
+    <div class="diag-hero">
+      <div class="dh-title">🔴 El hallazgo que reordena todo</div>
+      <div class="dh-body">Con <b>${DIAG_INVENTARIO.unidadesTotales} unidades</b> de inventario total en <b>${DIAG_INVENTARIO.productosActivos} productos activos</b> (${(DIAG_INVENTARIO.unidadesTotales/DIAG_INVENTARIO.productosActivos).toFixed(1)} por producto), la pauta de Meta con objetivo <b>Compra</b> nunca puede salir de fase de aprendizaje — necesita ~${DIAG_INVENTARIO.metaComprasMesParaAprender} compras/mes y aunque se vendiera <u>todo</u> el inventario junto, no se alcanza. No es un problema de creatividad ni de segmentación: es una incompatibilidad estructural entre el catálogo y cómo aprende el algoritmo. Solo <b>${DIAG_INVENTARIO.productosConTallaYStock} de ${DIAG_INVENTARIO.productosActivos}</b> productos tienen selector de talla y stock disponible a la vez.</div>
+    </div>
 
     <div class="kpi-grid">
-      <div class="kpi-card"><span class="kpi-icon">👀</span><div class="kpi-label">Sesiones (30d)</div><div class="kpi-value">${sesiones.toLocaleString('es-CL')}</div></div>
-      <div class="kpi-card alert"><span class="kpi-icon">📦</span><div class="kpi-label">Órdenes (30d)</div><div class="kpi-value alert">${compra}</div></div>
+      <div class="kpi-card"><span class="kpi-icon">👀</span><div class="kpi-label">Sesiones humanas (30d)</div><div class="kpi-value">${sesiones.toLocaleString('es-CL')}</div></div>
+      <div class="kpi-card alert"><span class="kpi-icon">📦</span><div class="kpi-label">Compras (30d)</div><div class="kpi-value alert">${DIAG_SHOPIFY_LIVE.checkoutsCompletados30d}</div></div>
       <div class="kpi-card alert"><span class="kpi-icon">🎯</span><div class="kpi-label">Conversión</div><div class="kpi-value alert">0%</div></div>
-      <div class="kpi-card alert"><span class="kpi-icon">🚨</span><div class="kpi-label">Carritos Abandonados</div><div class="kpi-value alert">${CARRITOS_DEMO.length}</div></div>
+      <div class="kpi-card alert"><span class="kpi-icon">🛒</span><div class="kpi-label">Carritos (30d)</div><div class="kpi-value alert">${DIAG_SHOPIFY_LIVE.carritos30d}</div></div>
     </div>
 
     <div class="lastunit-banner">
-      🚨 <b>${SHOPIFY_ULTIMA_UNIDAD.length} de tus productos activos</b> tienen inventario = 1 unidad ahora mismo — prácticamente todo el catálogo está en última unidad. Considera activar countdown/urgencia Liquid en la tienda.
+      🚨 Última orden: <b>${new Date(DIAG_SHOPIFY_LIVE.ultimaOrdenFecha+'T00:00:00').toLocaleDateString('es-CL')} · $${DIAG_SHOPIFY_LIVE.ultimaOrdenMonto.toLocaleString('es-CL')}</b> — ${DIAG_SHOPIFY_LIVE.ultimaOrdenCliente}. En toda la historia de la tienda, ASIRI aún no le ha vendido por web a una clienta desconocida.
     </div>
 
     <div class="section-row">
       <div class="panel">
-        <div class="panel-title">🎯 Funnel de Conversión <span class="badge-live">30 DÍAS</span></div>
+        <div class="panel-title">🎯 Embudo real de Agosto <span class="badge-live">MEDIDO 30-AGO</span></div>
         <div class="funnel">
-          ${pasos.map(p => {
+          ${pasosAgosto.map(p => {
             const pct = p.base > 0 ? Math.max((p.valor / p.base) * 100, p.valor > 0 ? 2 : 0) : 0;
             const esCero = p.valor === 0;
             return `
@@ -1613,29 +1754,66 @@ function renderShopify(){
             `;
           }).join('')}
         </div>
-        <div class="funnel-note">Vista de producto, carrito y checkout son estimados según benchmark de moda ecommerce Chile aplicado a tus sesiones reales. Sesiones y órdenes son datos reales de Shopify. El quiebre real está confirmado en el paso final: 0 compras.</div>
+        <div class="funnel-note">El tapón real está en <b>vitrina→ficha de producto (${((DIAG_AGOSTO.vistasFicha/DIAG_AGOSTO.vistasVitrina)*100).toFixed(1)}%)</b> — no en carrito→checkout (~94%, saludable) ni en el pago (Webpay activo desde el 29-ago). Número más limpio de carritos, excluyendo pruebas internas propias: <b>${DIAG_AGOSTO.carritosSocialLimpioPct}%</b> del tráfico social humano.</div>
       </div>
       <div class="panel">
-        <div class="panel-title">🛒 Carritos Abandonados</div>
-        ${CARRITOS_DEMO.map((c,i) => `
-          <div class="carrito-item" style="${c.contactado ? 'opacity:.55;' : ''}">
-            <div class="carrito-info"><b>${escaparHTML(c.nombre)} ${c.contactado ? '<span class="badge-nuevo" style="background:var(--turquesa-light); color:#0F766E;">✓ CONTACTADA</span>' : ''}</b><span>${escaparHTML(c.producto)} · $${c.monto.toLocaleString('es-CL')} · hace ${c.hace}</span></div>
-            <button class="btn btn-wa" style="padding:.4rem .7rem; font-size:.7rem;" onclick="recuperarCarrito(${i})">${c.contactado ? '↻ Reenviar' : '💬 WA'}</button>
+        <div class="panel-title">📋 Estado de hallazgos probados</div>
+        ${HALLAZGOS_PROBADOS.map(h => `
+          <div class="hallazgo-item">
+            <span class="hallazgo-badge ${h.estado}">${h.estado}</span>
+            <span>${h.texto}</span>
           </div>
         `).join('')}
       </div>
     </div>
 
     <div class="panel">
-      <div class="panel-title">⚠️ Última Unidad Disponible</div>
-      <div class="lastunit-grid">
-        ${SHOPIFY_ULTIMA_UNIDAD.map(p => `
-          <div class="lastunit-card">
-            <span class="lastunit-badge">1 UNIDAD</span>
-            <img src="${p.img}" alt="${p.nombre}" loading="lazy" onerror="this.style.display='none'">
-            <div class="lastunit-info"><div class="ln">${p.nombre}</div><div class="lp">$${p.precio.toLocaleString('es-CL')}</div></div>
-          </div>
+      <div class="panel-title">🗓 Plan de Septiembre <span class="badge-live">VENTANA ${new Date(PLAN_SEPTIEMBRE.ventanaInicio+'T00:00:00').toLocaleDateString('es-CL',{day:'numeric',month:'short'})}–${new Date(PLAN_SEPTIEMBRE.ventanaFin+'T00:00:00').toLocaleDateString('es-CL',{day:'numeric',month:'short'})}</span></div>
+      <div class="calc-note" style="margin-bottom:.8rem;">Métrica del mes: <b>${PLAN_SEPTIEMBRE.metaDelMes}</b></div>
+      <div class="table-scroll"><table class="escenario-table">
+        <tr><th>Escenario</th><th>Inversión</th><th>Resultado proyectado</th></tr>
+        ${PLAN_SEPTIEMBRE.escenarios.map(e => `
+          <tr class="${e.recomendado?'recomendado':''}">
+            <td>${e.nombre}${e.recomendado?' ✓':''}</td>
+            <td>$${e.inversion.toLocaleString('es-CL')}</td>
+            <td>${e.resultadoTexto}</td>
+          </tr>
         `).join('')}
+      </table></div>
+      <div style="margin-top:1rem; font-size:.78rem; font-weight:700; color:var(--gris); text-transform:uppercase; letter-spacing:.04em;">Puntos de decisión</div>
+      ${PLAN_SEPTIEMBRE.puntosDecision.map(d => {
+        const dias = diasHasta(d.fecha);
+        const pasada = dias < 0;
+        return `
+          <div class="decision-item">
+            <span class="decision-fecha ${pasada?'pasada':''}">${new Date(d.fecha+'T00:00:00').toLocaleDateString('es-CL',{day:'numeric',month:'short'})}${!pasada ? `<span class="decision-dias">${dias===0?'HOY':'en '+dias+'d'}</span>` : ''}</span>
+            <span>${d.texto}</span>
+          </div>
+        `;
+      }).join('')}
+    </div>
+
+    <div class="section-row">
+      <div class="panel">
+        <div class="panel-title">🛒 Carritos Abandonados</div>
+        ${CARRITOS_DEMO.length ? CARRITOS_DEMO.map((c,i) => `
+          <div class="carrito-item" style="${c.contactado ? 'opacity:.55;' : ''}">
+            <div class="carrito-info"><b>${escaparHTML(c.nombre)} ${c.contactado ? '<span class="badge-nuevo" style="background:var(--turquesa-light); color:#0F766E;">✓ CONTACTADA</span>' : ''}</b><span>${escaparHTML(c.producto)} · $${c.monto.toLocaleString('es-CL')} · hace ${c.hace}</span></div>
+            <button class="btn btn-wa" style="padding:.4rem .7rem; font-size:.7rem;" onclick="recuperarCarrito(${i})">${c.contactado ? '↻ Reenviar' : '💬 WA'}</button>
+          </div>
+        `).join('') : `<div class="placeholder-box"><span class="pi">🛒</span><p>Sin carritos abandonados registrados por webhook todavía.</p></div>`}
+      </div>
+      <div class="panel">
+        <div class="panel-title">⚠️ Última Unidad Disponible</div>
+        <div class="lastunit-grid">
+          ${SHOPIFY_ULTIMA_UNIDAD.slice(0,8).map(p => `
+            <div class="lastunit-card">
+              <span class="lastunit-badge">1 UNIDAD</span>
+              <img src="${p.img}" alt="${p.nombre}" loading="lazy" onerror="this.style.display='none'">
+              <div class="lastunit-info"><div class="ln">${p.nombre}</div><div class="lp">$${p.precio.toLocaleString('es-CL')}</div></div>
+            </div>
+          `).join('')}
+        </div>
       </div>
     </div>
   `;
@@ -1658,17 +1836,24 @@ function recuperarCarrito(i){
    ============================================================ */
 function renderVentas(){
   const porCanal = {shopify:0, pos:0, manual:0};
-  DATA_DEMO.ventas.forEach(v => { porCanal[v.canal] = (porCanal[v.canal]||0) + v.monto; });
+  // Bug corregido: las ventas marcadas como "prueba interna" (ver M5 modal) no deben inflar
+  // la caja real ni la proyección del mes — el ERP debe distinguir plata real de pruebas propias.
+  DATA_DEMO.ventas.filter(v => !v.esPrueba).forEach(v => { porCanal[v.canal] = (porCanal[v.canal]||0) + v.monto; });
   const totalHoy = porCanal.shopify + porCanal.pos + porCanal.manual;
+  const pruebasHoy = DATA_DEMO.ventas.filter(v => v.esPrueba).length;
 
-  const diaDelMes = 23; // 23 julio 2026
-  const diasDelMes = 31;
+  // Bug corregido: antes estaba fijo en "día 23 de 31 (julio 2026)" sin importar la fecha real —
+  // la proyección quedaba congelada en el pasado. Ahora usa la fecha real del dispositivo.
+  const hoyDate = new Date();
+  const diaDelMes = hoyDate.getDate();
+  const diasDelMes = new Date(hoyDate.getFullYear(), hoyDate.getMonth()+1, 0).getDate();
+  const nombreMes = hoyDate.toLocaleDateString('es-CL', {month:'long', year:'numeric'});
   const proyeccionMes = Math.round((totalHoy / diaDelMes) * diasDelMes);
 
   // Análisis por hora — agrupa las ventas demo por bloque horario
   const bloques = ['09-11h','11-13h','13-15h','15-17h','17-19h','19-21h'];
   const montosPorBloque = bloques.map(() => 0);
-  DATA_DEMO.ventas.forEach(v => {
+  DATA_DEMO.ventas.filter(v => !v.esPrueba).forEach(v => {
     const h = Number(v.hora.split(':')[0]);
     const idx = Math.min(Math.floor((h - 9) / 2), bloques.length - 1);
     if(idx >= 0) montosPorBloque[idx] += v.monto;
@@ -1698,22 +1883,23 @@ function renderVentas(){
         `).join('')}
       </div>
       <div class="proyeccion-box">
-        <div class="py-label">Proyección del Mes (julio 2026)</div>
+        <div class="py-label">Proyección del Mes (${nombreMes})</div>
         <div class="py-value">$${proyeccionMes.toLocaleString('es-CL')}</div>
-        <div class="calc-note">Basado en el promedio diario de hoy ($${Math.round(totalHoy/diaDelMes).toLocaleString('es-CL')}/día) proyectado a los 31 días de julio. Día ${diaDelMes} de ${diasDelMes}.</div>
+        <div class="calc-note">Basado en el promedio diario de hoy ($${Math.round(totalHoy/diaDelMes).toLocaleString('es-CL')}/día, sin contar ventas de prueba) proyectado a los ${diasDelMes} días del mes. Día ${diaDelMes} de ${diasDelMes}.</div>
       </div>
     </div>
 
     <div class="panel">
-      <div class="panel-title">🧾 Todas las Ventas de Hoy</div>
+      <div class="panel-title">🧾 Todas las Ventas de Hoy ${pruebasHoy ? `<span class="badge-live" style="background:#94a3b8;">${pruebasHoy} de prueba, excluida${pruebasHoy>1?'s':''}</span>` : ''}</div>
       <div class="table-scroll"><table class="simple">
-        <tr><th>Hora</th><th>Producto</th><th>Canal</th><th>Monto</th></tr>
+        <tr><th>Hora</th><th>Producto</th><th>Canal</th><th>Monto</th><th></th></tr>
         ${DATA_DEMO.ventas.map(v => `
-          <tr>
+          <tr style="${v.esPrueba ? 'opacity:.55;' : ''}">
             <td>${v.hora}</td>
             <td>${escaparHTML(v.producto)}</td>
             <td><span class="canal-pill ${v.canal}">${v.canal}</span></td>
             <td>$${v.monto.toLocaleString('es-CL')}</td>
+            <td>${v.esPrueba ? '<span class="estado-pill pendiente">PRUEBA</span>' : ''}</td>
           </tr>
         `).join('')}
       </table></div>
@@ -1868,6 +2054,15 @@ function renderCompras(){
     </div>
 
     <div class="panel">
+      <div class="panel-title">🔤 Generador de Texto — Tallas para Instagram</div>
+      <div class="calc-note" style="margin-bottom:.6rem;">El comentario más frecuente en los reels de ASIRI es "¿qué talla tiene?" (9 de 10 guiones analizados). Escribe el nombre del producto tal como aparece en Compras y genera un texto listo para copiar y responder.</div>
+      <div class="field-row">
+        <div class="field" style="flex:2;"><label>Producto</label><input type="text" id="talla-buscar-producto" placeholder="Ej: BLUSA PRINT" oninput="generarTextoTallas()"></div>
+      </div>
+      <div id="talla-resultado" class="insight-box" style="display:none;"></div>
+    </div>
+
+    <div class="panel">
       <div class="panel-title">🧾 Órdenes de Compra</div>
       <div class="table-scroll"><table class="simple" id="ordenes-tabla">
         ${ENCABEZADO_ORDENES}
@@ -1878,7 +2073,7 @@ function renderCompras(){
   `;
 }
 
-const ENCABEZADO_ORDENES = '<tr><th>Fecha</th><th>Proveedor</th><th>Producto</th><th>Cant.</th><th>Costo Unit.</th><th>Total</th><th>Estado</th><th>Acción</th></tr>';
+const ENCABEZADO_ORDENES = '<tr><th>Fecha</th><th>Proveedor</th><th>Producto</th><th>Talla</th><th>Cant.</th><th>Costo Unit.</th><th>Total</th><th>Estado</th><th>Acción</th></tr>';
 const FLUJO_ESTADO_ORDEN = { pendiente:'transito', transito:'recibido' };
 
 function renderFilasOrdenes(){
@@ -1888,6 +2083,7 @@ function renderFilasOrdenes(){
       <td>${new Date(o.fecha).toLocaleDateString('es-CL')}</td>
       <td>${escaparHTML(o.proveedor)}</td>
       <td>${escaparHTML(o.producto)}</td>
+      <td>${o.talla ? escaparHTML(o.talla) : '<span style="opacity:.4;">—</span>'}</td>
       <td>${o.cantidad}</td>
       <td>$${o.costo.toLocaleString('es-CL')}</td>
       <td>$${(o.cantidad*o.costo).toLocaleString('es-CL')}</td>
@@ -1903,12 +2099,50 @@ function renderFilasOrdenes(){
   `).join('');
 }
 
+/* Capa 2 — cierra el hallazgo de Instagram: cruza el nombre de producto contra las tallas
+   cargadas en Compras y arma un texto copiable para responder comentarios. Búsqueda por
+   coincidencia parcial (case-insensitive) porque el nombre en el reel rara vez es idéntico
+   al de la orden de compra. */
+function generarTextoTallas(){
+  const q = document.getElementById('talla-buscar-producto').value.trim().toLowerCase();
+  const caja = document.getElementById('talla-resultado');
+  if(!q){ caja.style.display = 'none'; return; }
+  const coincidencias = ORDENES_DEMO.filter(o => o.producto.toLowerCase().includes(q));
+  if(!coincidencias.length){
+    caja.style.display = 'block';
+    caja.innerHTML = `Sin coincidencias para "${escaparHTML(q)}" en Compras. Prueba con otra palabra del nombre del producto.`;
+    return;
+  }
+  const conTalla = coincidencias.filter(o => o.talla && o.talla.trim());
+  caja.style.display = 'block';
+  if(!conTalla.length){
+    caja.innerHTML = `Encontré ${coincidencias.length} orden(es) de "${escaparHTML(coincidencias[0].producto)}" pero ninguna tiene talla cargada todavía. Edítala desde la tabla de abajo (✏️) y agrégala.`;
+    return;
+  }
+  const tallasUnicas = [...new Set(conTalla.map(o => o.talla.trim().toUpperCase()))];
+  ULTIMO_TEXTO_TALLAS = `¡Hola! 🦋 "${conTalla[0].producto}" está disponible en talla${tallasUnicas.length>1?'s':''}: ${tallasUnicas.join(', ')}. ¿Te ayudo a elegir la tuya?`;
+  caja.innerHTML = `
+    <div style="margin-bottom:.5rem;">${escaparHTML(ULTIMO_TEXTO_TALLAS)}</div>
+    <button class="btn btn-ghost" style="padding:.35rem .7rem; font-size:.68rem;" onclick="copiarTextoTallas(this)">📋 Copiar texto</button>
+  `;
+}
+
+let ULTIMO_TEXTO_TALLAS = '';
+function copiarTextoTallas(btn){
+  navigator.clipboard.writeText(ULTIMO_TEXTO_TALLAS).then(() => {
+    const original = btn.textContent;
+    btn.textContent = '✓ Copiado';
+    setTimeout(() => { btn.textContent = original; }, 1500);
+  }).catch(() => alert('No se pudo copiar automáticamente. Selecciona el texto manualmente.'));
+}
+
 function avanzarEstadoOrden(i){
   const orden = ORDENES_DEMO[i];
   if(!orden || !FLUJO_ESTADO_ORDEN[orden.estado]) return;
   orden.estado = FLUJO_ESTADO_ORDEN[orden.estado];
   document.getElementById('ordenes-tabla').innerHTML = `${ENCABEZADO_ORDENES}${renderFilasOrdenes()}`;
   autoSave(true);
+  sincronizarNubeCompras();
 }
 
 let editandoOrdenIndex = null;
@@ -1920,6 +2154,7 @@ function abrirNuevaOrden(){
   document.getElementById('o-producto').value = '';
   document.getElementById('o-cantidad').value = '';
   document.getElementById('o-costo').value = '';
+  document.getElementById('o-talla').value = '';
   openModal('modal-orden');
 }
 
@@ -1932,6 +2167,7 @@ function editarOrden(i){
   document.getElementById('o-producto').value = o.producto;
   document.getElementById('o-cantidad').value = o.cantidad;
   document.getElementById('o-costo').value = o.costo;
+  document.getElementById('o-talla').value = o.talla || '';
   openModal('modal-orden');
 }
 
@@ -1940,6 +2176,7 @@ function eliminarOrden(i){
   ORDENES_DEMO.splice(i,1);
   document.getElementById('ordenes-tabla').innerHTML = `${ENCABEZADO_ORDENES}${renderFilasOrdenes()}`;
   autoSave(true);
+  sincronizarNubeCompras();
 }
 
 function guardarOrdenCompra(){
@@ -1947,17 +2184,19 @@ function guardarOrdenCompra(){
   const producto = document.getElementById('o-producto').value;
   const cantidad = Number(document.getElementById('o-cantidad').value);
   const costo = Number(document.getElementById('o-costo').value);
+  const talla = document.getElementById('o-talla').value.trim();
   if(!proveedor || !producto || !cantidad || !costo){ alert('Completa todos los campos'); return; }
   if(editandoOrdenIndex !== null){
     const original = ORDENES_DEMO[editandoOrdenIndex];
-    ORDENES_DEMO[editandoOrdenIndex] = {proveedor, producto, cantidad, costo, estado: original.estado, fecha: original.fecha};
+    ORDENES_DEMO[editandoOrdenIndex] = {proveedor, producto, cantidad, costo, talla, estado: original.estado, fecha: original.fecha};
   } else {
-    ORDENES_DEMO.unshift({proveedor, producto, cantidad, costo, estado:'pendiente', fecha:Date.now()});
+    ORDENES_DEMO.unshift({proveedor, producto, cantidad, costo, talla, estado:'pendiente', fecha:Date.now()});
   }
   editandoOrdenIndex = null;
   closeModal('modal-orden');
   document.getElementById('ordenes-tabla').innerHTML = `${ENCABEZADO_ORDENES}${renderFilasOrdenes()}`;
   autoSave(true);
+  sincronizarNubeCompras();
 }
 
 /* ============================================================
@@ -2016,11 +2255,12 @@ function renderComprasPorProveedor(){
             <span class="prov-subtotal">$${grupos[p].subtotal.toLocaleString('es-CL')}</span>
           </summary>
           <div class="table-scroll"><table class="simple compact">
-            <tr><th>Fecha</th><th>Producto</th><th>Cant.</th><th>Costo unit.</th><th>Total</th><th>Estado</th></tr>
+            <tr><th>Fecha</th><th>Producto</th><th>Talla</th><th>Cant.</th><th>Costo unit.</th><th>Total</th><th>Estado</th></tr>
             ${grupos[p].items.slice().sort((a,b)=>a.fecha-b.fecha).map(o => `
               <tr>
                 <td>${new Date(o.fecha).toLocaleDateString('es-CL')}</td>
                 <td>${escaparHTML(o.producto)}</td>
+                <td>${o.talla ? escaparHTML(o.talla) : '—'}</td>
                 <td>${o.cantidad}</td>
                 <td>$${o.costo.toLocaleString('es-CL')}</td>
                 <td>$${(o.cantidad*o.costo).toLocaleString('es-CL')}</td>
@@ -2708,16 +2948,22 @@ function guardarVentaManual(){
   const producto = document.getElementById('f-producto').value;
   const monto = document.getElementById('f-monto').value;
   const canal = document.getElementById('f-canal').value;
+  const esPrueba = document.getElementById('f-prueba').checked;
   if(!producto || !monto){ alert('Completa producto y monto'); return; }
-  DATA_DEMO.ventas.unshift({hora:new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'}), producto, canal, monto:Number(monto)});
-  DATA_DEMO.cajaHoy += Number(monto);
+  DATA_DEMO.ventas.unshift({hora:new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'}), producto, canal, monto:Number(monto), esPrueba});
+  // Las ventas de prueba interna (ej. testear el checkout, mostrarle el flujo a alguien) no deben
+  // sumar a la caja real ni al KPI de conversión — confirmado como causa de confusión real en agosto
+  // 2026 (pedido #1001 y varios carritos abandonados eran pruebas propias, no clientas).
+  if(!esPrueba) DATA_DEMO.cajaHoy += Number(monto);
   recalcularCajaDelta();
   closeModal('modal-venta');
+  document.getElementById('f-prueba').checked = false;
   document.getElementById('view-m0').innerHTML = renderHome();
   document.getElementById('view-m5').innerHTML = renderVentas();
   if(document.getElementById('view-m7')) document.getElementById('view-m7').innerHTML = renderFinanzas();
   irAModulo(moduloActivo === 'm5' ? 'm5' : 'm0');
   autoSave(true);
+  sincronizarNubeVentas();
 }
 
 /* ---------- Caja del día — delta real "vs ayer" (bug corregido: antes era '+12%' fijo) ----------
@@ -2838,7 +3084,7 @@ function setIndicator(state){
 
 async function guardarDatos(){
   const payload = {
-    timestamp: new Date().toISOString(), origen:'ASIRI-ERP',
+    action: 'kpis', timestamp: new Date().toISOString(), origen:'ASIRI-ERP',
     data: { ...DATA_DEMO, crm: CRM_DEMO, ordenes: ORDENES_DEMO, campanas: CAMPANAS_DEMO }
   };
 
@@ -2860,6 +3106,127 @@ async function guardarDatos(){
     // Si falla el POST (sin URL configurada aún, o sin red) → fallback local
     await guardarEnIndexedDB(payload);
     setIndicator('offline');
+  }
+}
+
+/* ============================================================
+   8b. CAPA 0 — SINCRONIZACIÓN REAL CON GOOGLE SHEETS (ASIRI_ERP_DB)
+   Hasta esta sesión, el webhook solo recibía autoguardados de KPIs del Home (y los
+   acumulaba con APPEND en vez de actualizar, generando basura). CRM/Compras/Ventas
+   vivían SOLO en este archivo — nunca llegaban a la base de datos real, así que nada
+   sobrevivía un localStorage.clear() ni se veía desde otro dispositivo.
+   Requiere que el Apps Script desplegado tenga las acciones 'sync_crm'/'sync_compras'/
+   'sync_ventas'/'kpis' (ver AppsScript_ASIRI_ERP.gs actualizado). Si el script desplegado
+   todavía es la versión vieja, estas llamadas simplemente no hacen nada visible — el ERP
+   sigue funcionando 100% con localStorage como hasta ahora (mismo principio de resiliencia
+   que guardarDatos()).
+   ============================================================ */
+
+function mapClientaARow(c){
+  const seg = segmentarClienta(c);
+  return {
+    ID: c.id, Nombre: c.nombre, Telefono: c.telefono, Email: c.email,
+    Segmento: seg.label,
+    'Ultima Compra': Number.isFinite(c.diasUltimaCompra) && c.diasUltimaCompra < 900
+      ? new Date(Date.now() - c.diasUltimaCompra*86400000).toISOString().slice(0,10) : '',
+    'Total Compras': c.compras, LTV: c.ltv, Notas: c.notas
+  };
+}
+
+function mapRowAClienta(r){
+  let dias = 0;
+  if(r['Ultima Compra']){
+    const t = new Date(r['Ultima Compra']).getTime();
+    if(!isNaN(t)) dias = Math.max(0, Math.round((Date.now() - t) / 86400000));
+  }
+  return {
+    id: Number(r.ID) || Date.now(),
+    nombre: r.Nombre || '', telefono: r.Telefono || '', email: r.Email || '',
+    compras: Number(r['Total Compras']) || 0, ltv: Number(r.LTV) || 0,
+    diasUltimaCompra: dias, notas: r.Notas || ''
+  };
+}
+
+function mapOrdenARow(o){
+  return {
+    Fecha: new Date(o.fecha).toISOString().slice(0,10), Proveedor: o.proveedor,
+    Producto: o.producto, Talla: o.talla || '', Cantidad: o.cantidad,
+    'Costo Unitario': o.costo, Total: o.cantidad * o.costo, 'Estado Despacho': o.estado
+  };
+}
+
+function mapRowAOrden(r){
+  const t = r.Fecha ? new Date(r.Fecha).getTime() : NaN;
+  return {
+    proveedor: r.Proveedor || '', producto: r.Producto || '', talla: r.Talla || '',
+    cantidad: Number(r.Cantidad) || 0, costo: Number(r['Costo Unitario']) || 0,
+    estado: r['Estado Despacho'] || 'recibido', fecha: isNaN(t) ? Date.now() : t
+  };
+}
+
+function mapVentaARow(v){
+  return {
+    Timestamp: new Date().toISOString(), Producto: v.producto, Monto: v.monto,
+    Canal: v.canal, Cliente: '', 'Metodo Pago': '', 'Es Prueba': v.esPrueba ? 'SI' : 'NO'
+  };
+}
+
+/* POST con mode:'no-cors' — igual que guardarDatos(): Apps Script no responde a preflight
+   OPTIONS, así que el único content-type que evita el preflight es text/plain, y no-cors
+   nos impide leer la respuesta (por diseño, es "fire and forget"). */
+async function enviarAccionNube(action, rows){
+  if(!navigator.onLine || !APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('TU_ID_DE_IMPLEMENTACION')) return;
+  try{
+    await fetch(APPS_SCRIPT_URL, {
+      method:'POST', mode:'no-cors',
+      headers:{'Content-Type':'text/plain'},
+      body: JSON.stringify({ action, rows, timestamp: new Date().toISOString() })
+    });
+  }catch(e){ /* sin red o script no desplegado aún — no rompe el flujo local */ }
+}
+
+function sincronizarNubeCRM(){ enviarAccionNube('sync_crm', CRM_DEMO.map(mapClientaARow)); }
+function sincronizarNubeCompras(){ enviarAccionNube('sync_compras', ORDENES_DEMO.map(mapOrdenARow)); }
+function sincronizarNubeVentas(){ enviarAccionNube('sync_ventas', DATA_DEMO.ventas.map(mapVentaARow)); }
+
+/* GET normal (sin no-cors) — a diferencia del POST, las peticiones GET simples de Apps Script
+   sí devuelven una respuesta legible por fetch(). Se ejecuta una sola vez al abrir el ERP. */
+async function leerModuloNube(modulo){
+  if(!navigator.onLine || !APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('TU_ID_DE_IMPLEMENTACION')) return null;
+  try{
+    const res = await fetch(`${APPS_SCRIPT_URL}?modulo=${modulo}`);
+    const data = await res.json();
+    return (data && data.status === 'ok' && Array.isArray(data.data)) ? data.data : null;
+  }catch(e){ return null; }
+}
+
+/* Al abrir el ERP: si Sheets ya tiene datos reales (porque Valeria editó desde otro
+   dispositivo, o porque ya se hizo la siembra inicial), esos datos mandan sobre el
+   hardcodeado/localStorage. Si Sheets está vacío, se siembra UNA vez con lo que ya
+   tiene el ERP en memoria — así el backend deja de estar vacío sin que Valeria haga nada. */
+async function sincronizarConLaNubeAlInicio(){
+  const [filasCrm, filasCompras] = await Promise.all([leerModuloNube('crm'), leerModuloNube('compras')]);
+
+  if(filasCrm && filasCrm.length){
+    CRM_DEMO = filasCrm.map(mapRowAClienta);
+  } else if(!localStorage.getItem('asiri_seed_crm_enviado')){
+    sincronizarNubeCRM();
+    try{ localStorage.setItem('asiri_seed_crm_enviado', '1'); }catch(e){}
+  }
+
+  if(filasCompras && filasCompras.length){
+    ORDENES_DEMO = filasCompras.map(mapRowAOrden);
+  } else if(!localStorage.getItem('asiri_seed_compras_enviado')){
+    sincronizarNubeCompras();
+    try{ localStorage.setItem('asiri_seed_compras_enviado', '1'); }catch(e){}
+  }
+
+  if((filasCrm && filasCrm.length) || (filasCompras && filasCompras.length)){
+    guardarEstadoLocal();
+    ['m2','m6','m0','m9'].forEach(id => { const v = document.getElementById('view-'+id); if(v){
+      const R = {m2:renderCRM, m6:renderCompras, m0:renderHome, m9:renderIntelligence};
+      v.innerHTML = R[id]();
+    }});
   }
 }
 
@@ -2950,6 +3317,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initViews();
   actualizarEstadoConexion();
   setIndicator('saved');
+  sincronizarConLaNubeAlInicio(); // Capa 0 — lee CRM/Compras reales de Sheets (o los siembra si están vacíos)
 });
 </script>
 </body>
