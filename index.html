@@ -755,7 +755,7 @@ function escaparHTML(valor){
 }
 
 /* ---------- 3. DATOS DE EJEMPLO (se reemplazan con datos reales via Apps Script) ---------- */
-const DATA_LOAD_VERSION = 'carga-inicial-v1.2-2026-07-25'; // sube este identificador cada vez que se recarguen CRM_DEMO/ORDENES_DEMO en el código, para que no queden pisados por un localStorage viejo
+const DATA_LOAD_VERSION = 'carga-compras-stock-v1.3-2026-08-31'; // sube este identificador cada vez que se recarguen CRM_DEMO/ORDENES_DEMO en el código, para que no queden pisados por un localStorage viejo
 
 const DATA_DEMO = {
   cajaHoy: 0,
@@ -1169,7 +1169,336 @@ let ORDENES_DEMO = [
   {proveedor:"Cit", producto:"POLERA ENCAJE", cantidad:3, costo:9000, estado:"recibido", fecha:1779710400000},
   {proveedor:"Cit", producto:"CHAQUETA JEANS", cantidad:2, costo:20500, estado:"recibido", fecha:1779710400000},
   {proveedor:"Cit", producto:"JEANS PIEDRAS", cantidad:2, costo:16000, estado:"recibido", fecha:1779710400000},
-  {proveedor:"Cit", producto:"AVIADORA FORRADA", cantidad:2, costo:25000, estado:"recibido", fecha:1779710400000}
+  {proveedor:"Cit", producto:"AVIADORA FORRADA", cantidad:2, costo:25000, estado:"recibido", fecha:1779710400000},
+
+  /* ---------- v3 (2026-08-31) — pedidos 18-21 de Aliandra + 2 pedidos nuevos de C. Iturrieta,
+     cargados desde COMPRAS.xlsx real que envió Valeria (info actualizada, no estimada como el
+     resto). Fechas SI son estimadas (~10 días entre pedidos, acotadas entre el último pedido ya
+     cargado —19-jul-2026— y hoy —31-ago-2026— porque el archivo tampoco trae fecha por pedido). ---------- */
+  {proveedor:"Aliandra Aponte Jimenez", producto:"SASTRERO POLIESTER", cantidad:6, costo:8700, talla:"", estado:"recibido", fecha:1785326400000},
+  {proveedor:"Aliandra Aponte Jimenez", producto:"PANTALON SASTRERO", cantidad:6, costo:12000, talla:"", estado:"recibido", fecha:1785326400000},
+  {proveedor:"Aliandra Aponte Jimenez", producto:"CHALECO RAYAS", cantidad:4, costo:10000, talla:"", estado:"recibido", fecha:1785326400000},
+  {proveedor:"Aliandra Aponte Jimenez", producto:"CHALECO BASICO VICTORIA", cantidad:4, costo:8900, talla:"", estado:"recibido", fecha:1785326400000},
+  {proveedor:"Aliandra Aponte Jimenez", producto:"CHALECO A RAYAS CLARA", cantidad:3, costo:10500, talla:"", estado:"recibido", fecha:1785326400000},
+  {proveedor:"Aliandra Aponte Jimenez", producto:"JEANS CELESTE", cantidad:4, costo:13500, talla:"", estado:"recibido", fecha:1786190400000},
+  {proveedor:"Aliandra Aponte Jimenez", producto:"CHAQUETA MEZCLILLA MILI", cantidad:2, costo:13500, talla:"XL", estado:"recibido", fecha:1786190400000},
+  {proveedor:"C. Iturrieta (Santiago)", producto:"BLAZER", cantidad:4, costo:16500, talla:"S,M,L", estado:"recibido", fecha:1786536000000},
+  {proveedor:"C. Iturrieta (Santiago)", producto:"POLERA ENCAJE", cantidad:3, costo:8000, talla:"", estado:"recibido", fecha:1786536000000},
+  {proveedor:"C. Iturrieta (Santiago)", producto:"JEANS POLKA", cantidad:2, costo:17000, talla:"M,L", estado:"recibido", fecha:1786536000000},
+  {proveedor:"C. Iturrieta (Santiago)", producto:"CHEVALIER (envío)", cantidad:1, costo:7000, talla:"", estado:"recibido", fecha:1786536000000},
+  {proveedor:"Aliandra Aponte Jimenez", producto:"PANTALON SASTRERO LINO", cantidad:3, costo:10000, talla:"XL", estado:"recibido", fecha:1787054400000},
+  {proveedor:"Aliandra Aponte Jimenez", producto:"POLERA BASICA", cantidad:4, costo:7500, talla:"", estado:"recibido", fecha:1787054400000},
+  {proveedor:"Aliandra Aponte Jimenez", producto:"POLERA BASICA PERRO", cantidad:4, costo:7500, talla:"S, M, L", estado:"recibido", fecha:1787054400000},
+  {proveedor:"Aliandra Aponte Jimenez", producto:"CHALECO CUELLO V LUA", cantidad:5, costo:11800, talla:"XL", estado:"recibido", fecha:1787054400000},
+  {proveedor:"Aliandra Aponte Jimenez", producto:"GUILLETE", cantidad:3, costo:9500, talla:"", estado:"recibido", fecha:1787054400000},
+  {proveedor:"Aliandra Aponte Jimenez", producto:"TRANSPORTE ALI", cantidad:1, costo:1000, talla:"", estado:"recibido", fecha:1787054400000},
+  {proveedor:"Aliandra Aponte Jimenez", producto:"CHEVALIER (envío)", cantidad:1, costo:7000, talla:"", estado:"recibido", fecha:1787054400000},
+  {proveedor:"C. Iturrieta (Santiago)", producto:"JEANS PINZAS HAWAII", cantidad:3, costo:16500, talla:"M,L", estado:"recibido", fecha:1787400000000},
+  {proveedor:"C. Iturrieta (Santiago)", producto:"POLERA BASICA", cantidad:4, costo:7500, talla:"S,M,L", estado:"recibido", fecha:1787400000000},
+  {proveedor:"C. Iturrieta (Santiago)", producto:"CHEVALIER (envío)", cantidad:1, costo:7000, talla:"", estado:"recibido", fecha:1787400000000},
+  {proveedor:"Aliandra Aponte Jimenez", producto:"JEANS CON CINTURÓN", cantidad:2, costo:14500, talla:"L/XL", estado:"recibido", fecha:1787918400000},
+  {proveedor:"Aliandra Aponte Jimenez", producto:"POLERA ANIMALES", cantidad:4, costo:9900, talla:"ESTANDAR", estado:"recibido", fecha:1787918400000},
+  {proveedor:"Aliandra Aponte Jimenez", producto:"CHAQUETA BRODERIE", cantidad:3, costo:14500, talla:"ESTANDAR", estado:"recibido", fecha:1787918400000},
+  {proveedor:"Aliandra Aponte Jimenez", producto:"BLAZER LINO BOTON", cantidad:4, costo:14500, talla:"ESTANDAR", estado:"recibido", fecha:1787918400000},
+  {proveedor:"Aliandra Aponte Jimenez", producto:"BLUSA BOTON CORAZON", cantidad:3, costo:8800, talla:"ESTANDAR", estado:"recibido", fecha:1787918400000},
+  {proveedor:"Aliandra Aponte Jimenez", producto:"SWEATER SPANDEX", cantidad:4, costo:12900, talla:"XL", estado:"recibido", fecha:1787918400000},
+  {proveedor:"Aliandra Aponte Jimenez", producto:"JEANS WIDE LEG", cantidad:4, costo:12500, talla:"", estado:"recibido", fecha:1787918400000},
+  {proveedor:"Aliandra Aponte Jimenez", producto:"MUSCULOSA CROCHET", cantidad:3, costo:7800, talla:"ESTANDAR", estado:"recibido", fecha:1787918400000},
+  {proveedor:"Aliandra Aponte Jimenez", producto:"JEANS FLARE AZUL", cantidad:4, costo:12000, talla:"", estado:"recibido", fecha:1787918400000},
+  {proveedor:"Aliandra Aponte Jimenez", producto:"TRANSPORTE ALI", cantidad:1, costo:1000, talla:"", estado:"recibido", fecha:1787918400000}
+];
+
+/* ---------- 3e-bis. TALLAS_CATALOGO (2026-08-31) — cierra el hallazgo de fricción de tallas
+   de Instagram (08-ago). Extraído de COMPRAS.xlsx (planilla real de Valeria, columna "TALLAS
+   ESCOGIDAS"/"TALLAS DISPONIBLES" de cada pedido) — 157 productos únicos con su talla real.
+   Se usa para rellenar automáticamente el campo `talla` de ORDENES_DEMO cuando falta (ver
+   backfillTallasCompras) y como respaldo del generador de texto de tallas en M6. Nombre de
+   producto normalizado (mayúsculas) → talla tal como la escribió Valeria. */
+const TALLAS_CATALOGO = {
+  "AVIADORA FORRADA": "L/XL",
+  "BEATLE": "ESTANDAR",
+  "BLAZER": "E",
+  "BLAZER ALLTA GAMA ACEBRADO": "M,L",
+  "BLAZER CUADRILLE": "s y m",
+  "BLAZER LINO BOTON": "ESTANDAR",
+  "BLAZER VISCOSA-GABARDINA": "ESTANDAR",
+  "BLEIZER ALTA GAMA": "M,L",
+  "BLEIZER LINO": "S/M  M/L L/XL  XL/XXL",
+  "BLUSA BLANCA Y FUCSIA": "ESTANDAR",
+  "BLUSA BOTON CORAZON": "ESTANDAR",
+  "BLUSA BOTON DORADO": "ESTANDAR",
+  "BLUSA CON BOTONES": "ESTANDAR",
+  "BLUSA CON BROCHES": "ESTANDAR",
+  "BLUSA CON CUELLO": "S/M/L",
+  "BLUSA CUELLO V": "L XL",
+  "BLUSA LINO": "ESTANDAR",
+  "BLUSA PRINT": "E",
+  "BLUSA RAYAS": "E",
+  "BLUSA TIRAS CUELLO V": "ESTANDAR",
+  "BLUSA TIRAS CUELLO V (BLUSA ALBERTA )": "ESTANDAR",
+  "BLUSA VISCOSA": "L XL",
+  "BLUSON": "ESTANDAR",
+  "BLUSON LINO": "ESTANDAR",
+  "BLUSÓN": "TODAS",
+  "BODY": "ESTANDAR",
+  "BODY CONCHITA": "SM/ML",
+  "BODY LYCRA TIPO ZARA": "ESTANDAR",
+  "BODY MUSCULOSA": "ESTANDAR",
+  "BODY ZARA": "ESTANDAR",
+  "CAMISA GAMUSA": "S/M  L/XL",
+  "CAMISA ITALIANA MANGA 3/4": "ESTANDAR",
+  "CARDIGAN BERTA": "ESTANDAR",
+  "CARDIGAN BLU": "ESTANDAR",
+  "CARDIGAN CARMEN": "ESTANDAR",
+  "CARDIGAN VIRGINIA": "ESTANDAR",
+  "CARDIGANS BLANCO": "ESTANDAR",
+  "CARDIGANS SOLE": "ESTANDAR",
+  "CHALECO A RAYAS": "ESTANDAR",
+  "CHALECO ALTA GAMA ITALIANO": "E",
+  "CHALECO CONCHA": "ESTANDAR",
+  "CHALECO CUELLO V LUA": "XL",
+  "CHALECO FLOR MANGAS": "ESTANDAR",
+  "CHALECO FLORES ALTA GAMA": "E",
+  "CHALECO FLORES Y CORAZONES": "ESTANDAR",
+  "CHALECO FUCSIA Y VERDE": "S",
+  "CHALECO GUILLETE CERRADO HILO": "ESTANDAR",
+  "CHALECO HILO": "ESTANDAR",
+  "CHALECO HILO DORADO": "ESTANDAR",
+  "CHALECO HILO FLOR": "ESTANDAR",
+  "CHALECO LENTEJUELAS FLOR": "ESTANDAR",
+  "CHALECO MANGA LARGA ITALIANA CORAZON DORADO": "E",
+  "CHALECO SPANDEX": "E",
+  "CHALECO SPANDEX CORAZONES": "E",
+  "CHALECO SPANDEX ESTÁNDAR": "E",
+  "CHALECO SPANDEX FLORES": "E",
+  "CHALECO SPANDEX LARGO": "ESTANDAR",
+  "CHALECO SPANDEX P 25417": "E",
+  "CHAQUETA BRODERIE": "ESTANDAR",
+  "CHAQUETA CALADA": "ESTANDAR",
+  "CHAQUETA CEBRA CON GORRO": "M",
+  "CHAQUETA CON BRODERI ABAJO": "ESTANDAR",
+  "CHAQUETA ITALIANA": "ESTANDAR",
+  "CHAQUETA JEANS": "ESTANDAR",
+  "CHAQUETA MEZCLILLA": "S, M, L",
+  "CHAQUETA MEZCLILLA CON BOTONES": "ESTANDAR",
+  "CHAQUETA MEZCLILLA CON CIERRE": "ESTANDAR",
+  "CHAQUETA MEZCLILLA MILI": "XL",
+  "CHAQUETA PAÑO": "ESTANDAR",
+  "CHAQUETA S/MANGAS": "ESTANDAR",
+  "CHELCO BOTONES DORADO MANGA": "ESTANDAR",
+  "CHELCO HILO": "ESTANDAR",
+  "CINTURON": "ESTANDAR",
+  "CINTURÓN": "ESTANDAR",
+  "CONJUNTO": "ESTANDAR",
+  "CONJUNTO BRODERIE": "ESTANDAR",
+  "CROPTOP": "ESTANDAR",
+  "ENTERITO": "ESTANDAR",
+  "GILLET ALTA GAMA LARGO": "E",
+  "GILLET CHALECO BOTON DORADO": "S",
+  "GILLET MEZCLILLA": "S,M",
+  "GILLETTE CROCHET": "S/M",
+  "GUILLETE CON CIERRE": "SM  LXL",
+  "GUILLETE CROCHETE": "S/M",
+  "GUILLETE PARKA": "ESTANDAR",
+  "GUILLETE RENO": "M/ XL",
+  "GUILLETTE BORDADO": "M/L   L/XL",
+  "JEANS": "S-M-L-XL",
+  "JEANS CON CINTURÓN": "L/ XL",
+  "JEANS CON ELASTICO": "ESTANDAR",
+  "JEANS FLARE": "S/M/L",
+  "JEANS PIEDRAS": "M /XL",
+  "JEANS PINZAS HAWAII": "M,L",
+  "JEANS POLKA": "M,L",
+  "JEANS PRETINA ADELANTE": "M-L",
+  "JEANS SUELTO": "S/M",
+  "JEANS TACHAS": "S",
+  "JOCKEY": "ESTANDAR",
+  "JOGGERS FLORES": "E",
+  "JOGGERS MEZCLILLA": "M,L",
+  "KIMONO": "ESTANDAR",
+  "MAXI VESTIDOS": "ESTANDAR",
+  "MUSCULOSA CROCHET": "ESTANDAR",
+  "PALAZZO": "L/XL",
+  "PALAZZO CINTURON": "ESTANDAR",
+  "PALAZZO ELASTICO": "ESTANDAR",
+  "PALAZZZO LINO": "ESTANDAR",
+  "PANTALON ALTA GAMA": "S L",
+  "PANTALON COTELE": "SM LXL",
+  "PANTALON GAMUZA": "M, XL",
+  "PANTALON LINO": "S/M/L",
+  "PANTALON SASTRERO LINO": "XL",
+  "PANTALON ZARA EXTRA LINDA": "XL/XXL",
+  "PANTALÓN COTELE": "S",
+  "PANTALÓN ELASTICO": "ESTANDAR",
+  "POLERA ALGODÓN S/H": "ESTANDAR",
+  "POLERA ANGELES": "ESTANDAR",
+  "POLERA ANIMALES": "ESTANDAR",
+  "POLERA BASICA": "ESTANDAR",
+  "POLERA BASICA PERRO": "S, M, L",
+  "POLERA BASICA TIRAS": "ESTANDAR",
+  "POLERA BRODERIE": "M, L",
+  "POLERA CAIDA": "S,M,L",
+  "POLERA CALIFORNIA": "SM / LXL",
+  "POLERA CHERRIES": "E",
+  "POLERA ENCAJE": "S/M/L",
+  "POLERA ESTAMPADO LOVE": "L",
+  "POLERA FRIDA": "E",
+  "POLERA LEOPARDO": "S/M/L",
+  "POLERA LIMON": "S/M/L",
+  "POLERA MANGA CORTA": "ESTANDAR",
+  "POLERA MANGA CORTA BRODERIE": "ESTANDAR",
+  "POLERA MANGA CORTA STRONG AND SEXY": "E (L)",
+  "POLERA MANGA LARGA OJO": "E",
+  "POLERA MANGA LARGA PRINT": "E",
+  "POLERA STRONG AND SEXY": "E",
+  "POLERA TAKE TIME": "M-L",
+  "PROMOCION 4 CINTUROS": "ESTANDAR",
+  "SPANDEX CORAZON": "ESTANDAR",
+  "SWEATER METALIZADO": "ESTANDAR",
+  "SWEATER SPANDEX": "XL",
+  "SWETER FRANCSICA": "ESTANDAR",
+  "SWETER JULIA": "ESTANDAR",
+  "SWETER MAITE": "ESTANDAR",
+  "SWETER MARCELA": "ESTANDAR",
+  "SWETER MARGARITA": "ESTANDAR",
+  "SWETER SABINA": "ESTANDAR",
+  "SWETER SUSAN": "ESTANDAR",
+  "SWETER TITI": "ESTANDAR",
+  "SWETER TRENZADO": "ESTANDAR",
+  "TAPADITO": "ESTANDAR",
+  "TAPADO SOL": "ESTANDAR",
+  "TRENCH": "ESTANDAR",
+  "VESTIDO BOTONES": "ESTANDAR",
+  "VESTIDO FLORES": "ESTANDAR",
+  "VESTIDO ITALIANO": "ESTANDAR"
+};
+
+/* Backfill: rellena o.talla en ORDENES_DEMO cuando está vacío, buscando el nombre del
+   producto (normalizado) en TALLAS_CATALOGO. Se llama una vez en el INIT — no pisa una
+   talla que Valeria ya haya escrito a mano. */
+function backfillTallasCompras(){
+  let rellenadas = 0;
+  ORDENES_DEMO.forEach(o => {
+    if(o.talla && o.talla.trim()) return;
+    const clave = (o.producto || '').trim().toUpperCase().replace(/\s+/g,' ');
+    if(TALLAS_CATALOGO[clave]){ o.talla = TALLAS_CATALOGO[clave]; rellenadas++; }
+  });
+  return rellenadas;
+}
+
+/* ---------- 3e-ter. CATALOGO_STOCK_AGOSTO (2026-08-31) — snapshot real del stock actual,
+   extraído de "STOCK AGOSTO 2026.xlsx" (planilla real de Valeria, organizada por categoría de
+   prenda). 108 productos con costo, precio de venta (cuando está cargado) y si queda
+   disponible o está agotado — la fuente más fresca que existe hoy del catálogo real. */
+const CATALOGO_STOCK_AGOSTO = [
+  {categoria:"PANTALONES", producto:"SASTRERO BLANCO", costo:10000, precioVenta:0, disponible:true},
+  {categoria:"PANTALONES", producto:"SASTRERO CAFÉ", costo:10000, precioVenta:0, disponible:true},
+  {categoria:"PANTALONES", producto:"SASTRERO NEGRO", costo:10000, precioVenta:0, disponible:false},
+  {categoria:"PANTALONES", producto:"JEANS SIMONA", costo:17000, precioVenta:0, disponible:false},
+  {categoria:"PANTALONES", producto:"JEANS CLAU AZUL TALLA M", costo:14500, precioVenta:0, disponible:true},
+  {categoria:"PANTALONES", producto:"JEANS CLAU CELESTE TALLA S", costo:14500, precioVenta:0, disponible:true},
+  {categoria:"PANTALONES", producto:"JEANS CLAU CELESTE TALLA XL", costo:14500, precioVenta:0, disponible:false},
+  {categoria:"PANTALONES", producto:"JEANS TACHAS", costo:5990, precioVenta:0, disponible:true},
+  {categoria:"PANTALONES", producto:"JEANS NEGRO WIDE LEG ANDREA", costo:10600, precioVenta:0, disponible:true},
+  {categoria:"PANTALONES", producto:"PANTALON SASTRERO MARCE BURDEO", costo:8700, precioVenta:0, disponible:true},
+  {categoria:"PANTALONES", producto:"PANTALON SASTRERO MURIEL BURDEOS", costo:12500, precioVenta:0, disponible:false},
+  {categoria:"PANTALONES", producto:"PANTALON SASTRERO JULIETA CAFÉ", costo:12000, precioVenta:0, disponible:true},
+  {categoria:"PANTALONES", producto:"JEANS HAWAII CAFÉ L", costo:16500, precioVenta:0, disponible:false},
+  {categoria:"PANTALONES", producto:"JEANS HAWAII AZUL  XL", costo:16500, precioVenta:0, disponible:false},
+  {categoria:"PANTALONES", producto:"JEANS HAWAII CELESTE M", costo:16500, precioVenta:0, disponible:false},
+  {categoria:"PANTALONES", producto:"JEANS CELESTE TALLA S", costo:13500, precioVenta:0, disponible:false},
+  {categoria:"PANTALONES", producto:"PANTALON DE COTELE BURDEOS", costo:3990, precioVenta:0, disponible:true},
+  {categoria:"PANTALONES", producto:"PALAZZO CELESTE", costo:5500, precioVenta:0, disponible:true},
+  {categoria:"PANTALONES", producto:"PALAZZO AMARILLO", costo:5500, precioVenta:0, disponible:true},
+  {categoria:"SWEATER", producto:"CARDIGANS BLU", costo:5990, precioVenta:16000, disponible:true},
+  {categoria:"SWEATER", producto:"SWEATER LUISA GRIS CLARO", costo:14900, precioVenta:18990, disponible:true},
+  {categoria:"SWEATER", producto:"SWEATER LUISA GRIS OSCURO", costo:14900, precioVenta:18990, disponible:true},
+  {categoria:"SWEATER", producto:"CHALECO ARGELIA BLANCO", costo:8000, precioVenta:18000, disponible:true},
+  {categoria:"SWEATER", producto:"CHALECO ARGELIA NEGRO", costo:8000, precioVenta:18000, disponible:true},
+  {categoria:"SWEATER", producto:"CHALECO ARGELIA VERDE", costo:8000, precioVenta:18000, disponible:true},
+  {categoria:"SWEATER", producto:"CHALECO ARGELIA CELESTE", costo:8000, precioVenta:18000, disponible:true},
+  {categoria:"SWEATER", producto:"SWEATER AMAYA CAFÉ", costo:12900, precioVenta:18990, disponible:true},
+  {categoria:"SWEATER", producto:"SWEATER AMAYA BEIGE", costo:12900, precioVenta:18990, disponible:true},
+  {categoria:"SWEATER", producto:"SWEATER PAZ", costo:12900, precioVenta:18990, disponible:false},
+  {categoria:"SWEATER", producto:"SWEATER MARCELA AMARILLO", costo:6990, precioVenta:11990, disponible:true},
+  {categoria:"SWEATER", producto:"SWEATER MARCELA NEGRO", costo:6990, precioVenta:11990, disponible:true},
+  {categoria:"SWEATER", producto:"SWEATER JULIA NEGRO VUELOS", costo:6990, precioVenta:16000, disponible:true},
+  {categoria:"SWEATER", producto:"SWEATER SUSAN", costo:4990, precioVenta:11990, disponible:true},
+  {categoria:"SWEATER", producto:"SWEATER TITI", costo:4990, precioVenta:11990, disponible:true},
+  {categoria:"SWEATER", producto:"SWEATER BELEN CAFÉ", costo:11900, precioVenta:18990, disponible:false},
+  {categoria:"SWEATER", producto:"SWEATER EMILIA", costo:10000, precioVenta:18990, disponible:true},
+  {categoria:"SWEATER", producto:"SWEATER SOFIA", costo:10900, precioVenta:20000, disponible:true},
+  {categoria:"SWEATER", producto:"TEJIDO ASIMETRICO GRIS", costo:9000, precioVenta:16000, disponible:true},
+  {categoria:"SWEATER", producto:"TEJIDO ASIMETRICO BURDEOS", costo:9000, precioVenta:16000, disponible:true},
+  {categoria:"SWEATER", producto:"CHALECO VICTORIA VERDE", costo:8900, precioVenta:16000, disponible:true},
+  {categoria:"SWEATER", producto:"CHALECO VICTORIA FUCSIA", costo:8900, precioVenta:16000, disponible:false},
+  {categoria:"SWEATER", producto:"SWEATER LUA BEIGE", costo:11800, precioVenta:20000, disponible:true},
+  {categoria:"SWEATER", producto:"SWEATER LUA CHOCOLATE", costo:11800, precioVenta:20000, disponible:true},
+  {categoria:"SWEATER", producto:"SWEATER LUA ROJO", costo:11800, precioVenta:20000, disponible:true},
+  {categoria:"SWEATER", producto:"SWEATER LUA CAFÉ", costo:11800, precioVenta:20000, disponible:true},
+  {categoria:"SWEATER", producto:"SWEATER LUA NEGRO", costo:11800, precioVenta:20000, disponible:true},
+  {categoria:"SWEATER", producto:"CHALECO CLARA GRIS", costo:10500, precioVenta:21500, disponible:true},
+  {categoria:"POLERAS", producto:"POLERA VICENTA NEGRA M", costo:8000, precioVenta:16000, disponible:true},
+  {categoria:"POLERAS", producto:"POLERA VICENTA CAFÉ L", costo:8000, precioVenta:16000, disponible:true},
+  {categoria:"POLERAS", producto:"POLERA VICENTA  BLANCA S", costo:8000, precioVenta:16000, disponible:false},
+  {categoria:"POLERAS", producto:"POLERA ROCIO NARANJA M", costo:7500, precioVenta:16990, disponible:false},
+  {categoria:"POLERAS", producto:"POLERA ROCDIO AMARILLA L", costo:7500, precioVenta:16990, disponible:true},
+  {categoria:"POLERAS", producto:"POLERA ROCIO VERDE S", costo:7500, precioVenta:16990, disponible:false},
+  {categoria:"POLERAS", producto:"POLERA MURRIEL CHOCOLATE L", costo:7500, precioVenta:16000, disponible:false},
+  {categoria:"POLERAS", producto:"POLERA MUREL CHOCOLATE M", costo:7500, precioVenta:16000, disponible:false},
+  {categoria:"POLERAS", producto:"POLERA MURIEL CHOCOLATE S", costo:7500, precioVenta:16000, disponible:false},
+  {categoria:"POLERAS", producto:"POLERA MURIEL CAFE S", costo:7500, precioVenta:16000, disponible:true},
+  {categoria:"POLERAS", producto:"POLERA MURIEL CAFÉ L", costo:7500, precioVenta:16000, disponible:false},
+  {categoria:"POLERAS", producto:"POLERA MURIEL NEGRA L", costo:7500, precioVenta:16000, disponible:false},
+  {categoria:"POLERAS", producto:"POLERA MURIEL BLANCA M", costo:7500, precioVenta:16000, disponible:true},
+  {categoria:"POLERAS", producto:"POLERA MURIEL BLANCA L CON FALLA", costo:7500, precioVenta:12000, disponible:false},
+  {categoria:"POLERAS", producto:"POLERA CALIFORNIA", costo:4500, precioVenta:10000, disponible:true},
+  {categoria:"POLERAS", producto:"POLERA PRIMT MANGA LARGA", costo:5500, precioVenta:15000, disponible:true},
+  {categoria:"POLERAS", producto:"POLERA FUCSIA JACINTA", costo:5000, precioVenta:10000, disponible:true},
+  {categoria:"POLERAS", producto:"POLERA BEIGE JACINTA", costo:5000, precioVenta:10000, disponible:true},
+  {categoria:"POLERAS", producto:"TEJIDO ARTESANAL GIOLLETE", costo:7500, precioVenta:10000, disponible:true},
+  {categoria:"POLERAS", producto:"BODY BLANCO", costo:7000, precioVenta:12000, disponible:true},
+  {categoria:"POLERAS", producto:"BODY BEIGE", costo:7000, precioVenta:12000, disponible:true},
+  {categoria:"POLERAS", producto:"BODY LILA", costo:7000, precioVenta:12000, disponible:true},
+  {categoria:"POLERAS", producto:"BODY VERDE", costo:7000, precioVenta:12000, disponible:true},
+  {categoria:"POLERAS", producto:"BODY VERDE MUSCULOSA", costo:5500, precioVenta:12000, disponible:true},
+  {categoria:"BLUSAS", producto:"BLUSA A RAYAS AZUL", costo:10900, precioVenta:16000, disponible:true},
+  {categoria:"BLUSAS", producto:"BLUSA A RAYAS CELESTE", costo:10900, precioVenta:16000, disponible:false},
+  {categoria:"BLUSAS", producto:"BLUSA PRINT", costo:12500, precioVenta:18990, disponible:true},
+  {categoria:"BLUSAS", producto:"BLUSA BRODERIE", costo:8500, precioVenta:13500, disponible:true},
+  {categoria:"BLUSAS", producto:"BLUSA VALENTINA", costo:10000, precioVenta:18990, disponible:true},
+  {categoria:"BLUSAS", producto:"BLUSA MAGNOLIA", costo:11500, precioVenta:18990, disponible:true},
+  {categoria:"BLUSAS", producto:"BLUSA ALBERTA NEGRA", costo:10500, precioVenta:10000, disponible:true},
+  {categoria:"BLUSAS", producto:"BLUSA ESPERANZA", costo:8500, precioVenta:12500, disponible:true},
+  {categoria:"VESTIDOS", producto:"VESTIDO ROJO LARGO", costo:9000, precioVenta:13500, disponible:true},
+  {categoria:"VESTIDOS", producto:"VESTIDO ELI FUCSIA", costo:10900, precioVenta:10000, disponible:true},
+  {categoria:"VESTIDOS", producto:"VESTIDO ELI AZUL", costo:10900, precioVenta:10000, disponible:true},
+  {categoria:"VESTIDOS", producto:"VESTIDO ITALIANO  NEGRO", costo:7900, precioVenta:10000, disponible:true},
+  {categoria:"CHAQUETAS Y BLAZER", producto:"BLAZER BOHEMIA CAFÉ S", costo:16500, precioVenta:26990, disponible:true},
+  {categoria:"CHAQUETAS Y BLAZER", producto:"BLAZER BOHEMIA BEIGE M", costo:16500, precioVenta:26990, disponible:true},
+  {categoria:"CHAQUETAS Y BLAZER", producto:"BLAZER BOHEMIA ROJO L", costo:16500, precioVenta:26990, disponible:true},
+  {categoria:"CHAQUETAS Y BLAZER", producto:"BLAZER BOHEMIA NEGRO L", costo:16500, precioVenta:26990, disponible:false},
+  {categoria:"CHAQUETAS Y BLAZER", producto:"BLAZER SOFIA GRIS", costo:12000, precioVenta:19000, disponible:true},
+  {categoria:"CHAQUETAS Y BLAZER", producto:"BLAZER MONE CUADROS BLANCOS", costo:14000, precioVenta:19000, disponible:true},
+  {categoria:"CHAQUETAS Y BLAZER", producto:"BLAZER MONE CUADROS AMARILLOS", costo:14000, precioVenta:19000, disponible:true},
+  {categoria:"CHAQUETAS Y BLAZER", producto:"ABRIGO CORTO  MARRON", costo:10900, precioVenta:20000, disponible:false},
+  {categoria:"CHAQUETAS Y BLAZER", producto:"CHAQUETA MEZCLILLA MILI AZUL", costo:13500, precioVenta:24000, disponible:false},
+  {categoria:"CHAQUETAS Y BLAZER", producto:"CHAQUETA MEZCLILLA MILI CELESTE", costo:13500, precioVenta:24000, disponible:true},
+  {categoria:"CHAQUETAS Y BLAZER", producto:"SOBRECAMISA GRIS COTELE", costo:17500, precioVenta:20000, disponible:false},
+  {categoria:"CHAQUETAS Y BLAZER", producto:"SOBRECAMISA GRIS COTELE (2)", costo:17500, precioVenta:20000, disponible:true},
+  {categoria:"CHAQUETAS Y BLAZER", producto:"AVIADORA CAFÉ", costo:17500, precioVenta:28990, disponible:true},
+  {categoria:"CHAQUETAS Y BLAZER", producto:"SOBRECAMISA CAFÉ PAÑO", costo:10500, precioVenta:20000, disponible:true},
+  {categoria:"CHAQUETAS Y BLAZER", producto:"SOBRECAMISA CAFÉ PAÑO (2)", costo:10500, precioVenta:20000, disponible:false},
+  {categoria:"CHAQUETAS Y BLAZER", producto:"ABRIGO LARGO CREMA", costo:13900, precioVenta:20000, disponible:true},
+  {categoria:"CHAQUETAS Y BLAZER", producto:"CHAQUETA FUCSIA SIN MANGAS", costo:8990, precioVenta:16000, disponible:true},
+  {categoria:"GUILETS", producto:"GUILLETYS BLANCO", costo:9500, precioVenta:18990, disponible:false},
+  {categoria:"GUILETS", producto:"GUILLETE BLANCO", costo:9500, precioVenta:18990, disponible:true},
+  {categoria:"GUILETS", producto:"GUILLETE BEIGE", costo:9500, precioVenta:18990, disponible:true},
+  {categoria:"ENTERITOS Y MONOS", producto:"ENTERITO LINO ROJO", costo:12900, precioVenta:10000, disponible:true},
+  {categoria:"ACCESORIOS", producto:"CINTURON ROJO", costo:3000, precioVenta:8000, disponible:true},
+  {categoria:"ACCESORIOS", producto:"JOCKEY PRINT", costo:5000, precioVenta:10000, disponible:true},
+  {categoria:"ACCESORIOS", producto:"JOCKEY ESTRELLA BLANCA", costo:5000, precioVenta:10000, disponible:true},
+  {categoria:"ACCESORIOS", producto:"JOCKEY GRIS", costo:5000, precioVenta:10000, disponible:true}
 ];
 
 /* ---------- 3f. Histórico Ventas Mensuales — carga inicial (ago 2025 → jun 2026) ---------- */
@@ -2024,6 +2353,46 @@ function guardarCampana(){
    M6 — COMPRAS · GESTIÓN MERCADERÍA
    Proveedores · Órdenes de compra · Seguimiento despachos · Stock mínimo
    ============================================================ */
+/* Capa 2 — catálogo real de stock (STOCK AGOSTO 2026.xlsx), agrupado por categoría con
+   details/summary igual que "Compras por Proveedor". Es la fuente más fresca que existe hoy
+   de qué prendas quedan disponibles versus agotadas. */
+function renderCatalogoStock(){
+  const grupos = {};
+  CATALOGO_STOCK_AGOSTO.forEach(p => {
+    if(!grupos[p.categoria]) grupos[p.categoria] = { items: [], disponibles: 0 };
+    grupos[p.categoria].items.push(p);
+    if(p.disponible) grupos[p.categoria].disponibles++;
+  });
+  const categorias = Object.keys(grupos).sort((a,b) => grupos[b].items.length - grupos[a].items.length);
+  const totalDisponibles = CATALOGO_STOCK_AGOSTO.filter(p => p.disponible).length;
+
+  return `
+    <div class="panel">
+      <div class="panel-title">📋 Catálogo de Stock — Agosto 2026 <span class="badge-live">${totalDisponibles} disponibles / ${CATALOGO_STOCK_AGOSTO.length}</span></div>
+      <div class="calc-note" style="margin-bottom:.6rem;">Snapshot real que envió Valeria (STOCK AGOSTO 2026.xlsx), organizado por categoría de prenda — la foto más actual de qué queda disponible versus agotado.</div>
+      ${categorias.map(cat => `
+        <details class="proveedor-detalle">
+          <summary>
+            <span class="prov-nombre">${escaparHTML(cat)}</span>
+            <span class="prov-meta">${grupos[cat].disponibles} de ${grupos[cat].items.length} disponibles</span>
+          </summary>
+          <div class="table-scroll"><table class="simple compact">
+            <tr><th>Producto</th><th>Costo</th><th>Precio venta</th><th>Estado</th></tr>
+            ${grupos[cat].items.map(p => `
+              <tr style="${p.disponible?'':'opacity:.5;'}">
+                <td>${escaparHTML(p.producto)}</td>
+                <td>$${p.costo.toLocaleString('es-CL')}</td>
+                <td>${p.precioVenta ? '$'+p.precioVenta.toLocaleString('es-CL') : '—'}</td>
+                <td><span class="estado-pill ${p.disponible?'recibido':'pendiente'}">${p.disponible?'Disponible':'Agotado'}</span></td>
+              </tr>
+            `).join('')}
+          </table></div>
+        </details>
+      `).join('')}
+    </div>
+  `;
+}
+
 function renderCompras(){
   return `
     <div class="page-title">📦 Compras · Gestión Mercadería</div>
@@ -2061,6 +2430,8 @@ function renderCompras(){
       </div>
       <div id="talla-resultado" class="insight-box" style="display:none;"></div>
     </div>
+
+    ${renderCatalogoStock()}
 
     <div class="panel">
       <div class="panel-title">🧾 Órdenes de Compra</div>
@@ -2107,20 +2478,35 @@ function generarTextoTallas(){
   const q = document.getElementById('talla-buscar-producto').value.trim().toLowerCase();
   const caja = document.getElementById('talla-resultado');
   if(!q){ caja.style.display = 'none'; return; }
+  caja.style.display = 'block';
+
   const coincidencias = ORDENES_DEMO.filter(o => o.producto.toLowerCase().includes(q));
-  if(!coincidencias.length){
-    caja.style.display = 'block';
-    caja.innerHTML = `Sin coincidencias para "${escaparHTML(q)}" en Compras. Prueba con otra palabra del nombre del producto.`;
+  const conTalla = coincidencias.filter(o => o.talla && o.talla.trim());
+
+  if(conTalla.length){
+    const nombreReal = conTalla[0].producto;
+    const tallasUnicas = [...new Set(conTalla.map(o => o.talla.trim().toUpperCase()))];
+    mostrarTextoTallas(nombreReal, tallasUnicas, caja);
     return;
   }
-  const conTalla = coincidencias.filter(o => o.talla && o.talla.trim());
-  caja.style.display = 'block';
-  if(!conTalla.length){
+
+  // Sin match con talla en Compras — probar el catálogo de tallas real (TALLAS_CATALOGO,
+  // extraído de COMPRAS.xlsx) por coincidencia parcial de nombre.
+  const claveCatalogo = Object.keys(TALLAS_CATALOGO).find(k => k.toLowerCase().includes(q) || q.includes(k.toLowerCase()));
+  if(claveCatalogo){
+    mostrarTextoTallas(claveCatalogo, [TALLAS_CATALOGO[claveCatalogo]], caja);
+    return;
+  }
+
+  if(coincidencias.length){
     caja.innerHTML = `Encontré ${coincidencias.length} orden(es) de "${escaparHTML(coincidencias[0].producto)}" pero ninguna tiene talla cargada todavía. Edítala desde la tabla de abajo (✏️) y agrégala.`;
     return;
   }
-  const tallasUnicas = [...new Set(conTalla.map(o => o.talla.trim().toUpperCase()))];
-  ULTIMO_TEXTO_TALLAS = `¡Hola! 🦋 "${conTalla[0].producto}" está disponible en talla${tallasUnicas.length>1?'s':''}: ${tallasUnicas.join(', ')}. ¿Te ayudo a elegir la tuya?`;
+  caja.innerHTML = `Sin coincidencias para "${escaparHTML(q)}" en Compras ni en el catálogo de tallas. Prueba con otra palabra del nombre del producto.`;
+}
+
+function mostrarTextoTallas(nombreProducto, tallasUnicas, caja){
+  ULTIMO_TEXTO_TALLAS = `¡Hola! 🦋 "${nombreProducto}" está disponible en talla${tallasUnicas.length>1?'s':''}: ${tallasUnicas.join(', ')}. ¿Te ayudo a elegir la tuya?`;
   caja.innerHTML = `
     <div style="margin-bottom:.5rem;">${escaparHTML(ULTIMO_TEXTO_TALLAS)}</div>
     <button class="btn btn-ghost" style="padding:.35rem .7rem; font-size:.68rem;" onclick="copiarTextoTallas(this)">📋 Copiar texto</button>
@@ -3205,6 +3591,7 @@ async function leerModuloNube(modulo){
    hardcodeado/localStorage. Si Sheets está vacío, se siembra UNA vez con lo que ya
    tiene el ERP en memoria — así el backend deja de estar vacío sin que Valeria haga nada. */
 async function sincronizarConLaNubeAlInicio(){
+  const ordenesLocalesAntes = ORDENES_DEMO.length; // snapshot antes de tocar nada
   const [filasCrm, filasCompras] = await Promise.all([leerModuloNube('crm'), leerModuloNube('compras')]);
 
   if(filasCrm && filasCrm.length){
@@ -3214,12 +3601,20 @@ async function sincronizarConLaNubeAlInicio(){
     try{ localStorage.setItem('asiri_seed_crm_enviado', '1'); }catch(e){}
   }
 
-  if(filasCompras && filasCompras.length){
+  // Si Sheets tiene MENOS órdenes que el código local, el código local es la versión más
+  // completa (ej. se cargaron pedidos nuevos en una sesión de código) — en ese caso Sheets
+  // se actualiza a partir del código, nunca al revés. Solo se lee de Sheets cuando tiene
+  // igual o más filas (Valeria editó desde otro dispositivo, o ya estaba al día).
+  if(filasCompras && filasCompras.length >= ordenesLocalesAntes){
     ORDENES_DEMO = filasCompras.map(mapRowAOrden);
+  } else if(filasCompras && filasCompras.length){
+    sincronizarNubeCompras(); // Sheets desactualizado respecto al código — lo empareja
   } else if(!localStorage.getItem('asiri_seed_compras_enviado')){
     sincronizarNubeCompras();
     try{ localStorage.setItem('asiri_seed_compras_enviado', '1'); }catch(e){}
   }
+
+  backfillTallasCompras(); // rellena tallas faltantes con TALLAS_CATALOGO, venga de donde venga ORDENES_DEMO
 
   if((filasCrm && filasCrm.length) || (filasCompras && filasCompras.length)){
     guardarEstadoLocal();
@@ -3312,6 +3707,7 @@ if('serviceWorker' in navigator){
 /* ---------- 12. INIT ---------- */
 document.addEventListener('DOMContentLoaded', () => {
   cargarEstadoLocal(); // restaura ventas, CRM, compras, ads, F29 y Looker guardados antes de renderizar
+  backfillTallasCompras(); // rellena tallas faltantes antes del primer render de M6
   actualizarCajaBaseDia(); // fija/lee la base de caja del día para calcular el delta real "vs ayer"
   renderSidebar();
   initViews();
