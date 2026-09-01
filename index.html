@@ -1386,6 +1386,199 @@ function backfillTallasCompras(){
   return rellenadas;
 }
 
+/* ---------- PRECIO_VENTA_CATALOGO (2026-09-01) — precio de venta real por producto, extraído
+   de COMPRAS.xlsx (columna "PRECIO VENTA" de la tabla de precios de cada pedido). 175 productos.
+   Con esto ORDENES_DEMO puede calcular margen real a nivel de compra individual, no solo a
+   nivel de catálogo agregado (ver Propuesta A / renderMargenReal). Ajuste pedido por Valeria
+   ("proceder con ajustes, go") sobre el hallazgo de modo ninja del 01-sep-2026. */
+const PRECIO_VENTA_CATALOGO = {
+  "ABRIGO LARGO": 23990,
+  "AVIADORA": 34990,
+  "AVIADORA FORRADA": 34990,
+  "BEATLE": 12000,
+  "BLAZER": 24990,
+  "BLAZER ALLTA GAMA ACEBRADO": 22990,
+  "BLAZER CUADRILLE": 22990,
+  "BLAZER LINO BOTON": 23990,
+  "BLAZER VISCOSA-GABARDINA": 22990,
+  "BLEIZER ALTA GAMA": 22990,
+  "BLEIZER LINO": 22990,
+  "BLUSA BLANCA Y FUCSIA": 12500,
+  "BLUSA BOTON CORAZON": 18990,
+  "BLUSA BOTON DORADO": 19000,
+  "BLUSA CON BOTONES": 22990,
+  "BLUSA CON BROCHES": 22000,
+  "BLUSA CON CUELLO": 22990,
+  "BLUSA CUELLO V": 16000,
+  "BLUSA CUELO ALTO": 21000,
+  "BLUSA LINO": 15000,
+  "BLUSA PRINT": 18990,
+  "BLUSA RAYAS": 19990,
+  "BLUSA TIRAS CUELLO V": 11500,
+  "BLUSA TIRAS CUELLO V (BLUSA ALBERTA )": 11500,
+  "BLUSA VISCOSA": 10000,
+  "BLUSON": 17000,
+  "BLUSON LINO": 17000,
+  "BLUSÓN": 16990,
+  "BODY": 12000,
+  "BODY CONCHITA": 12000,
+  "BODY LYCRA TIPO ZARA": 12000,
+  "BODY MUSCULOSA": 10000,
+  "BODY ZARA": 12000,
+  "BUFANDA ANIMAL PRINT": 7500,
+  "CAMISA GAMUSA": 24000,
+  "CAMISA ITALIANA MANGA 3/4": 24000,
+  "CARDIGAN BLU": 18000,
+  "CARDIGAN CARMEN": 15000,
+  "CARDIGANS BLANCO": 14500,
+  "CARDIGANS SOLE": 14500,
+  "CHALECO A RAYAS": 22000,
+  "CHALECO A RAYAS CLARA": 21500,
+  "CHALECO ALTA GAMA ITALIANO": 24990,
+  "CHALECO BASICO VICTORIA": 16000,
+  "CHALECO CERRADO": 18500,
+  "CHALECO CONCHA": 20000,
+  "CHALECO CUELLO V LUA": 20000,
+  "CHALECO FLOR MANGAS": 22990,
+  "CHALECO FLORES ALTA GAMA": 19990,
+  "CHALECO FLORES Y CORAZONES": 20000,
+  "CHALECO GUILLETE CERRADO HILO": 13500,
+  "CHALECO HILO": 19500,
+  "CHALECO HILO DORADO": 20000,
+  "CHALECO HILO FLOR": 24990,
+  "CHALECO LANA BOTONES": 20000,
+  "CHALECO LENTEJUELAS FLOR": 20000,
+  "CHALECO MANGA LARGA ITALIANA CORAZON DORADO": 23990,
+  "CHALECO RAYAS": 16000,
+  "CHALECO SPANDEX": 20000,
+  "CHALECO SPANDEX CORAZONES": 20000,
+  "CHALECO SPANDEX ESTÁNDAR": 20000,
+  "CHALECO SPANDEX FLORES": 20000,
+  "CHALECO SPANDEX LARGO": 10990,
+  "CHALECO SPANDEX P 25417": 20000,
+  "CHAQUETA AVIADORA CAMEL": 28990,
+  "CHAQUETA BRODERIE": 26000,
+  "CHAQUETA CALADA": 26000,
+  "CHAQUETA CEBRA CON GORRO": 22000,
+  "CHAQUETA CON BRODERI ABAJO": 26000,
+  "CHAQUETA GAMUZA": 27990,
+  "CHAQUETA ITALIANA": 26000,
+  "CHAQUETA JEANS": 29990,
+  "CHAQUETA MEZCLILLA": 29990,
+  "CHAQUETA MEZCLILLA CON BOTONES": 24000,
+  "CHAQUETA MEZCLILLA CON CIERRE": 27990,
+  "CHAQUETA MEZCLILLA MILI": 24000,
+  "CHAQUETA PAÑO": 27000,
+  "CHAQUETA S/MANGAS": 20000,
+  "CHELCO BOTONES DORADO MANGA": 16000,
+  "CHELCO HILO": 22000,
+  "CINTURON": 6000,
+  "CINTURÓN": 8000,
+  "CONJUNTO": 21500,
+  "CONJUNTO BRODERIE": 21500,
+  "CROPTOP": 10000,
+  "ENTERITO": 19000,
+  "GILLET ALTA GAMA LARGO": 18990,
+  "GILLET CHALECO BOTON DORADO": 18990,
+  "GILLET MEZCLILLA": 18990,
+  "GILLETTE CROCHET": 16990,
+  "GUILLETE": 18990,
+  "GUILLETE CON CIERRE": 18990,
+  "GUILLETE CROCHETE": 15000,
+  "GUILLETE PARKA": 20000,
+  "GUILLETE RENO": 16000,
+  "GUILLETTE BORDADO": 20000,
+  "GUILLETTE CON CIERRE": 15000,
+  "JEANS": 20000,
+  "JEANS CELESTE": 22990,
+  "JEANS CON CINTURÓN": 25990,
+  "JEANS CON ELASTICO": 20000,
+  "JEANS FLARE": 22990,
+  "JEANS FLARE AZUL": 25990,
+  "JEANS PIEDRAS": 26990,
+  "JEANS PINZAS HAWAII": 26990,
+  "JEANS POLKA": 26990,
+  "JEANS PRETINA ADELANTE": 18000,
+  "JEANS SUELTO": 18000,
+  "JEANS TACHAS": 18000,
+  "JEANS WIDE LEG": 25990,
+  "JOCKEY": 12000,
+  "JOGGERS FLORES": 22000,
+  "JOGGERS MEZCLILLA": 12000,
+  "KIMONO": 10000,
+  "MAXI VESTIDOS": 19000,
+  "MAXIVESTIDO": 19000,
+  "MUSCULOSA CROCHET": 16000,
+  "PALAZZO": 13000,
+  "PALAZZO CINTURON": 18990,
+  "PALAZZO ELASTICO": 21500,
+  "PALAZZZO LINO": 13000,
+  "PANTALON ALTA GAMA": 22000,
+  "PANTALON COTELE": 20000,
+  "PANTALON COTELE FORRADO": 20000,
+  "PANTALON GAMUSA": 20000,
+  "PANTALON GAMUZA": 22000,
+  "PANTALON LINO": 20000,
+  "PANTALON POLIESTER": 20000,
+  "PANTALON SASTRERO": 20000,
+  "PANTALON SASTRERO LINO": 20000,
+  "PANTALON ZARA EXTRA LINDA": 20000,
+  "PANTALÓN COTELE": 11990,
+  "PANTALÓN ELASTICO": 16000,
+  "PANTY": 9000,
+  "POLERA ALGODÓN S/H": 10000,
+  "POLERA ANGELES": 18990,
+  "POLERA ANIMALES": 18990,
+  "POLERA BASICA": 16000,
+  "POLERA BASICA PERRO": 16990,
+  "POLERA BASICA TIRAS": 18000,
+  "POLERA BRODERIE": 15000,
+  "POLERA CAIDA": 14500,
+  "POLERA CALIFORNIA": 10000,
+  "POLERA CHERRIES": 15000,
+  "POLERA ENCAJE": 19000,
+  "POLERA ESTAMPADO LOVE": 22000,
+  "POLERA FRIDA": 10000,
+  "POLERA LEOPARDO": 14000,
+  "POLERA LIMON": 16000,
+  "POLERA MANGA CORTA": 18000,
+  "POLERA MANGA CORTA BRODERIE": 18000,
+  "POLERA MANGA LARGA OJO": 18990,
+  "POLERA MANGA LARGA PRINT": 10000,
+  "POLERA STRONG AND SEXY": 12000,
+  "POLERA TAKE TIME": 15990,
+  "SASTRERO POLIESTER": 16000,
+  "SOBRECAMISA": 28000,
+  "SOBRECAMISA GAMUZA": 28000,
+  "SOBRECAMISA PAÑO": 20000,
+  "SPANDEX": 18990,
+  "SPANDEX CORAZON": 23990,
+  "SWEATER CORAZON": 20000,
+  "SWEATER METALIZADO": 22000,
+  "SWEATER SPANDEX": 22990,
+  "SWETER JULIA": 18000,
+  "SWETER MAITE": 14500,
+  "SWETER MARCELA": 16000,
+  "SWETER SUSAN": 11990,
+  "SWETER TITI": 11990,
+  "TAPADITO": 18000,
+  "TAPADO SOL": 14500,
+  "TRENCH": 23990,
+  "VESTIDO BOTONES": 22000,
+  "VESTIDO FLORES": 14500,
+  "VESTIDO ITALIANO": 14500
+};
+
+function backfillPrecioVentaCompras(){
+  let rellenadas = 0;
+  ORDENES_DEMO.forEach(o => {
+    if(o.precioVenta) return;
+    const clave = (o.producto || '').trim().toUpperCase().replace(/\s+/g,' ');
+    if(PRECIO_VENTA_CATALOGO[clave]){ o.precioVenta = PRECIO_VENTA_CATALOGO[clave]; rellenadas++; }
+  });
+  return rellenadas;
+}
+
 /* ---------- 3e-ter. CATALOGO_STOCK_AGOSTO (2026-08-31) — snapshot real del stock actual,
    extraído de "STOCK AGOSTO 2026.xlsx" (planilla real de Valeria, organizada por categoría de
    prenda). 108 productos con costo, precio de venta (cuando está cargado) y si queda
@@ -1558,7 +1751,35 @@ function detectarProblemasLimpieza(){
       problemas.push({id:'orden-'+i, texto:`Orden pendiente hace ${dias} días sin seguimiento: ${escaparHTML(o.producto)} (${escaparHTML(o.proveedor)})`});
     }
   });
+  // Posibles clientas duplicadas en CRM (nombre corto/apodo vs nombre completo, ej. "Rocio" y
+  // "Rocio Veliz", o "Fer Neira" y "Fernanda Neira") — hallazgo de modo ninja 01-sep-2026.
+  // Solo SUGIERE, nunca fusiona sola: casos como "Jovita" vs "Jovita (Talca)" pueden ser dos
+  // personas distintas a propósito — Valeria decide y fusiona a mano desde M2 si corresponde.
+  for(let i=0; i<CRM_DEMO.length; i++){
+    for(let j=i+1; j<CRM_DEMO.length; j++){
+      const a = CRM_DEMO[i], b = CRM_DEMO[j];
+      if(nombresPosibleDuplicado(a.nombre, b.nombre)){
+        problemas.push({id:'nombredup-'+a.id+'-'+b.id, texto:`Posibles clientas duplicadas: "${escaparHTML(a.nombre)}" y "${escaparHTML(b.nombre)}" — revisa y fusiona a mano si son la misma persona`});
+      }
+    }
+  }
   return problemas;
+}
+
+function nombresPosibleDuplicado(nombreA, nombreB){
+  const A = (nombreA || '').trim().toUpperCase();
+  const B = (nombreB || '').trim().toUpperCase();
+  if(!A || !B) return false;
+  // Un nombre contenido literalmente en el otro (apodos, paréntesis: "Tía Lore" en "Sandra (Tía Lore)")
+  if(A.length >= 4 && B.includes(A)) return true;
+  if(B.length >= 4 && A.includes(B)) return true;
+  // Mismo apellido (última palabra) y el primer nombre es prefijo uno del otro ("Fer Neira" / "Fernanda Neira")
+  const wa = A.split(/\s+/), wb = B.split(/\s+/);
+  if(wa.length > 1 && wb.length > 1 && wa[wa.length-1] === wb[wb.length-1]){
+    const na = wa[0], nb = wb[0];
+    if(na.length >= 2 && nb.length >= 2 && (na.startsWith(nb) || nb.startsWith(na))) return true;
+  }
+  return false;
 }
 
 /* ---------- 3i. ESTADO M11 ACADEMY — notas guardadas por Valeria (localStorage) ---------- */
@@ -1618,7 +1839,17 @@ function calcularResumenMensual(){
 }
 
 /* ---------- 4. RENDER HOME (M0) ---------- */
+/* Home — antes 3 de las 4 tarjetas eran números muertos (DATA_DEMO.stockCritico/conversion/
+   clientasNuevas fijos en 0 desde la instalación, solo cambiaban si alguien los pisaba a mano).
+   Ahora se calculan en el momento del render sobre datos que ya están cargados — hallazgo de
+   modo ninja 01-sep-2026. */
 function renderHome(){
+  const agotados = CATALOGO_STOCK_AGOSTO.filter(p => !p.disponible).length;
+  const conversionReal = SHOPIFY_SESIONES_30D > 0
+    ? ((DIAG_SHOPIFY_LIVE.checkoutsCompletados30d / SHOPIFY_SESIONES_30D) * 100).toFixed(1)
+    : '0.0';
+  const clientasNuevasReal = CRM_DEMO.filter(c => segmentarClienta(c).key === 'nueva').length;
+
   const html = `
     <div class="page-title">Dashboard Ejecutivo 🏠</div>
     <div class="page-sub">Resumen del negocio en tiempo real — ASIRI La Boutique</div>
@@ -1630,23 +1861,23 @@ function renderHome(){
         <div class="kpi-value">$${DATA_DEMO.cajaHoy.toLocaleString('es-CL')}</div>
         <div class="kpi-delta ${String(DATA_DEMO.cajaHoyDelta).startsWith('-') ? 'down' : 'up'}">${String(DATA_DEMO.cajaHoyDelta).startsWith('-') ? '↓' : '↑'} ${DATA_DEMO.cajaHoyDelta} vs ayer</div>
       </div>
-      <div class="kpi-card alert">
+      <div class="kpi-card">
         <span class="kpi-icon">📦</span>
-        <div class="kpi-label">Stock Crítico</div>
-        <div class="kpi-value alert">${DATA_DEMO.stockCritico}</div>
-        <div class="kpi-delta down">productos con 1 unidad</div>
+        <div class="kpi-label">Productos Agotados</div>
+        <div class="kpi-value">${agotados}</div>
+        <div class="kpi-delta">de ${CATALOGO_STOCK_AGOSTO.length} — normal, 1 unidad por modelo es la estrategia</div>
       </div>
       <div class="kpi-card alert">
         <span class="kpi-icon">🎯</span>
         <div class="kpi-label">Conversión Shopify</div>
-        <div class="kpi-value alert">${DATA_DEMO.conversion}%</div>
+        <div class="kpi-value alert">${conversionReal}%</div>
         <div class="kpi-delta down">${SHOPIFY_SESIONES_30D.toLocaleString('es-CL')} sesiones / ${DIAG_SHOPIFY_LIVE.checkoutsCompletados30d} ventas (30d)</div>
       </div>
       <div class="kpi-card">
         <span class="kpi-icon">💎</span>
         <div class="kpi-label">Clientas Nuevas</div>
-        <div class="kpi-value">${DATA_DEMO.clientasNuevas}</div>
-        <div class="kpi-delta up">esta semana</div>
+        <div class="kpi-value">${clientasNuevasReal}</div>
+        <div class="kpi-delta up">últimos 14 días</div>
       </div>
     </div>
 
@@ -2661,6 +2892,64 @@ function renderComprasPorProveedor(){
   `;
 }
 
+/* Margen real por categoría — usa CATALOGO_STOCK_AGOSTO (ya tiene costo Y precio de venta
+   real cargados desde STOCK AGOSTO 2026.xlsx). Dato que hasta hoy no existía en ningún panel
+   del ERP: todo lo que había era costo de compra, nunca cuánto deja realmente cada prenda.
+   Hallazgo + propuesta de modo ninja 01-sep-2026. */
+function renderMargenReal(){
+  const conPrecio = CATALOGO_STOCK_AGOSTO.filter(p => p.precioVenta > 0);
+  const sinPrecio = CATALOGO_STOCK_AGOSTO.length - conPrecio.length;
+  const items = conPrecio.map(p => ({...p, margen: p.precioVenta - p.costo, pctMargen: (p.precioVenta - p.costo) / p.precioVenta * 100}));
+
+  const grupos = {};
+  items.forEach(p => {
+    if(!grupos[p.categoria]) grupos[p.categoria] = { items: [], costoTotal: 0, ventaTotal: 0, margenTotal: 0 };
+    grupos[p.categoria].items.push(p);
+    grupos[p.categoria].costoTotal += p.costo;
+    grupos[p.categoria].ventaTotal += p.precioVenta;
+    grupos[p.categoria].margenTotal += p.margen;
+  });
+  const categorias = Object.keys(grupos).sort((a,b) => grupos[b].margenTotal - grupos[a].margenTotal);
+  const pctPromedio = (lista) => lista.length ? lista.reduce((s,p) => s+p.pctMargen, 0) / lista.length : 0;
+
+  // Margen a nivel de compra individual (226 órdenes de M6), usando PRECIO_VENTA_CATALOGO como
+  // respaldo (mismo patrón que TALLAS_CATALOGO) — ajuste pedido por Valeria el 01-sep-2026.
+  const ordenesConPrecio = ORDENES_DEMO.filter(o => o.precioVenta > 0);
+  const costoOrdenesConPrecio = ordenesConPrecio.reduce((s,o) => s + o.cantidad*o.costo, 0);
+  const ventaOrdenesConPrecio = ordenesConPrecio.reduce((s,o) => s + o.cantidad*o.precioVenta, 0);
+  const margenOrdenes = ventaOrdenesConPrecio - costoOrdenesConPrecio;
+  const pctMargenOrdenes = ventaOrdenesConPrecio > 0 ? (margenOrdenes/ventaOrdenesConPrecio*100) : 0;
+
+  return `
+    <div class="panel">
+      <div class="panel-title">💹 Margen Real por Categoría <span class="badge-live">CATÁLOGO AGOSTO 2026</span></div>
+      <div class="calc-note" style="margin-bottom:.6rem;">Costo real de compra vs precio de venta real, producto por producto.${sinPrecio ? ` ${sinPrecio} productos sin precio de venta cargado quedan fuera de este cálculo.` : ''}</div>
+      <div class="table-scroll"><table class="simple compact">
+        <tr><th>Categoría</th><th>Productos</th><th>Costo total</th><th>Venta total</th><th>Margen total</th><th>% margen prom.</th></tr>
+        ${categorias.map(cat => { const g = grupos[cat]; return `
+          <tr>
+            <td>${escaparHTML(cat)}</td>
+            <td>${g.items.length}</td>
+            <td>$${g.costoTotal.toLocaleString('es-CL')}</td>
+            <td>$${g.ventaTotal.toLocaleString('es-CL')}</td>
+            <td>$${g.margenTotal.toLocaleString('es-CL')}</td>
+            <td>${pctPromedio(g.items).toFixed(1)}%</td>
+          </tr>
+        `; }).join('')}
+        <tr class="total">
+          <td>Total (${items.length} productos)</td>
+          <td>${items.length}</td>
+          <td>$${items.reduce((s,p)=>s+p.costo,0).toLocaleString('es-CL')}</td>
+          <td>$${items.reduce((s,p)=>s+p.precioVenta,0).toLocaleString('es-CL')}</td>
+          <td>$${items.reduce((s,p)=>s+p.margen,0).toLocaleString('es-CL')}</td>
+          <td>${pctPromedio(items).toFixed(1)}%</td>
+        </tr>
+      </table></div>
+      <div class="calc-note" style="margin-top:.8rem;">📦 A nivel de compra individual (${ORDENES_DEMO.length} órdenes de M6): ${ordenesConPrecio.length} tienen precio de venta conocido — costo $${costoOrdenesConPrecio.toLocaleString('es-CL')}, venta potencial $${ventaOrdenesConPrecio.toLocaleString('es-CL')}, margen $${margenOrdenes.toLocaleString('es-CL')} (${pctMargenOrdenes.toFixed(1)}%). Es venta potencial a precio de lista, no venta real — no todo lo comprado se ha vendido todavía.</div>
+    </div>
+  `;
+}
+
 function renderFinanzas(){
   const f29 = calcularF29();
   const egresosTotal = f29.libro.filter(m => m.tipo === 'egreso').reduce((s,m) => s + m.total, 0);
@@ -2718,6 +3007,8 @@ function renderFinanzas(){
     </div>
 
     ${renderComprasPorProveedor()}
+
+    ${renderMargenReal()}
 
     <div class="panel">
       <div class="panel-title">📈 Histórico de Ventas Mensuales <span class="badge-live">v1.3 · Ago 2025 → Jul 2026</span></div>
@@ -3615,6 +3906,7 @@ async function sincronizarConLaNubeAlInicio(){
   }
 
   backfillTallasCompras(); // rellena tallas faltantes con TALLAS_CATALOGO, venga de donde venga ORDENES_DEMO
+  backfillPrecioVentaCompras(); // idem para precio de venta (margen por compra individual)
 
   if((filasCrm && filasCrm.length) || (filasCompras && filasCompras.length)){
     guardarEstadoLocal();
@@ -3708,6 +4000,7 @@ if('serviceWorker' in navigator){
 document.addEventListener('DOMContentLoaded', () => {
   cargarEstadoLocal(); // restaura ventas, CRM, compras, ads, F29 y Looker guardados antes de renderizar
   backfillTallasCompras(); // rellena tallas faltantes antes del primer render de M6
+  backfillPrecioVentaCompras(); // rellena precio de venta faltante para el cálculo de margen
   actualizarCajaBaseDia(); // fija/lee la base de caja del día para calcular el delta real "vs ayer"
   renderSidebar();
   initViews();
