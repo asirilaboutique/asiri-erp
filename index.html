@@ -920,11 +920,16 @@ const PLAN_SEPTIEMBRE = {
     {nombre:'C — Retargeting quirúrgico', inversion:30000, resultadoTexto:'$170.000–$310.000 en ingresos → resultado neto +$140.000 a +$280.000', recomendado:true}
   ],
   puntosDecision: [
-    {fecha:'2026-09-04', texto:'Si la deuda de $20.002 con Meta no se paga antes de esta fecha, el Escenario C deja de ser ejecutable — pasar directo a Escenario B.'},
-    {fecha:'2026-09-10', texto:'Si las vistas de ficha de producto acumuladas son menos de 60, el problema no era la talla — apagar la pauta e investigar con grabaciones de sesión (Clarity).'},
-    {fecha:'2026-09-30', texto:'Si hay 0 ventas a una clienta desconocida por segundo mes consecutivo, la web funciona como catálogo, no como checkout — octubre pasa a venta asistida por DM.'}
+    {id:'pd1', fecha:'2026-09-04', texto:'Si la deuda de $20.002 con Meta no se paga antes de esta fecha, el Escenario C deja de ser ejecutable — pasar directo a Escenario B.'},
+    {id:'pd2', fecha:'2026-09-10', texto:'Si las vistas de ficha de producto acumuladas son menos de 60, el problema no era la talla — apagar la pauta e investigar con grabaciones de sesión (Clarity).'},
+    {id:'pd3', fecha:'2026-09-30', texto:'Si hay 0 ventas a una clienta desconocida por segundo mes consecutivo, la web funciona como catálogo, no como checkout — octubre pasa a venta asistida por DM.'}
   ]
 };
+
+/* Estado manual de cumplimiento de los hitos del Plan (Propuesta J, modo ninja 14-sep-2026) —
+   el ERP no puede saber solo con la fecha si Valeria de verdad encendió/apagó la pauta o pagó
+   la deuda; se marca a mano y queda persistido. */
+let PLAN_SEPTIEMBRE_ESTADO = {}; // { pd1: {cumplido:true, notaFecha:'2026-09-04'}, ... }
 
 const SHOPIFY_ULTIMA_UNIDAD = [
   {nombre:'Blusa Valentina', precio:18990, img:'https://cdn.shopify.com/s/files/1/0593/7892/5697/files/rn-image_picker_lib_temp_a22ee696-fa87-4e9d-adc9-5ae9b0138a0a.jpg'},
@@ -1581,30 +1586,39 @@ function backfillPrecioVentaCompras(){
   return rellenadas;
 }
 
-/* ---------- 3e-ter. CATALOGO_STOCK_AGOSTO (2026-08-31) — snapshot real del stock actual,
-   extraído de "STOCK AGOSTO 2026.xlsx" (planilla real de Valeria, organizada por categoría de
-   prenda). 108 productos con costo, precio de venta (cuando está cargado) y si queda
-   disponible o está agotado — la fuente más fresca que existe hoy del catálogo real. */
+/* ---------- 3e-ter. CATALOGO_STOCK_AGOSTO (refrescado 14-sep-2026, Propuesta H modo ninja) —
+   117 productos, snapshot real del stock actual, extraído directamente de "STOCK AGOSTO
+   2026.xlsx" (Drive id 1dOlxqE0W8lFB_IlIcOjGNcdm8hiCr2FD, el que Valeria mandó el 9-sep con
+   costos reales), vía read_file_content (texto aplanado) — el intento anterior de bajar el
+   xlsx binario fallaba por truncamiento del tool a nivel de transporte, no del archivo; leerlo
+   como texto lo evitó. Incluye los ingresos nuevos que ya estaban en Shopify pero nunca se
+   habían cargado a este catálogo (Florencia Andrea, Tejido Claudia, Blusa Tuti, Blazer Eloisa,
+   Chaqueta Antonia, Sweater Lorena, Jeans Renata/Amanda).
+   OJO: el propio Excel trae una nota "17 jeans y 2 palazzos" en Pantalones pero lista 19 +
+   2 palazzos (21) — discrepancia de origen ya anotada en memoria (asiri_stock_costos_2026-09-09),
+   no se corrigió acá, se transcribió tal cual viene. */
 const CATALOGO_STOCK_AGOSTO = [
-  {categoria:"PANTALONES", producto:"SASTRERO BLANCO", costo:10000, precioVenta:0, disponible:true},
-  {categoria:"PANTALONES", producto:"SASTRERO CAFÉ", costo:10000, precioVenta:0, disponible:true},
-  {categoria:"PANTALONES", producto:"SASTRERO NEGRO", costo:10000, precioVenta:0, disponible:false},
-  {categoria:"PANTALONES", producto:"JEANS SIMONA", costo:17000, precioVenta:0, disponible:false},
-  {categoria:"PANTALONES", producto:"JEANS CLAU AZUL TALLA M", costo:14500, precioVenta:0, disponible:true},
-  {categoria:"PANTALONES", producto:"JEANS CLAU CELESTE TALLA S", costo:14500, precioVenta:0, disponible:true},
-  {categoria:"PANTALONES", producto:"JEANS CLAU CELESTE TALLA XL", costo:14500, precioVenta:0, disponible:false},
-  {categoria:"PANTALONES", producto:"JEANS TACHAS", costo:5990, precioVenta:0, disponible:true},
-  {categoria:"PANTALONES", producto:"JEANS NEGRO WIDE LEG ANDREA", costo:10600, precioVenta:0, disponible:true},
-  {categoria:"PANTALONES", producto:"PANTALON SASTRERO MARCE BURDEO", costo:8700, precioVenta:0, disponible:true},
-  {categoria:"PANTALONES", producto:"PANTALON SASTRERO MURIEL BURDEOS", costo:12500, precioVenta:0, disponible:false},
-  {categoria:"PANTALONES", producto:"PANTALON SASTRERO JULIETA CAFÉ", costo:12000, precioVenta:0, disponible:true},
-  {categoria:"PANTALONES", producto:"JEANS HAWAII CAFÉ L", costo:16500, precioVenta:0, disponible:false},
-  {categoria:"PANTALONES", producto:"JEANS HAWAII AZUL  XL", costo:16500, precioVenta:0, disponible:false},
-  {categoria:"PANTALONES", producto:"JEANS HAWAII CELESTE M", costo:16500, precioVenta:0, disponible:false},
-  {categoria:"PANTALONES", producto:"JEANS CELESTE TALLA S", costo:13500, precioVenta:0, disponible:false},
-  {categoria:"PANTALONES", producto:"PANTALON DE COTELE BURDEOS", costo:3990, precioVenta:0, disponible:true},
-  {categoria:"PANTALONES", producto:"PALAZZO CELESTE", costo:5500, precioVenta:0, disponible:true},
-  {categoria:"PANTALONES", producto:"PALAZZO AMARILLO", costo:5500, precioVenta:0, disponible:true},
+  {categoria:"PANTALONES", producto:"SASTRERO BLANCO", costo:10000, precioVenta:20000, disponible:true},
+  {categoria:"PANTALONES", producto:"SASTRERO CAFÉ", costo:10000, precioVenta:20000, disponible:true},
+  {categoria:"PANTALONES", producto:"SASTRERO NEGRO", costo:10000, precioVenta:20000, disponible:false},
+  {categoria:"PANTALONES", producto:"JEANS SIMONA", costo:17000, precioVenta:26990, disponible:false},
+  {categoria:"PANTALONES", producto:"JEANS CLAU AZUL TALLA M", costo:14500, precioVenta:25990, disponible:false},
+  {categoria:"PANTALONES", producto:"JEANS CLAU CELESTE TALLA L", costo:14500, precioVenta:25990, disponible:true},
+  {categoria:"PANTALONES", producto:"JEANS CLAU CELESTE TALLA XL", costo:14500, precioVenta:25990, disponible:true},
+  {categoria:"PANTALONES", producto:"JEANS TACHAS", costo:5990, precioVenta:11990, disponible:true},
+  {categoria:"PANTALONES", producto:"JEANS NEGRO WIDE LEG ANDREA", costo:10600, precioVenta:18000, disponible:true},
+  {categoria:"PANTALONES", producto:"PANTALON SASTRERO MARCE BURDEO", costo:8700, precioVenta:16000, disponible:true},
+  {categoria:"PANTALONES", producto:"PANTALON SASTRERO MURIEL BURDEOS", costo:12500, precioVenta:20000, disponible:false},
+  {categoria:"PANTALONES", producto:"PANTALON SASTRERO JULIETA CAFÉ", costo:12000, precioVenta:20000, disponible:true},
+  {categoria:"PANTALONES", producto:"JEANS HAWAII CAFÉ L", costo:16500, precioVenta:26990, disponible:false},
+  {categoria:"PANTALONES", producto:"JEANS HAWAII AZUL XL", costo:16500, precioVenta:26990, disponible:false},
+  {categoria:"PANTALONES", producto:"JEANS HAWAII CELESTE M", costo:16500, precioVenta:26990, disponible:false},
+  {categoria:"PANTALONES", producto:"JEANS CELESTE TALLA S", costo:13500, precioVenta:23990, disponible:false},
+  {categoria:"PANTALONES", producto:"PANTALON DE COTELE BURDEOS", costo:3990, precioVenta:11990, disponible:true},
+  {categoria:"PANTALONES", producto:"PALAZZO CELESTE", costo:5500, precioVenta:10000, disponible:true},
+  {categoria:"PANTALONES", producto:"PALAZZO AMARILLO", costo:5500, precioVenta:10000, disponible:true},
+  {categoria:"PANTALONES", producto:"JEANS RENATA (FLARE AZUL)", costo:12000, precioVenta:23990, disponible:true},
+  {categoria:"PANTALONES", producto:"JEANS AMANDA (CAFÉ)", costo:12500, precioVenta:25990, disponible:true},
   {categoria:"SWEATER", producto:"CARDIGANS BLU", costo:5990, precioVenta:16000, disponible:true},
   {categoria:"SWEATER", producto:"SWEATER LUISA GRIS CLARO", costo:14900, precioVenta:18990, disponible:true},
   {categoria:"SWEATER", producto:"SWEATER LUISA GRIS OSCURO", costo:14900, precioVenta:18990, disponible:true},
@@ -1633,6 +1647,7 @@ const CATALOGO_STOCK_AGOSTO = [
   {categoria:"SWEATER", producto:"SWEATER LUA CAFÉ", costo:11800, precioVenta:20000, disponible:true},
   {categoria:"SWEATER", producto:"SWEATER LUA NEGRO", costo:11800, precioVenta:20000, disponible:true},
   {categoria:"SWEATER", producto:"CHALECO CLARA GRIS", costo:10500, precioVenta:21500, disponible:true},
+  {categoria:"SWEATER", producto:"SWEATER LORENA", costo:12900, precioVenta:22990, disponible:true},
   {categoria:"POLERAS", producto:"POLERA VICENTA NEGRA M", costo:8000, precioVenta:16000, disponible:true},
   {categoria:"POLERAS", producto:"POLERA VICENTA CAFÉ L", costo:8000, precioVenta:16000, disponible:true},
   {categoria:"POLERAS", producto:"POLERA VICENTA  BLANCA S", costo:8000, precioVenta:16000, disponible:false},
@@ -1642,7 +1657,7 @@ const CATALOGO_STOCK_AGOSTO = [
   {categoria:"POLERAS", producto:"POLERA MURRIEL CHOCOLATE L", costo:7500, precioVenta:16000, disponible:false},
   {categoria:"POLERAS", producto:"POLERA MUREL CHOCOLATE M", costo:7500, precioVenta:16000, disponible:false},
   {categoria:"POLERAS", producto:"POLERA MURIEL CHOCOLATE S", costo:7500, precioVenta:16000, disponible:false},
-  {categoria:"POLERAS", producto:"POLERA MURIEL CAFE S", costo:7500, precioVenta:16000, disponible:true},
+  {categoria:"POLERAS", producto:"POLERA MURIEL CAFE S", costo:7500, precioVenta:16000, disponible:false},
   {categoria:"POLERAS", producto:"POLERA MURIEL CAFÉ L", costo:7500, precioVenta:16000, disponible:false},
   {categoria:"POLERAS", producto:"POLERA MURIEL NEGRA L", costo:7500, precioVenta:16000, disponible:false},
   {categoria:"POLERAS", producto:"POLERA MURIEL BLANCA M", costo:7500, precioVenta:16000, disponible:true},
@@ -1657,6 +1672,8 @@ const CATALOGO_STOCK_AGOSTO = [
   {categoria:"POLERAS", producto:"BODY LILA", costo:7000, precioVenta:12000, disponible:true},
   {categoria:"POLERAS", producto:"BODY VERDE", costo:7000, precioVenta:12000, disponible:true},
   {categoria:"POLERAS", producto:"BODY VERDE MUSCULOSA", costo:5500, precioVenta:12000, disponible:true},
+  {categoria:"POLERAS", producto:"POLERA FLORENCIA ANDREA", costo:9900, precioVenta:18990, disponible:true},
+  {categoria:"POLERAS", producto:"TEJIDO CLAUDIA", costo:7800, precioVenta:16000, disponible:true},
   {categoria:"BLUSAS", producto:"BLUSA A RAYAS AZUL", costo:10900, precioVenta:16000, disponible:true},
   {categoria:"BLUSAS", producto:"BLUSA A RAYAS CELESTE", costo:10900, precioVenta:16000, disponible:false},
   {categoria:"BLUSAS", producto:"BLUSA PRINT", costo:12500, precioVenta:18990, disponible:true},
@@ -1665,6 +1682,7 @@ const CATALOGO_STOCK_AGOSTO = [
   {categoria:"BLUSAS", producto:"BLUSA MAGNOLIA", costo:11500, precioVenta:18990, disponible:true},
   {categoria:"BLUSAS", producto:"BLUSA ALBERTA NEGRA", costo:10500, precioVenta:10000, disponible:true},
   {categoria:"BLUSAS", producto:"BLUSA ESPERANZA", costo:8500, precioVenta:12500, disponible:true},
+  {categoria:"BLUSAS", producto:"BLUSA TUTI", costo:8800, precioVenta:18990, disponible:true},
   {categoria:"VESTIDOS", producto:"VESTIDO ROJO LARGO", costo:9000, precioVenta:13500, disponible:true},
   {categoria:"VESTIDOS", producto:"VESTIDO ELI FUCSIA", costo:10900, precioVenta:10000, disponible:true},
   {categoria:"VESTIDOS", producto:"VESTIDO ELI AZUL", costo:10900, precioVenta:10000, disponible:true},
@@ -1686,9 +1704,12 @@ const CATALOGO_STOCK_AGOSTO = [
   {categoria:"CHAQUETAS Y BLAZER", producto:"SOBRECAMISA CAFÉ PAÑO (2)", costo:10500, precioVenta:20000, disponible:false},
   {categoria:"CHAQUETAS Y BLAZER", producto:"ABRIGO LARGO CREMA", costo:13900, precioVenta:20000, disponible:true},
   {categoria:"CHAQUETAS Y BLAZER", producto:"CHAQUETA FUCSIA SIN MANGAS", costo:8990, precioVenta:16000, disponible:true},
+  {categoria:"CHAQUETAS Y BLAZER", producto:"BLAZER ELOISA", costo:14500, precioVenta:23990, disponible:true},
+  {categoria:"CHAQUETAS Y BLAZER", producto:"CHAQUETA ANTONIA", costo:0, precioVenta:26000, disponible:true},
   {categoria:"GUILETS", producto:"GUILLETYS BLANCO", costo:9500, precioVenta:18990, disponible:false},
-  {categoria:"GUILETS", producto:"GUILLETE BLANCO", costo:9500, precioVenta:18990, disponible:true},
+  {categoria:"GUILETS", producto:"GUILLETE BLANCO", costo:9500, precioVenta:18990, disponible:false},
   {categoria:"GUILETS", producto:"GUILLETE BEIGE", costo:9500, precioVenta:18990, disponible:true},
+  {categoria:"GUILETS", producto:"TEJIDO", costo:7800, precioVenta:16000, disponible:true},
   {categoria:"ENTERITOS Y MONOS", producto:"ENTERITO LINO ROJO", costo:12900, precioVenta:10000, disponible:true},
   {categoria:"ACCESORIOS", producto:"CINTURON ROJO", costo:3000, precioVenta:8000, disponible:true},
   {categoria:"ACCESORIOS", producto:"JOCKEY PRINT", costo:5000, precioVenta:10000, disponible:true},
@@ -1715,6 +1736,7 @@ const HISTORICO_VENTAS_MENSUAL = [
 /* ---------- 3f. ESTADO M7 FINANZAS ---------- */
 let TASA_PPM = 0.3; // % sobre ventas netas — ajustar según tasa real asignada por el SII a ASIRI
 let SALDO_INICIAL_CAJA = 850000; // ajustar con saldo bancario real de ASIRI
+let FACTOR_UTILIDAD_REAL = 0.22; // punto medio del 17-27% verificado con el pedido #1002 (IVA + flete + comisiones Webpay/Shopify) — ajustable a medida que haya más pedidos reales
 let MES_CERRADO = false;
 
 /* ---------- 3g. ESTADO M8 INFORMES ---------- */
@@ -2119,6 +2141,17 @@ function calcDescuento(){
    ============================================================ */
 function renderCRM(){
   const dormidas = CRM_DEMO.filter(c => segmentarClienta(c).key === 'dormida');
+
+  /* Propuesta K (modo ninja 14-sep-2026): el CRM pasa de fichero pasivo a motor de recompra.
+     Score simple = días desde última compra × LTV — prioriza a la vez "hace tiempo que no
+     compra" y "vale la pena el esfuerzo de contactarla". Excluye clientas nuevas (aún no hay
+     patrón de recompra que reactivar) y a las que no tienen compras registradas. */
+  const paraRecontactar = CRM_DEMO
+    .filter(c => c.compras > 0 && segmentarClienta(c).key !== 'nueva')
+    .map(c => ({...c, scoreRecontacto: (c.diasUltimaCompra||0) * (c.ltv||0)}))
+    .sort((a,b) => b.scoreRecontacto - a.scoreRecontacto)
+    .slice(0, 8);
+
   return `
     <div class="page-title">💎 CRM · Clientas ASIRI</div>
     <div class="page-sub">${CRM_DEMO.length} clientas registradas — segmentación automática</div>
@@ -2127,6 +2160,25 @@ function renderCRM(){
       <div class="reactivacion-box">
         <div class="rt">🚨 <b>${dormidas.length} clienta${dormidas.length>1?'s':''} dormida${dormidas.length>1?'s':''}</b> sin comprar hace más de 60 días — oportunidad de reactivación.</div>
         <button class="btn btn-primary" onclick="filtrarCRM('dormida')">Ver dormidas</button>
+      </div>
+    ` : ''}
+
+    ${paraRecontactar.length ? `
+      <div class="panel" style="margin-bottom:1.2rem;">
+        <div class="panel-title">📞 Para recontactar ahora <span class="badge-live">TOP ${paraRecontactar.length}</span></div>
+        <div class="calc-note" style="margin-bottom:.6rem;">Priorizadas por días sin comprar × LTV — la mezcla de "hace tiempo que no vuelve" y "vale la pena escribirle". El CRM tiene 53+ clientas que compran fuera de la web (ver Método ASIRI); esta lista es el punto de partida para retomar el contacto, no una lista para pauta.</div>
+        <div class="table-scroll"><table class="simple compact">
+          <tr><th>Clienta</th><th>Segmento</th><th>Días sin comprar</th><th>Compras</th><th>LTV</th></tr>
+          ${paraRecontactar.map(c => { const seg = segmentarClienta(c); return `
+            <tr style="cursor:pointer;" onclick="abrirFicha(${c.id})">
+              <td>${escaparHTML(c.nombre)}</td>
+              <td><span class="seg-badge ${seg.clase}">${seg.label}</span></td>
+              <td>${c.diasUltimaCompra}</td>
+              <td>${c.compras}</td>
+              <td>$${(c.ltv||0).toLocaleString('es-CL')}</td>
+            </tr>
+          `; }).join('')}
+        </table></div>
       </div>
     ` : ''}
 
@@ -2344,14 +2396,18 @@ function renderShopify(){
           </tr>
         `).join('')}
       </table></div>
-      <div style="margin-top:1rem; font-size:.78rem; font-weight:700; color:var(--gris); text-transform:uppercase; letter-spacing:.04em;">Puntos de decisión</div>
+      <div style="margin-top:1rem; font-size:.78rem; font-weight:700; color:var(--gris); text-transform:uppercase; letter-spacing:.04em;">Puntos de decisión — marcar si de verdad se cumplió</div>
       ${PLAN_SEPTIEMBRE.puntosDecision.map(d => {
         const dias = diasHasta(d.fecha);
         const pasada = dias < 0;
+        const cumplido = !!(PLAN_SEPTIEMBRE_ESTADO[d.id] && PLAN_SEPTIEMBRE_ESTADO[d.id].cumplido);
         return `
           <div class="decision-item">
             <span class="decision-fecha ${pasada?'pasada':''}">${new Date(d.fecha+'T00:00:00').toLocaleDateString('es-CL',{day:'numeric',month:'short'})}${!pasada ? `<span class="decision-dias">${dias===0?'HOY':'en '+dias+'d'}</span>` : ''}</span>
             <span>${d.texto}</span>
+            <label style="display:flex; align-items:center; gap:.3rem; margin-left:auto; font-size:.75rem; white-space:nowrap; cursor:pointer;">
+              <input type="checkbox" ${cumplido?'checked':''} onchange="marcarHitoPlan('${d.id}', this.checked)"> ${cumplido ? 'cumplido ✓' : (pasada ? 'sin marcar ⚠️' : 'pendiente')}
+            </label>
           </div>
         `;
       }).join('')}
@@ -2925,9 +2981,16 @@ function renderMargenReal(){
   const margenOrdenes = ventaOrdenesConPrecio - costoOrdenesConPrecio;
   const pctMargenOrdenes = ventaOrdenesConPrecio > 0 ? (margenOrdenes/ventaOrdenesConPrecio*100) : 0;
 
+  const utilidadRealEstim = ventaOrdenesConPrecio * FACTOR_UTILIDAD_REAL;
+
   return `
     <div class="panel">
       <div class="panel-title">💹 Margen Real por Categoría <span class="badge-live">CATÁLOGO AGOSTO 2026</span></div>
+      <div class="kpi-grid" style="margin-bottom:.8rem;">
+        <div class="kpi-card"><span class="kpi-icon">📦</span><div class="kpi-label">Margen bruto mercadería</div><div class="kpi-value">${pctMargenOrdenes.toFixed(0)}%</div></div>
+        <div class="kpi-card"><span class="kpi-icon">💰</span><div class="kpi-label">Utilidad real estimada</div><div class="kpi-value">$${Math.round(utilidadRealEstim).toLocaleString('es-CL')}</div></div>
+      </div>
+      <div class="calc-note" style="margin-bottom:.6rem;">Factor de utilidad real: <input type="number" step="1" min="0" max="100" id="factor-utilidad-real" value="${(FACTOR_UTILIDAD_REAL*100).toFixed(0)}" onchange="cambiarFactorUtilidad(this.value)" style="width:60px;">% del monto cobrado (venta potencial $${ventaOrdenesConPrecio.toLocaleString('es-CL')}) — punto medio verificado 17-27% tras IVA, flete y comisiones Webpay/Shopify del pedido #1002. Ajústalo cuando haya más pedidos reales para promediar.</div>
       <div class="calc-note" style="margin-bottom:.6rem;">Costo real de compra vs precio de venta real, producto por producto.${sinPrecio ? ` ${sinPrecio} productos sin precio de venta cargado quedan fuera de este cálculo.` : ''}</div>
       <div class="table-scroll"><table class="simple compact">
         <tr><th>Categoría</th><th>Productos</th><th>Costo total</th><th>Venta total</th><th>Margen total</th><th>% margen prom.</th></tr>
@@ -3081,6 +3144,18 @@ function cambiarTasaPPM(valor){
 function cambiarSaldoInicial(valor){
   SALDO_INICIAL_CAJA = Number(valor) || 0;
   document.getElementById('view-m7').innerHTML = renderFinanzas();
+  autoSave();
+}
+
+function cambiarFactorUtilidad(valor){
+  FACTOR_UTILIDAD_REAL = (Number(valor) || 0) / 100;
+  document.getElementById('view-m7').innerHTML = renderFinanzas();
+  autoSave();
+}
+
+function marcarHitoPlan(id, cumplido){
+  PLAN_SEPTIEMBRE_ESTADO[id] = { cumplido, marcadoEl: new Date().toISOString() };
+  document.getElementById('view-m4').innerHTML = renderShopify();
   autoSave();
 }
 
@@ -3715,6 +3790,8 @@ function guardarEstadoLocal(){
     lookerUrl: LOOKER_URL,
     tasaPPM: TASA_PPM,
     saldoInicialCaja: SALDO_INICIAL_CAJA,
+    factorUtilidadReal: FACTOR_UTILIDAD_REAL,
+    planSeptiembreEstado: PLAN_SEPTIEMBRE_ESTADO,
     mesCerrado: MES_CERRADO,
     brief: DATA_DEMO.brief,
     alertas: DATA_DEMO.alertas,
@@ -3754,6 +3831,8 @@ function cargarEstadoLocal(){
     if(typeof estado.lookerUrl === 'string') LOOKER_URL = estado.lookerUrl;
     if(typeof estado.tasaPPM === 'number') TASA_PPM = estado.tasaPPM;
     if(typeof estado.saldoInicialCaja === 'number') SALDO_INICIAL_CAJA = estado.saldoInicialCaja;
+    if(typeof estado.factorUtilidadReal === 'number') FACTOR_UTILIDAD_REAL = estado.factorUtilidadReal;
+    if(estado.planSeptiembreEstado && typeof estado.planSeptiembreEstado === 'object') PLAN_SEPTIEMBRE_ESTADO = estado.planSeptiembreEstado;
     if(typeof estado.mesCerrado === 'boolean') MES_CERRADO = estado.mesCerrado;
     if(typeof estado.brief === 'string') DATA_DEMO.brief = estado.brief;
     if(Array.isArray(estado.alertas)) DATA_DEMO.alertas = estado.alertas;
