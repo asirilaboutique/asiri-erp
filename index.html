@@ -848,18 +848,20 @@ let filtroCRM = localStorage.getItem('asiri_crm_filtro') || 'all';
    SINCE -30d UNTIL today.
    OJO — lección de la auditoría del 30-ago (ver memoria asiri_plan_septiembre_2026-08-30): los
    carritos/checkouts de agosto NO están limpios de pruebas propias (valeria.inzunza@gmail.com,
-   test-auditoria@asirilaboutique.com, prueba.asiri@gmail.com). El único pedido histórico (#1001)
-   es de Nancy Ferreira, mamá de Valeria. En 12+ meses de tienda, ASIRI nunca le ha vendido a una
-   clienta desconocida por la web — no es que "dejó de vender", es que aún no ha empezado. */
+   test-auditoria@asirilaboutique.com, prueba.asiri@gmail.com). El pedido #1001 fue de Nancy
+   Ferreira, mamá de Valeria (prueba interna). El 3-sep-2026 llegó el #1002: la primera venta
+   real a una clienta desconocida (Vania Sepúlveda Zúñiga, $40.990 vía Webpay, atribuida a la
+   campaña Meta 120253227320720310). n=1 — no proyectar una tasa de conversión a partir de un
+   solo pedido. */
 const DIAG_SHOPIFY_LIVE = {
-  fechaConsulta: '2026-08-31',
+  fechaConsulta: '2026-09-03',
   sesiones30d: 2423,
   carritos30d: 18,
   checkoutsIniciados30d: 17,
-  checkoutsCompletados30d: 0,
-  ultimaOrdenFecha: '2026-07-29',
-  ultimaOrdenMonto: 16190,
-  ultimaOrdenCliente: 'Nancy Ferreira — mamá de Valeria (prueba interna, no clienta real)'
+  checkoutsCompletados30d: 1,
+  ultimaOrdenFecha: '2026-09-03',
+  ultimaOrdenMonto: 40990,
+  ultimaOrdenCliente: 'Vania Sepúlveda Zúñiga — primera clienta desconocida (pedido #1002, vía Webpay)'
 };
 const SHOPIFY_ORDENES_30D = DIAG_SHOPIFY_LIVE.checkoutsCompletados30d;
 const SHOPIFY_SESIONES_30D = DIAG_SHOPIFY_LIVE.sesiones30d;
@@ -1712,6 +1714,7 @@ const HISTORICO_VENTAS_MENSUAL = [
 
 /* ---------- 3f. ESTADO M7 FINANZAS ---------- */
 let TASA_PPM = 0.3; // % sobre ventas netas — ajustar según tasa real asignada por el SII a ASIRI
+let SALDO_INICIAL_CAJA = 850000; // ajustar con saldo bancario real de ASIRI
 let MES_CERRADO = false;
 
 /* ---------- 3g. ESTADO M8 INFORMES ---------- */
@@ -1822,7 +1825,9 @@ const ACADEMY_CONTENIDO = {
 /* Resumen ejecutivo — cruza datos reales de M2 CRM, M5 Ventas, M6 Compras y M7 Finanzas */
 function calcularResumenMensual(){
   const totalHoy = DATA_DEMO.ventas.reduce((s,v) => s + v.monto, 0);
-  const diaDelMes = 23, diasDelMes = 31;
+  const hoy = new Date();
+  const diaDelMes = hoy.getDate();
+  const diasDelMes = new Date(hoy.getFullYear(), hoy.getMonth()+1, 0).getDate();
   const ventasProyectadasMes = Math.round((totalHoy / diaDelMes) * diasDelMes);
   const comprasTotal = ORDENES_DEMO.reduce((s,o) => s + o.cantidad*o.costo, 0);
   const f29 = calcularF29();
@@ -1833,8 +1838,7 @@ function calcularResumenMensual(){
     totalHoy, ventasProyectadasMes, comprasTotal, resultadoNeto, f29,
     clientasTotales: CRM_DEMO.length,
     clientasVIP: CRM_DEMO.filter(c => segmentarClienta(c).key === 'vip').length,
-    ordenesCompra: ORDENES_DEMO.length,
-    conversion: 0
+    ordenesCompra: ORDENES_DEMO.length
   };
 }
 
@@ -2288,12 +2292,12 @@ function renderShopify(){
     <div class="kpi-grid">
       <div class="kpi-card"><span class="kpi-icon">👀</span><div class="kpi-label">Sesiones humanas (30d)</div><div class="kpi-value">${sesiones.toLocaleString('es-CL')}</div></div>
       <div class="kpi-card alert"><span class="kpi-icon">📦</span><div class="kpi-label">Compras (30d)</div><div class="kpi-value alert">${DIAG_SHOPIFY_LIVE.checkoutsCompletados30d}</div></div>
-      <div class="kpi-card alert"><span class="kpi-icon">🎯</span><div class="kpi-label">Conversión</div><div class="kpi-value alert">0%</div></div>
+      <div class="kpi-card alert"><span class="kpi-icon">🎯</span><div class="kpi-label">Conversión</div><div class="kpi-value alert">${DIAG_SHOPIFY_LIVE.checkoutsCompletados30d > 0 ? ((DIAG_SHOPIFY_LIVE.checkoutsCompletados30d/sesiones)*100).toFixed(2) : '0'}%</div></div>
       <div class="kpi-card alert"><span class="kpi-icon">🛒</span><div class="kpi-label">Carritos (30d)</div><div class="kpi-value alert">${DIAG_SHOPIFY_LIVE.carritos30d}</div></div>
     </div>
 
     <div class="lastunit-banner">
-      🚨 Última orden: <b>${new Date(DIAG_SHOPIFY_LIVE.ultimaOrdenFecha+'T00:00:00').toLocaleDateString('es-CL')} · $${DIAG_SHOPIFY_LIVE.ultimaOrdenMonto.toLocaleString('es-CL')}</b> — ${DIAG_SHOPIFY_LIVE.ultimaOrdenCliente}. En toda la historia de la tienda, ASIRI aún no le ha vendido por web a una clienta desconocida.
+      🎉 Última orden: <b>${new Date(DIAG_SHOPIFY_LIVE.ultimaOrdenFecha+'T00:00:00').toLocaleDateString('es-CL')} · $${DIAG_SHOPIFY_LIVE.ultimaOrdenMonto.toLocaleString('es-CL')}</b> — ${DIAG_SHOPIFY_LIVE.ultimaOrdenCliente}. Primera venta real a una desconocida en la historia de la tienda — n=1, no proyectar una tasa de conversión todavía.
     </div>
 
     <div class="section-row">
@@ -2823,12 +2827,13 @@ function guardarOrdenCompra(){
 
 /* Construye el Libro IyE a partir de ventas reales (M5) y compras reales (M6) */
 function construirLibroIyE(){
+  const fechaHoyCorta = new Date().toLocaleDateString('es-CL', {day:'2-digit', month:'short'});
   const ingresos = DATA_DEMO.ventas.map(v => ({
-    fecha: '23 jul', tipo:'ingreso', doc: v.canal === 'shopify' ? 'Boleta Web' : v.canal === 'pos' ? 'Boleta MP POS' : 'Boleta Manual',
+    fecha: fechaHoyCorta, tipo:'ingreso', doc: v.canal === 'shopify' ? 'Boleta Web' : v.canal === 'pos' ? 'Boleta MP POS' : 'Boleta Manual',
     concepto: escaparHTML(v.producto), total: v.monto
   }));
   const egresos = ORDENES_DEMO.map(o => ({
-    fecha: '23 jul', tipo:'egreso', doc:'Factura Proveedor',
+    fecha: new Date(o.fecha).toLocaleDateString('es-CL', {day:'2-digit', month:'short'}), tipo:'egreso', doc:'Factura Proveedor',
     concepto: `${escaparHTML(o.producto)} (${escaparHTML(o.proveedor)})`, total: o.cantidad * o.costo
   }));
   return [...ingresos, ...egresos].map(m => {
@@ -2946,6 +2951,7 @@ function renderMargenReal(){
         </tr>
       </table></div>
       <div class="calc-note" style="margin-top:.8rem;">📦 A nivel de compra individual (${ORDENES_DEMO.length} órdenes de M6): ${ordenesConPrecio.length} tienen precio de venta conocido — costo $${costoOrdenesConPrecio.toLocaleString('es-CL')}, venta potencial $${ventaOrdenesConPrecio.toLocaleString('es-CL')}, margen $${margenOrdenes.toLocaleString('es-CL')} (${pctMargenOrdenes.toFixed(1)}%). Es venta potencial a precio de lista, no venta real — no todo lo comprado se ha vendido todavía.</div>
+      <div class="calc-note" style="margin-top:.8rem;border-left:3px solid #C9A84C;padding-left:.6rem;">⚠️ <b>Este es el margen bruto de mercadería, NO la utilidad real.</b> Con datos verificados del pedido #1002 (API Shopify, 3-sep-2026): tras descontar IVA (÷1,19), flete asumido por ASIRI y comisiones de pasarela (Webpay ~2% + Shopify ~2%), la <b>utilidad real de un pedido queda entre 17% y 27% del monto cobrado</b> — no el ${pctMargenOrdenes.toFixed(0)}% de margen de mercadería de arriba. Nunca reportar el margen bruto como si fuera el resultado del negocio.</div>
     </div>
   `;
 }
@@ -2961,7 +2967,7 @@ function renderFinanzas(){
 
     <div class="kpi-grid">
       <div class="kpi-card"><span class="kpi-icon">💵</span><div class="kpi-label">Ingresos (hoy)</div><div class="kpi-value">$${ingresosTotal.toLocaleString('es-CL')}</div></div>
-      <div class="kpi-card"><span class="kpi-icon">📤</span><div class="kpi-label">Egresos (hoy)</div><div class="kpi-value">$${egresosTotal.toLocaleString('es-CL')}</div></div>
+      <div class="kpi-card"><span class="kpi-icon">📤</span><div class="kpi-label">Egresos (histórico compras)</div><div class="kpi-value">$${egresosTotal.toLocaleString('es-CL')}</div></div>
       <div class="kpi-card"><span class="kpi-icon">🧾</span><div class="kpi-label">IVA Débito</div><div class="kpi-value">$${f29.ivaDebito.toLocaleString('es-CL')}</div></div>
       <div class="kpi-card ${f29.ivaDeterminado>0?'alert':''}"><span class="kpi-icon">⚖️</span><div class="kpi-label">${f29.ivaDeterminado>=0?'IVA a Pagar':'Remanente Crédito'}</div><div class="kpi-value ${f29.ivaDeterminado>0?'alert':''}">$${Math.abs(f29.ivaDeterminado).toLocaleString('es-CL')}</div></div>
     </div>
@@ -3037,11 +3043,14 @@ function renderFinanzas(){
 }
 
 function renderFlujoCaja(){
-  const saldoInicial = 850000; // ajustar con saldo bancario real de ASIRI
+  const saldoInicial = SALDO_INICIAL_CAJA;
   const totalHoy = DATA_DEMO.ventas.reduce((s,v) => s + v.monto, 0);
-  const totalEgresosHoy = ORDENES_DEMO.reduce((s,o) => s + o.cantidad*o.costo, 0);
+  const ahora = Date.now();
+  const ventana30d = 30*24*60*60*1000;
+  const ordenesUlt30d = ORDENES_DEMO.filter(o => ahora - o.fecha <= ventana30d);
+  const totalEgresos30d = ordenesUlt30d.reduce((s,o) => s + o.cantidad*o.costo, 0);
   const promedioIngresoDiario = totalHoy; // referencia: caja de hoy como proxy diario
-  const promedioEgresoDiario = totalEgresosHoy / 31;
+  const promedioEgresoDiario = totalEgresos30d / 30;
 
   const checkpoints = [5,10,15,20,25,30];
   const saldos = checkpoints.map(dia => Math.round(saldoInicial + dia*(promedioIngresoDiario - promedioEgresoDiario)));
@@ -3058,13 +3067,19 @@ function renderFlujoCaja(){
 
   return `
     ${filas}
-    <div class="calc-note">Saldo inicial referencial $${saldoInicial.toLocaleString('es-CL')} + proyección lineal según tu venta e compra promedio diarias actuales. Ajustar saldo inicial con tu cuenta bancaria real.</div>
+    <div class="calc-note">Saldo inicial de caja: <input type="number" step="1000" id="saldo-inicial-caja" value="${saldoInicial}" onchange="cambiarSaldoInicial(this.value)" style="width:120px;"> — ajústalo con tu saldo bancario real de ASIRI. Proyección lineal según venta de hoy y compra promedio de los últimos 30 días.</div>
     ${hayNegativo ? `<div class="flujo-alerta">⚠️ El flujo proyectado cae bajo $0 en algún punto de los próximos 30 días. Revisa gastos comprometidos o acelera cobranzas antes de que ocurra.</div>` : ''}
   `;
 }
 
 function cambiarTasaPPM(valor){
   TASA_PPM = Number(valor) || 0;
+  document.getElementById('view-m7').innerHTML = renderFinanzas();
+  autoSave();
+}
+
+function cambiarSaldoInicial(valor){
+  SALDO_INICIAL_CAJA = Number(valor) || 0;
   document.getElementById('view-m7').innerHTML = renderFinanzas();
   autoSave();
 }
@@ -3699,6 +3714,7 @@ function guardarEstadoLocal(){
     carritos: CARRITOS_DEMO,
     lookerUrl: LOOKER_URL,
     tasaPPM: TASA_PPM,
+    saldoInicialCaja: SALDO_INICIAL_CAJA,
     mesCerrado: MES_CERRADO,
     brief: DATA_DEMO.brief,
     alertas: DATA_DEMO.alertas,
@@ -3737,6 +3753,7 @@ function cargarEstadoLocal(){
     if(Array.isArray(estado.carritos)){ CARRITOS_DEMO.length = 0; CARRITOS_DEMO.push(...estado.carritos); }
     if(typeof estado.lookerUrl === 'string') LOOKER_URL = estado.lookerUrl;
     if(typeof estado.tasaPPM === 'number') TASA_PPM = estado.tasaPPM;
+    if(typeof estado.saldoInicialCaja === 'number') SALDO_INICIAL_CAJA = estado.saldoInicialCaja;
     if(typeof estado.mesCerrado === 'boolean') MES_CERRADO = estado.mesCerrado;
     if(typeof estado.brief === 'string') DATA_DEMO.brief = estado.brief;
     if(Array.isArray(estado.alertas)) DATA_DEMO.alertas = estado.alertas;
