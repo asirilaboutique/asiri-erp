@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#14B8A6">
+<meta name="theme-color" content="#00A3A3">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -13,20 +13,22 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/svg+xml" href="icon-192.svg">
 <link rel="apple-touch-icon" href="icon-192.svg">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Poppins:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --blanco:#F8FAFB; --turquesa:#14B8A6; --turquesa-light:#CCFBF1;
-    --rosado:#EC4899; --rosado-light:#FCE7F3;
-    --dorado:#C9A84C; --dorado-light:#FEF9E7;
-    --negro:#0F172A; --gris:#64748B; --gris-light:#F1F5F9;
+    /* Paleta oficial ASIRI (cerrada 9-sep-2026, ver asiri_identidad_marca_2026-09-09) */
+    --blanco:#F5F0E8; --turquesa:#00A3A3; --turquesa-light:#D6F0EE;
+    --rosado:#DB3B7C; --rosado-light:#FBE3ED;
+    --dorado:#C9A84C; --dorado-light:#FBF4E3;
+    --negro:#0D0D0D; --gris:#6E6A63; --gris-light:#EDE8DE;
     --violeta:#8B5CF6; --violeta-light:#EDE9FE;
+    --grad-asiri:linear-gradient(135deg,#006B8A 0%,#00B4B4 60%,#00C9A7 100%);
     --sidebar-w:240px; --header-h:60px;
     --rojo:#EF4444; --verde:#059669;
   }
   *{margin:0;padding:0;box-sizing:border-box;}
   html{scroll-behavior:smooth;}
-  body{background:var(--blanco);color:var(--negro);font-family:'Inter',sans-serif;overflow-x:hidden;}
+  body{background:var(--blanco);color:var(--negro);font-family:'Poppins',sans-serif;overflow-x:hidden;}
   button,input,select,textarea{font-family:inherit;}
 
   /* ===== LAYOUT BASE ===== */
@@ -43,7 +45,7 @@
     border-bottom:1px solid rgba(255,255,255,.08);
   }
   .sb-brand .butterfly{display:block; flex-shrink:0;}
-  .sb-brand-text{font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:600;letter-spacing:.03em;}
+  .sb-brand-text{font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:600;letter-spacing:.03em;}
   .sb-brand-text span{color:var(--turquesa);}
   .sb-nav{flex:1; padding:.8rem .6rem; display:flex; flex-direction:column; gap:.2rem;}
   .sb-item{
@@ -52,7 +54,7 @@
     transition:background .15s, color .15s; border:none; background:none; width:100%; text-align:left;
   }
   .sb-item:hover{background:rgba(255,255,255,.06); color:white;}
-  .sb-item.active{background:linear-gradient(135deg, rgba(20,184,166,.25), rgba(236,72,153,.15)); color:white; box-shadow:inset 3px 0 0 var(--turquesa);}
+  .sb-item.active{background:linear-gradient(135deg, rgba(0,163,163,.25), rgba(219,59,124,.15)); color:white; box-shadow:inset 3px 0 0 var(--turquesa);}
   .sb-item .ic{font-size:1.1rem; width:22px; text-align:center;}
   .sb-item .num{font-family:'JetBrains Mono',monospace; font-size:.6rem; opacity:.5;}
   .sb-item.soon{opacity:.4; cursor:not-allowed;}
@@ -72,7 +74,7 @@
   }
   .hdr-left{display:flex; align-items:center; gap:1rem;}
   #menu-toggle{display:none; background:none; border:none; font-size:1.3rem; cursor:pointer; color:var(--negro);}
-  .hdr-logo{font-family:'Cormorant Garamond',serif; font-size:1.1rem; font-weight:600; display:flex; align-items:center; gap:.4rem;}
+  .hdr-logo{font-family:'Playfair Display',serif; font-size:1.1rem; font-weight:600; display:flex; align-items:center; gap:.4rem;}
   .hdr-logo img{flex-shrink:0; display:block;}
   .hdr-right{display:flex; align-items:center; gap:1rem;}
   #save-indicator{
@@ -92,7 +94,7 @@
   .view{display:none; animation:fadeIn .25s ease;}
   .view.active{display:block;}
   @keyframes fadeIn{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);}}
-  .page-title{font-family:'Cormorant Garamond',serif; font-size:1.9rem; font-weight:600; margin-bottom:.2rem;}
+  .page-title{font-family:'Playfair Display',serif; font-size:1.9rem; font-weight:600; margin-bottom:.2rem;}
   .page-sub{color:var(--gris); font-size:.85rem; margin-bottom:1.6rem;}
 
   /* ===== KPI CARDS ===== */
@@ -121,8 +123,8 @@
 
   /* Brief Claude */
   .brief-box{
-    background:linear-gradient(135deg, rgba(20,184,166,.06), rgba(236,72,153,.05));
-    border:1px solid rgba(20,184,166,.15); border-radius:14px; padding:1.1rem 1.2rem;
+    background:linear-gradient(135deg, rgba(0,163,163,.06), rgba(219,59,124,.05));
+    border:1px solid rgba(0,163,163,.15); border-radius:14px; padding:1.1rem 1.2rem;
     font-size:.85rem; line-height:1.7; color:var(--negro);
   }
   .brief-box strong{color:var(--turquesa);}
@@ -136,7 +138,7 @@
   .alert-item:last-child{margin-bottom:0;}
   .alert-item.critico{background:rgba(239,68,68,.06); border-left:3px solid var(--rojo);}
   .alert-item.aviso{background:rgba(201,168,76,.08); border-left:3px solid var(--dorado);}
-  .alert-item.info{background:rgba(20,184,166,.06); border-left:3px solid var(--turquesa);}
+  .alert-item.info{background:rgba(0,163,163,.06); border-left:3px solid var(--turquesa);}
   .alert-icon{font-size:1rem;}
   .alert-text b{display:block; margin-bottom:.1rem;}
   .alert-text span{color:var(--gris); font-size:.75rem;}
@@ -191,7 +193,7 @@
     padding:3rem 1.5rem; text-align:center; color:var(--gris);
   }
   .placeholder-box .pi{font-size:2.2rem; display:block; margin-bottom:.8rem;}
-  .placeholder-box h3{font-family:'Cormorant Garamond',serif; font-size:1.4rem; color:var(--negro); margin-bottom:.4rem;}
+  .placeholder-box h3{font-family:'Playfair Display',serif; font-size:1.4rem; color:var(--negro); margin-bottom:.4rem;}
   .placeholder-box p{font-size:.85rem; max-width:400px; margin:0 auto;}
   .placeholder-box.soon{border-color:rgba(139,92,246,.3); background:var(--violeta-light);}
   .placeholder-box.soon h3{color:var(--violeta);}
@@ -209,7 +211,7 @@
   }
   .modal-overlay.open{display:flex;}
   .modal-box{background:white; border-radius:20px; padding:1.6rem; width:100%; max-width:420px; max-height:90vh; overflow-y:auto;}
-  .modal-box h3{font-family:'Cormorant Garamond',serif; font-size:1.3rem; margin-bottom:1rem;}
+  .modal-box h3{font-family:'Playfair Display',serif; font-size:1.3rem; margin-bottom:1rem;}
   .field{margin-bottom:.9rem;}
   .field label{display:block; font-size:.75rem; font-weight:600; color:var(--gris); margin-bottom:.3rem;}
   .field input, .field select, .field textarea{
@@ -227,7 +229,7 @@
   .tab-panel.active{display:block; animation:fadeIn .2s ease;}
   .calc-grid{display:grid; grid-template-columns:1fr 1fr; gap:1.4rem; align-items:start;}
   @media(max-width:700px){.calc-grid{grid-template-columns:1fr;}}
-  .calc-result{background:linear-gradient(135deg, rgba(20,184,166,.08), rgba(236,72,153,.06)); border-radius:14px; padding:1.2rem;}
+  .calc-result{background:linear-gradient(135deg, rgba(0,163,163,.08), rgba(219,59,124,.06)); border-radius:14px; padding:1.2rem;}
   .calc-result .r-row{margin-bottom:1rem;}
   .calc-result .r-row:last-child{margin-bottom:0;}
   .calc-result .r-label{font-size:.7rem; color:var(--gris); text-transform:uppercase; letter-spacing:.05em; font-weight:700;}
@@ -306,7 +308,7 @@
   .canal-total-card{background:white; border:1px solid rgba(15,23,42,.07); border-radius:14px; padding:1rem 1.1rem; text-align:center;}
   .canal-total-card .ct-canal{font-size:.68rem; font-weight:700; text-transform:uppercase; color:var(--gris); letter-spacing:.05em;}
   .canal-total-card .ct-monto{font-family:'JetBrains Mono',monospace; font-size:1.25rem; font-weight:700; margin-top:.3rem; color:var(--negro);}
-  .canal-total-card.total{background:linear-gradient(135deg, rgba(20,184,166,.08), rgba(236,72,153,.06)); border-color:rgba(20,184,166,.2);}
+  .canal-total-card.total{background:linear-gradient(135deg, rgba(0,163,163,.08), rgba(219,59,124,.06)); border-color:rgba(0,163,163,.2);}
   .canal-total-card.total .ct-monto{color:var(--turquesa); font-size:1.4rem;}
 
   .hora-bar-row{display:flex; align-items:center; gap:.6rem; margin-bottom:.55rem;}
@@ -316,7 +318,7 @@
   .hora-val{width:76px; text-align:right; font-size:.72rem; font-family:'JetBrains Mono',monospace; flex-shrink:0;}
 
   .proyeccion-box{
-    background:linear-gradient(135deg, rgba(201,168,76,.08), rgba(236,72,153,.05));
+    background:linear-gradient(135deg, rgba(201,168,76,.08), rgba(219,59,124,.05));
     border:1px solid rgba(201,168,76,.25); border-radius:14px; padding:1.2rem;
   }
   .proyeccion-box .py-label{font-size:.72rem; text-transform:uppercase; letter-spacing:.05em; color:var(--gris); font-weight:700;}
@@ -385,7 +387,7 @@
   .f29-tasa input{width:70px; padding:.35rem .5rem; border:1px solid rgba(15,23,42,.15); border-radius:8px; font-size:.8rem;}
 
   /* ===== M4 — DIAGNÓSTICO DE CONVERSIÓN ===== */
-  .diag-hero{background:linear-gradient(135deg, rgba(239,68,68,.08), rgba(236,72,153,.06)); border:1px solid rgba(239,68,68,.2); border-radius:16px; padding:1.2rem 1.4rem; margin-bottom:1.2rem;}
+  .diag-hero{background:linear-gradient(135deg, rgba(239,68,68,.08), rgba(219,59,124,.06)); border:1px solid rgba(239,68,68,.2); border-radius:16px; padding:1.2rem 1.4rem; margin-bottom:1.2rem;}
   .diag-hero .dh-title{font-size:.72rem; font-weight:800; letter-spacing:.05em; color:var(--rojo); text-transform:uppercase; margin-bottom:.4rem;}
   .diag-hero .dh-body{font-size:.95rem; line-height:1.5;}
   .diag-hero .dh-body b{color:var(--rojo);}
@@ -400,7 +402,7 @@
   .escenario-table{width:100%; border-collapse:collapse; font-size:.8rem;}
   .escenario-table th{text-align:left; padding:.5rem .6rem; font-size:.65rem; text-transform:uppercase; letter-spacing:.04em; color:var(--gris); border-bottom:2px solid rgba(15,23,42,.08);}
   .escenario-table td{padding:.6rem; border-bottom:1px solid rgba(15,23,42,.06);}
-  .escenario-table tr.recomendado{background:rgba(20,184,166,.06);}
+  .escenario-table tr.recomendado{background:rgba(0,163,163,.06);}
   .escenario-table tr.recomendado td:first-child{font-weight:700; color:#0F766E;}
   .decision-item{display:flex; gap:.7rem; padding:.6rem 0; border-bottom:1px solid rgba(15,23,42,.06); font-size:.8rem; align-items:baseline;}
   .decision-item:last-child{border-bottom:none;}
@@ -439,7 +441,7 @@
   .clean-item:last-child{margin-bottom:0;}
   .clean-item.resuelto{opacity:.4;}
   .clean-item.resuelto .clean-texto{text-decoration:line-through;}
-  .insight-box{background:linear-gradient(135deg, rgba(20,184,166,.08), rgba(139,92,246,.06)); border:1px solid rgba(20,184,166,.2); border-radius:14px; padding:1.1rem 1.2rem; font-size:.85rem; line-height:1.7; margin-bottom:1rem;}
+  .insight-box{background:linear-gradient(135deg, rgba(0,163,163,.08), rgba(139,92,246,.06)); border:1px solid rgba(0,163,163,.2); border-radius:14px; padding:1.1rem 1.2rem; font-size:.85rem; line-height:1.7; margin-bottom:1rem;}
   .insight-box:last-child{margin-bottom:0;}
   .insight-box b{color:var(--turquesa);}
   .toggle-row{display:flex; align-items:center; justify-content:space-between; padding:.6rem 0; font-size:.85rem;}
@@ -3496,15 +3498,15 @@ function generarPDFMensual(){
   const html = `
     <!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>ASIRI ERP — Informe Ejecutivo</title>
     <style>
-      body{font-family:Arial,sans-serif; color:#0F172A; padding:2rem; max-width:800px; margin:0 auto;}
+      body{font-family:Arial,sans-serif; color:#0D0D0D; padding:2rem; max-width:800px; margin:0 auto;}
       h1{font-size:1.5rem; margin-bottom:.2rem;}
-      .sub{color:#64748B; font-size:.85rem; margin-bottom:1.5rem;}
+      .sub{color:#6E6A63; font-size:.85rem; margin-bottom:1.5rem;}
       table{width:100%; border-collapse:collapse; margin-bottom:1.5rem; font-size:.85rem;}
       th,td{text-align:left; padding:.5rem; border-bottom:1px solid #E2E8F0;}
-      th{background:#0F172A; color:white;}
+      th{background:#0D0D0D; color:white;}
       .kpi{display:inline-block; width:23%; margin-right:1%; vertical-align:top; padding:.8rem; border:1px solid #E2E8F0; border-radius:8px; margin-bottom:1rem;}
       .kpi b{display:block; font-size:1.1rem;}
-      .kpi span{font-size:.7rem; color:#64748B; text-transform:uppercase;}
+      .kpi span{font-size:.7rem; color:#6E6A63; text-transform:uppercase;}
     </style></head>
     <body>
       <h1>🦋 ASIRI ERP — Informe Ejecutivo</h1>
