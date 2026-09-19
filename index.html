@@ -1893,7 +1893,7 @@ const ACADEMY_CONTENIDO = {
 
 /* Resumen ejecutivo — cruza datos reales de M2 CRM, M5 Ventas, M6 Compras y M7 Finanzas */
 function calcularResumenMensual(){
-  const totalHoy = DATA_DEMO.ventas.reduce((s,v) => s + v.monto, 0);
+  const totalHoy = DATA_DEMO.ventas.filter(v => !v.esPrueba).reduce((s,v) => s + v.monto, 0);
   const hoy = new Date();
   const diaDelMes = hoy.getDate();
   const diasDelMes = new Date(hoy.getFullYear(), hoy.getMonth()+1, 0).getDate();
@@ -3053,7 +3053,11 @@ function guardarOrdenCompra(){
 /* Construye el Libro IyE a partir de ventas reales (M5) y compras reales (M6) */
 function construirLibroIyE(){
   const fechaHoyCorta = new Date().toLocaleDateString('es-CL', {day:'2-digit', month:'short'});
-  const ingresos = DATA_DEMO.ventas.map(v => ({
+  // Bug encontrado y corregido 19-sep-2026: esta función no excluía las ventas marcadas como
+  // "prueba interna" (esPrueba), a diferencia de M5/M0 que sí lo hacen desde antes — el Libro
+  // I&E, el F29 (IVA a pagar) y el Flujo de Caja (ver renderFlujoCaja) estaban inflando ingresos
+  // reales con ventas de prueba. Ahora los tres filtran igual.
+  const ingresos = DATA_DEMO.ventas.filter(v => !v.esPrueba).map(v => ({
     fecha: fechaHoyCorta, tipo:'ingreso', doc: v.canal === 'shopify' ? 'Boleta Web' : v.canal === 'pos' ? 'Boleta MP POS' : 'Boleta Manual',
     concepto: escaparHTML(v.producto), total: v.monto
   }));
@@ -3276,7 +3280,7 @@ function renderFinanzas(){
 
 function renderFlujoCaja(){
   const saldoInicial = SALDO_INICIAL_CAJA;
-  const totalHoy = DATA_DEMO.ventas.reduce((s,v) => s + v.monto, 0);
+  const totalHoy = DATA_DEMO.ventas.filter(v => !v.esPrueba).reduce((s,v) => s + v.monto, 0);
   const ahora = Date.now();
   const ventana30d = 30*24*60*60*1000;
   const ordenesUlt30d = ORDENES_DEMO.filter(o => ahora - o.fecha <= ventana30d);
