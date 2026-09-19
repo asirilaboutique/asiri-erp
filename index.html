@@ -2894,11 +2894,8 @@ function renderCompras(){
     ${renderViajes()}
 
     <div class="panel">
-      <div class="panel-title">🧾 Órdenes de Compra</div>
-      <div class="table-scroll"><table class="simple" id="ordenes-tabla">
-        ${ENCABEZADO_ORDENES}
-        ${renderFilasOrdenes()}
-      </table></div>
+      <div class="panel-title">🧾 Órdenes de Compra <span class="badge-live">${ORDENES_DEMO.length} órdenes</span></div>
+      <div id="ordenes-tabla">${renderOrdenesAgrupadas()}</div>
       <div style="margin-top:1rem;"><button class="btn btn-primary" onclick="abrirNuevaOrden()">+ Nueva Orden de Compra</button></div>
     </div>
   `;
@@ -2907,27 +2904,74 @@ function renderCompras(){
 const ENCABEZADO_ORDENES = '<tr><th>Fecha</th><th>Proveedor</th><th>Producto</th><th>Talla</th><th>Cant.</th><th>Costo Unit.</th><th>Total</th><th>Estado</th><th>Acción</th></tr>';
 const FLUJO_ESTADO_ORDEN = { pendiente:'transito', transito:'recibido' };
 
-function renderFilasOrdenes(){
+let filtroEstadoOrdenes = 'all'; // Propuesta de agrupación (19-sep-2026): antes 226 filas planas sin ninguna forma de acotar la vista
+
+/* Agrupa las órdenes de compra por proveedor (mismo patrón de acordeón ya usado en Catálogo de
+   Stock y en "Compras por Proveedor" de Finanzas) — 226 órdenes en una sola tabla plana eran
+   ilegibles. Conserva los botones de acción por fila (avanzar estado, editar, eliminar), que
+   necesitan el índice ORIGINAL de ORDENES_DEMO, no la posición dentro del grupo. */
+function renderOrdenesAgrupadas(){
   const estadoLabel = {pendiente:'Pendiente', transito:'En Tránsito', recibido:'Recibido'};
-  return ORDENES_DEMO.map((o,i) => `
-    <tr>
-      <td>${new Date(o.fecha).toLocaleDateString('es-CL')}</td>
-      <td>${escaparHTML(o.proveedor)}</td>
-      <td>${escaparHTML(o.producto)}</td>
-      <td>${o.talla ? escaparHTML(o.talla) : '<span style="opacity:.4;">—</span>'}</td>
-      <td>${o.cantidad}</td>
-      <td>$${o.costo.toLocaleString('es-CL')}</td>
-      <td>$${(o.cantidad*o.costo).toLocaleString('es-CL')}</td>
-      <td><span class="estado-pill ${o.estado}">${estadoLabel[o.estado]}</span></td>
-      <td>
-        <div style="display:flex; gap:.35rem; flex-wrap:wrap;">
-          ${FLUJO_ESTADO_ORDEN[o.estado] ? `<button class="btn btn-ghost" style="padding:.35rem .7rem; font-size:.68rem;" onclick="avanzarEstadoOrden(${i})">→ ${estadoLabel[FLUJO_ESTADO_ORDEN[o.estado]]}</button>` : ''}
-          <button class="btn btn-ghost" style="padding:.35rem .55rem; font-size:.68rem;" onclick="editarOrden(${i})">✏️</button>
-          <button class="btn btn-eliminar" style="padding:.35rem .55rem; font-size:.68rem;" onclick="eliminarOrden(${i})">🗑️</button>
-        </div>
-      </td>
-    </tr>
-  `).join('');
+  const conIndice = ORDENES_DEMO.map((o,i) => ({...o, _i:i}));
+  const filtradas = filtroEstadoOrdenes === 'all' ? conIndice : conIndice.filter(o => o.estado === filtroEstadoOrdenes);
+
+  const grupos = {};
+  filtradas.forEach(o => {
+    if(!grupos[o.proveedor]) grupos[o.proveedor] = { items: [], subtotal: 0 };
+    grupos[o.proveedor].items.push(o);
+    grupos[o.proveedor].subtotal += o.cantidad * o.costo;
+  });
+  const proveedores = Object.keys(grupos).sort((a,b) => grupos[b].subtotal - grupos[a].subtotal);
+  const conteoPorEstado = {
+    pendiente: ORDENES_DEMO.filter(o=>o.estado==='pendiente').length,
+    transito: ORDENES_DEMO.filter(o=>o.estado==='transito').length,
+    recibido: ORDENES_DEMO.filter(o=>o.estado==='recibido').length,
+  };
+
+  return `
+    <div class="crm-filters" style="margin-bottom:.8rem;">
+      <span class="filter-chip f-all ${filtroEstadoOrdenes==='all'?'chip-active':''}" onclick="filtrarEstadoOrdenes('all')">Todas (${ORDENES_DEMO.length})</span>
+      <span class="filter-chip f-dormida ${filtroEstadoOrdenes==='pendiente'?'chip-active':''}" onclick="filtrarEstadoOrdenes('pendiente')">Pendiente (${conteoPorEstado.pendiente})</span>
+      <span class="filter-chip f-regular ${filtroEstadoOrdenes==='transito'?'chip-active':''}" onclick="filtrarEstadoOrdenes('transito')">En Tránsito (${conteoPorEstado.transito})</span>
+      <span class="filter-chip f-vip ${filtroEstadoOrdenes==='recibido'?'chip-active':''}" onclick="filtrarEstadoOrdenes('recibido')">Recibido (${conteoPorEstado.recibido})</span>
+    </div>
+    ${proveedores.length ? proveedores.map(p => `
+      <details class="proveedor-detalle">
+        <summary>
+          <span class="prov-nombre">${escaparHTML(p)}</span>
+          <span class="prov-meta">${grupos[p].items.length} orden${grupos[p].items.length>1?'es':''}</span>
+          <span class="prov-subtotal">$${grupos[p].subtotal.toLocaleString('es-CL')}</span>
+        </summary>
+        <div class="table-scroll"><table class="simple compact">
+          ${ENCABEZADO_ORDENES}
+          ${grupos[p].items.map(o => `
+            <tr>
+              <td>${new Date(o.fecha).toLocaleDateString('es-CL')}</td>
+              <td>${escaparHTML(o.proveedor)}</td>
+              <td>${escaparHTML(o.producto)}</td>
+              <td>${o.talla ? escaparHTML(o.talla) : '<span style="opacity:.4;">—</span>'}</td>
+              <td>${o.cantidad}</td>
+              <td>$${o.costo.toLocaleString('es-CL')}</td>
+              <td>$${(o.cantidad*o.costo).toLocaleString('es-CL')}</td>
+              <td><span class="estado-pill ${o.estado}">${estadoLabel[o.estado]}</span></td>
+              <td>
+                <div style="display:flex; gap:.35rem; flex-wrap:wrap;">
+                  ${FLUJO_ESTADO_ORDEN[o.estado] ? `<button class="btn btn-ghost" style="padding:.35rem .7rem; font-size:.68rem;" onclick="avanzarEstadoOrden(${o._i})">→ ${estadoLabel[FLUJO_ESTADO_ORDEN[o.estado]]}</button>` : ''}
+                  <button class="btn btn-ghost" style="padding:.35rem .55rem; font-size:.68rem;" onclick="editarOrden(${o._i})">✏️</button>
+                  <button class="btn btn-eliminar" style="padding:.35rem .55rem; font-size:.68rem;" onclick="eliminarOrden(${o._i})">🗑️</button>
+                </div>
+              </td>
+            </tr>
+          `).join('')}
+        </table></div>
+      </details>
+    `).join('') : `<div class="placeholder-box"><span class="pi">📦</span><p>Ninguna orden en este estado.</p></div>`}
+  `;
+}
+
+function filtrarEstadoOrdenes(estado){
+  filtroEstadoOrdenes = estado;
+  document.getElementById('ordenes-tabla').innerHTML = renderOrdenesAgrupadas();
 }
 
 /* Capa 2 — cierra el hallazgo de Instagram: cruza el nombre de producto contra las tallas
@@ -2986,7 +3030,7 @@ function avanzarEstadoOrden(i){
   const orden = ORDENES_DEMO[i];
   if(!orden || !FLUJO_ESTADO_ORDEN[orden.estado]) return;
   orden.estado = FLUJO_ESTADO_ORDEN[orden.estado];
-  document.getElementById('ordenes-tabla').innerHTML = `${ENCABEZADO_ORDENES}${renderFilasOrdenes()}`;
+  document.getElementById('ordenes-tabla').innerHTML = renderOrdenesAgrupadas();
   autoSave(true);
   sincronizarNubeCompras();
 }
@@ -3020,7 +3064,7 @@ function editarOrden(i){
 function eliminarOrden(i){
   if(!confirm('¿Eliminar esta orden de compra? Esta acción no se puede deshacer.')) return;
   ORDENES_DEMO.splice(i,1);
-  document.getElementById('ordenes-tabla').innerHTML = `${ENCABEZADO_ORDENES}${renderFilasOrdenes()}`;
+  document.getElementById('ordenes-tabla').innerHTML = renderOrdenesAgrupadas();
   autoSave(true);
   sincronizarNubeCompras();
 }
@@ -3040,7 +3084,7 @@ function guardarOrdenCompra(){
   }
   editandoOrdenIndex = null;
   closeModal('modal-orden');
-  document.getElementById('ordenes-tabla').innerHTML = `${ENCABEZADO_ORDENES}${renderFilasOrdenes()}`;
+  document.getElementById('ordenes-tabla').innerHTML = renderOrdenesAgrupadas();
   autoSave(true);
   sincronizarNubeCompras();
 }
@@ -3057,14 +3101,20 @@ function construirLibroIyE(){
   // "prueba interna" (esPrueba), a diferencia de M5/M0 que sí lo hacen desde antes — el Libro
   // I&E, el F29 (IVA a pagar) y el Flujo de Caja (ver renderFlujoCaja) estaban inflando ingresos
   // reales con ventas de prueba. Ahora los tres filtran igual.
+  const hoyDate = new Date();
+  const mesKeyHoy = `${hoyDate.getFullYear()}-${String(hoyDate.getMonth()+1).padStart(2,'0')}`;
   const ingresos = DATA_DEMO.ventas.filter(v => !v.esPrueba).map(v => ({
-    fecha: fechaHoyCorta, tipo:'ingreso', doc: v.canal === 'shopify' ? 'Boleta Web' : v.canal === 'pos' ? 'Boleta MP POS' : 'Boleta Manual',
+    fecha: fechaHoyCorta, mesKey: mesKeyHoy, tipo:'ingreso', doc: v.canal === 'shopify' ? 'Boleta Web' : v.canal === 'pos' ? 'Boleta MP POS' : 'Boleta Manual',
     concepto: escaparHTML(v.producto), total: v.monto
   }));
-  const egresos = ORDENES_DEMO.map(o => ({
-    fecha: new Date(o.fecha).toLocaleDateString('es-CL', {day:'2-digit', month:'short'}), tipo:'egreso', doc:'Factura Proveedor',
-    concepto: `${escaparHTML(o.producto)} (${escaparHTML(o.proveedor)})`, total: o.cantidad * o.costo
-  }));
+  const egresos = ORDENES_DEMO.map(o => {
+    const d = new Date(o.fecha);
+    return {
+      fecha: d.toLocaleDateString('es-CL', {day:'2-digit', month:'short'}), mesKey: `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`,
+      tipo:'egreso', doc:'Factura Proveedor',
+      concepto: `${escaparHTML(o.producto)} (${escaparHTML(o.proveedor)})`, total: o.cantidad * o.costo
+    };
+  });
   return [...ingresos, ...egresos].map(m => {
     const neto = Math.round(m.total / 1.19);
     const iva = m.total - neto;
@@ -3230,21 +3280,45 @@ function renderFinanzas(){
     </div>
 
     <div class="panel">
-      <div class="panel-title">📖 Libro de Ingresos y Egresos</div>
-      <div class="table-scroll"><table class="simple">
-        <tr><th>Fecha</th><th>Tipo</th><th>Documento</th><th>Concepto</th><th>Neto</th><th>IVA</th><th>Total</th></tr>
-        ${f29.libro.map(m => `
-          <tr>
-            <td>${m.fecha}</td>
-            <td><span class="tipo-pill ${m.tipo}">${m.tipo === 'ingreso' ? 'Ingreso' : 'Egreso'}</span></td>
-            <td>${m.doc}</td>
-            <td>${m.concepto}</td>
-            <td>$${m.neto.toLocaleString('es-CL')}</td>
-            <td>$${m.iva.toLocaleString('es-CL')}</td>
-            <td>$${m.total.toLocaleString('es-CL')}</td>
-          </tr>
-        `).join('')}
-      </table></div>
+      <div class="panel-title">📖 Libro de Ingresos y Egresos <span class="badge-live">${f29.libro.length} movimientos</span></div>
+      <div class="calc-note" style="margin-bottom:.6rem;">Agrupado por mes — ${f29.libro.length} movimientos en una sola tabla eran difíciles de leer. El mes más reciente empieza abierto.</div>
+      ${(() => {
+        const gruposMes = {};
+        f29.libro.forEach(m => {
+          if(!gruposMes[m.mesKey]) gruposMes[m.mesKey] = { items: [], total: 0 };
+          gruposMes[m.mesKey].items.push(m);
+          gruposMes[m.mesKey].total += (m.tipo === 'ingreso' ? m.total : -m.total);
+        });
+        const mesesOrdenados = Object.keys(gruposMes).sort().reverse();
+        return mesesOrdenados.map((mk, idx) => {
+          const [anio, mesNum] = mk.split('-');
+          const nombreMes = new Date(Number(anio), Number(mesNum)-1, 1).toLocaleDateString('es-CL', {month:'long', year:'numeric'});
+          const g = gruposMes[mk];
+          return `
+            <details class="proveedor-detalle" ${idx===0?'open':''}>
+              <summary>
+                <span class="prov-nombre">${nombreMes.charAt(0).toUpperCase()+nombreMes.slice(1)}</span>
+                <span class="prov-meta">${g.items.length} movimientos</span>
+                <span class="prov-subtotal" style="${g.total<0?'color:var(--rojo);':''}">${g.total<0?'-':''}$${Math.abs(g.total).toLocaleString('es-CL')}</span>
+              </summary>
+              <div class="table-scroll"><table class="simple compact">
+                <tr><th>Fecha</th><th>Tipo</th><th>Documento</th><th>Concepto</th><th>Neto</th><th>IVA</th><th>Total</th></tr>
+                ${g.items.map(m => `
+                  <tr>
+                    <td>${m.fecha}</td>
+                    <td><span class="tipo-pill ${m.tipo}">${m.tipo === 'ingreso' ? 'Ingreso' : 'Egreso'}</span></td>
+                    <td>${m.doc}</td>
+                    <td>${m.concepto}</td>
+                    <td>$${m.neto.toLocaleString('es-CL')}</td>
+                    <td>$${m.iva.toLocaleString('es-CL')}</td>
+                    <td>$${m.total.toLocaleString('es-CL')}</td>
+                  </tr>
+                `).join('')}
+              </table></div>
+            </details>
+          `;
+        }).join('');
+      })()}
       <div style="margin-top:1rem;"><button class="btn btn-primary" onclick="abrirCierreMensual()">🔒 Cerrar Mes</button></div>
     </div>
 
