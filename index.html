@@ -566,6 +566,11 @@
       <input type="number" id="f-monto" placeholder="18000" oninput="autoSave()">
     </div>
     <div class="field">
+      <label>Clienta (opcional — alimenta el CRM automáticamente)</label>
+      <input type="text" id="f-clienta" list="lista-clientas-venta" placeholder="Ej: Camila Reyes — déjalo vacío si no la conoces" oninput="autoSave()">
+      <datalist id="lista-clientas-venta"></datalist>
+    </div>
+    <div class="field">
       <label>Canal</label>
       <select id="f-canal" onchange="autoSave()">
         <option value="manual">Manual</option>
@@ -1982,7 +1987,7 @@ function renderHome(){
             </tr>
           `).join('')}
         </table></div>
-        <div style="margin-top:1rem;"><button class="btn btn-primary" onclick="openModal('modal-venta')">+ Registrar Venta</button></div>
+        <div style="margin-top:1rem;"><button class="btn btn-primary" onclick="abrirModalVenta()">+ Registrar Venta</button></div>
       </div>
       <div class="panel">
         <div class="panel-title">⚡ Acceso Rápido ${ADAPTIVE_HOME_ON ? '<span class="badge-live">🧠 ADAPTATIVO</span>' : ''}</div>
@@ -2608,18 +2613,19 @@ function renderVentas(){
     <div class="panel">
       <div class="panel-title">🧾 Todas las Ventas de Hoy ${pruebasHoy ? `<span class="badge-live" style="background:#94a3b8;">${pruebasHoy} de prueba, excluida${pruebasHoy>1?'s':''}</span>` : ''}</div>
       <div class="table-scroll"><table class="simple">
-        <tr><th>Hora</th><th>Producto</th><th>Canal</th><th>Monto</th><th></th></tr>
+        <tr><th>Hora</th><th>Producto</th><th>Clienta</th><th>Canal</th><th>Monto</th><th></th></tr>
         ${DATA_DEMO.ventas.map(v => `
           <tr style="${v.esPrueba ? 'opacity:.55;' : ''}">
             <td>${v.hora}</td>
             <td>${escaparHTML(v.producto)}</td>
+            <td>${v.clienteId ? `<a href="#" onclick="abrirFicha(${v.clienteId});return false;">${escaparHTML(v.clienteNombre||'')}</a>` : (escaparHTML(v.clienteNombre||'') || '<span class="calc-note">—</span>')}</td>
             <td><span class="canal-pill ${v.canal}">${v.canal}</span></td>
             <td>$${v.monto.toLocaleString('es-CL')}</td>
             <td>${v.esPrueba ? '<span class="estado-pill pendiente">PRUEBA</span>' : ''}</td>
           </tr>
         `).join('')}
       </table></div>
-      <div style="margin-top:1rem;"><button class="btn btn-primary" onclick="openModal('modal-venta')">+ Registrar Venta</button></div>
+      <div style="margin-top:1rem;"><button class="btn btn-primary" onclick="abrirModalVenta()">+ Registrar Venta</button></div>
     </div>
   `;
 }
@@ -3874,13 +3880,49 @@ function initViews(){
 function openModal(id){ document.getElementById(id).classList.add('open'); }
 function closeModal(id){ document.getElementById(id).classList.remove('open'); }
 
+function abrirModalVenta(){
+  const datalist = document.getElementById('lista-clientas-venta');
+  datalist.innerHTML = CRM_DEMO.map(c => `<option value="${escaparHTML(c.nombre)}">`).join('');
+  document.getElementById('f-clienta').value = '';
+  openModal('modal-venta');
+}
+
+/* Propuesta plus (19-sep-2026, pedido explícito del partner): cada venta manual alimenta el
+   CRM automáticamente — si el nombre coincide con una clienta existente le suma la compra
+   (compras+1, ltv+=monto, diasUltimaCompra=0); si no existe y se escribió un nombre, crea la
+   ficha nueva sola (con la ciudad del viaje activo si hay uno planificado). Sin esto, las 30
+   ventas pendientes de Concepción quedarían en M5 sin nunca actualizar quién compró qué en el CRM. */
+function vincularVentaConCRM(nombreClienta, monto){
+  const nombre = (nombreClienta||'').trim();
+  if(!nombre) return null;
+  const existente = CRM_DEMO.find(c => c.nombre.trim().toLowerCase() === nombre.toLowerCase());
+  if(existente){
+    existente.compras = (existente.compras||0) + 1;
+    existente.ltv = (existente.ltv||0) + monto;
+    existente.diasUltimaCompra = 0;
+    return existente.id;
+  }
+  const nueva = {
+    id: Date.now(),
+    nombre, telefono: '', email: '',
+    ciudad: ciudadViajePlanificado || '',
+    compras: 1, ltv: monto, diasUltimaCompra: 0,
+    notas: 'Creada automáticamente al registrar una venta en M5.'
+  };
+  CRM_DEMO.unshift(nueva);
+  return nueva.id;
+}
+
 function guardarVentaManual(mantenerAbierto){
   const producto = document.getElementById('f-producto').value;
   const monto = document.getElementById('f-monto').value;
+  const clienta = document.getElementById('f-clienta').value;
   const canal = document.getElementById('f-canal').value;
   const esPrueba = document.getElementById('f-prueba').checked;
   if(!producto || !monto){ alert('Completa producto y monto'); return; }
-  DATA_DEMO.ventas.unshift({hora:new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'}), producto, canal, monto:Number(monto), esPrueba});
+  let clienteId = null;
+  if(!esPrueba) clienteId = vincularVentaConCRM(clienta, Number(monto));
+  DATA_DEMO.ventas.unshift({hora:new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'}), producto, canal, monto:Number(monto), esPrueba, clienteNombre: clienta||'', clienteId});
   // Las ventas de prueba interna (ej. testear el checkout, mostrarle el flujo a alguien) no deben
   // sumar a la caja real ni al KPI de conversión — confirmado como causa de confusión real en agosto
   // 2026 (pedido #1001 y varios carritos abandonados eran pruebas propias, no clientas).
@@ -3888,15 +3930,19 @@ function guardarVentaManual(mantenerAbierto){
   recalcularCajaDelta();
   document.getElementById('view-m0').innerHTML = renderHome();
   document.getElementById('view-m5').innerHTML = renderVentas();
+  if(document.getElementById('view-m2')) document.getElementById('view-m2').innerHTML = renderCRM();
   if(document.getElementById('view-m7')) document.getElementById('view-m7').innerHTML = renderFinanzas();
   autoSave(true);
   sincronizarNubeVentas();
+  if(clienteId) sincronizarNubeCRM();
   // Propuesta D (pivote presencial, 19-sep-2026): "Guardar y agregar otra" deja el modal abierto
-  // y solo limpia producto/monto — para registrar varias ventas seguidas en un viaje sin la
-  // fricción de abrir el modal de nuevo cada vez (riesgo real: ventas que no se cargan a tiempo).
+  // y solo limpia producto/monto/clienta — para registrar varias ventas seguidas en un viaje sin
+  // la fricción de abrir el modal de nuevo cada vez (riesgo real: ventas que no se cargan a tiempo).
   if(mantenerAbierto){
     document.getElementById('f-producto').value = '';
     document.getElementById('f-monto').value = '';
+    document.getElementById('f-clienta').value = '';
+    document.getElementById('lista-clientas-venta').innerHTML = CRM_DEMO.map(c => `<option value="${escaparHTML(c.nombre)}">`).join('');
     document.getElementById('f-producto').focus();
   } else {
     closeModal('modal-venta');
