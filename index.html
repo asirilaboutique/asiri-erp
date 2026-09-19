@@ -581,12 +581,39 @@
     </div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal('modal-venta')">Cancelar</button>
-      <button class="btn btn-primary" onclick="guardarVentaManual()">Guardar Venta</button>
+      <button class="btn btn-ghost" onclick="guardarVentaManual(true)" title="Para registrar varias ventas seguidas, ej. en un viaje">Guardar y agregar otra</button>
+      <button class="btn btn-primary" onclick="guardarVentaManual(false)">Guardar Venta</button>
     </div>
   </div>
 </div>
 
 <!-- ===== M2 CRM — MODAL NUEVA/EDITAR CLIENTA ===== -->
+<div class="modal-overlay" id="modal-viaje">
+  <div class="modal-box">
+    <h3>Registrar Viaje / Evento Presencial</h3>
+    <div class="field">
+      <label>Ciudad</label>
+      <input type="text" id="v-ciudad" placeholder="Ej: Concepción" oninput="autoSave()">
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Fecha inicio</label><input type="date" id="v-fecha-inicio" oninput="autoSave()"></div>
+      <div class="field"><label>Fecha fin</label><input type="date" id="v-fecha-fin" oninput="autoSave()"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Prendas llevadas</label><input type="number" id="v-llevadas" placeholder="100" oninput="autoSave()"></div>
+      <div class="field"><label>Prendas devueltas</label><input type="number" id="v-vueltas" placeholder="68" oninput="autoSave()"></div>
+    </div>
+    <div class="field">
+      <label>Notas</label>
+      <textarea id="v-notas" rows="2" placeholder="Costo del viaje, qué categorías se vendieron mejor, etc." oninput="autoSave()"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-viaje')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarViaje()">Guardar Viaje</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-clienta">
   <div class="modal-box">
     <h3>Nueva Clienta ASIRI</h3>
@@ -601,6 +628,10 @@
     <div class="field">
       <label>Email</label>
       <input type="email" id="c-email" placeholder="clienta@email.com" oninput="autoSave()">
+    </div>
+    <div class="field">
+      <label>Ciudad</label>
+      <input type="text" id="c-ciudad" placeholder="Ej: Concepción, Talca" oninput="autoSave()">
     </div>
     <div class="field">
       <label>Notas</label>
@@ -840,6 +871,7 @@ function segmentarClienta(c){
 }
 
 let filtroCRM = localStorage.getItem('asiri_crm_filtro') || 'all';
+let ciudadViajePlanificado = ''; // Propuesta C (pivote presencial, 19-sep-2026): ciudad activa al planificar un viaje
 
 /* ---------- 3c. DIAGNÓSTICO DE CONVERSIÓN — datos reales, consultados en vivo 31-ago-2026 vía ShopifyQL ----------
    Reemplaza la versión anterior (24-jul-2026, 1.439 sesiones y funnel estimado con % de benchmark
@@ -970,6 +1002,15 @@ const CONTENIDO_DEMO = [
 
 /* ---------- 3e. M6 COMPRAS — puesta en marcha: sin proveedores ni órdenes de prueba ---------- */
 const PROVEEDORES_DEMO = [];
+
+/* Propuesta A (pivote a venta presencial, 19-sep-2026): módulo de Viajes/Eventos. Con $70.000
+   en pauta Shopify generando 0 ventas y el viaje a Concepción vendiendo ~30-32 prendas en 6
+   días sin gasto de pauta, el ERP necesita poder comparar el rendimiento de un viaje contra el
+   de la pauta paga en el mismo panel. Primer registro real: el viaje que el partner contó el
+   19-sep (número exacto de ventas pendiente de confirmar — Valeria mandará el detalle). */
+let VIAJES_DEMO = [
+  {id:1, ciudad:'Concepción', fechaInicio:'2026-09-11', fechaFin:'2026-09-16', prendasLlevadas:100, prendasVueltas:68, notas:'Primer registro del módulo — número de vendidas (32, por la resta) pendiente de confirmar contra el conteo de Valeria (~30).'}
+];
 
 /* ORDENES_DEMO v2 (2026-07-25) — actualizado con cruce Gmail/Mercado Pago hecho por Cowork:
    proveedor real "Aliandra Aponte Jimenez" (antes agrupado genéricamente como "Ali Pedidos"),
@@ -1736,6 +1777,7 @@ const HISTORICO_VENTAS_MENSUAL = [
 /* ---------- 3f. ESTADO M7 FINANZAS ---------- */
 let TASA_PPM = 0.3; // % sobre ventas netas — ajustar según tasa real asignada por el SII a ASIRI
 let SALDO_INICIAL_CAJA = 850000; // ajustar con saldo bancario real de ASIRI
+let GASTO_PAUTA_MES = 70000; // pauta Shopify de sep-2026 (el partner confirmó $70.000 sin ventas generadas) — ajustar cada mes
 let FACTOR_UTILIDAD_REAL = 0.22; // punto medio del 17-27% verificado con el pedido #1002 (IVA + flete + comisiones Webpay/Shopify) — ajustable a medida que haya más pedidos reales
 let MES_CERRADO = false;
 
@@ -2152,9 +2194,45 @@ function renderCRM(){
     .sort((a,b) => b.scoreRecontacto - a.scoreRecontacto)
     .slice(0, 8);
 
+  /* Propuesta C (pivote a venta presencial, 19-sep-2026): con $70.000 en pauta Shopify sin
+     ventas y el viaje a Concepción vendiendo ~30 prendas en 6 días, el CRM necesita avisar
+     ANTES de viajar a quién contactar en esa ciudad — no solo priorizar por LTV/recencia en
+     abstracto, sino filtrado por dónde se va a estar. */
+  const ciudadesConClientas = [...new Set(CRM_DEMO.map(c => (c.ciudad||'').trim()).filter(Boolean))].sort();
+  const clientasDelViaje = ciudadViajePlanificado
+    ? CRM_DEMO.filter(c => (c.ciudad||'').trim().toLowerCase() === ciudadViajePlanificado.toLowerCase())
+        .map(c => ({...c, scoreRecontacto: (c.diasUltimaCompra||0) * (c.ltv||0)}))
+        .sort((a,b) => b.scoreRecontacto - a.scoreRecontacto)
+    : [];
+
   return `
     <div class="page-title">💎 CRM · Clientas ASIRI</div>
     <div class="page-sub">${CRM_DEMO.length} clientas registradas — segmentación automática</div>
+
+    <div class="panel" style="margin-bottom:1.2rem;">
+      <div class="panel-title">🧳 Planificar viaje <span class="badge-live">MODELO PRESENCIAL</span></div>
+      <div class="calc-note" style="margin-bottom:.6rem;">El viaje a Concepción (11 al 16-sep) vendió más en 6 días que semanas de pauta en Shopify. Antes de viajar, avisa a tus clientas de esa ciudad.</div>
+      <div style="display:flex; gap:.5rem; flex-wrap:wrap; align-items:center;">
+        <input type="text" id="ciudad-viaje-input" list="lista-ciudades-crm" placeholder="Ej: Concepción" value="${escaparHTML(ciudadViajePlanificado)}" style="flex:1; min-width:180px;">
+        <datalist id="lista-ciudades-crm">${ciudadesConClientas.map(c => `<option value="${escaparHTML(c)}">`).join('')}</datalist>
+        <button class="btn btn-primary" onclick="planificarViaje(document.getElementById('ciudad-viaje-input').value)">Buscar clientas</button>
+        ${ciudadViajePlanificado ? `<button class="btn btn-ghost" onclick="planificarViaje('')">Limpiar</button>` : ''}
+      </div>
+      ${ciudadViajePlanificado ? (clientasDelViaje.length ? `
+        <div class="table-scroll" style="margin-top:.8rem;"><table class="simple compact">
+          <tr><th>Clienta</th><th>Segmento</th><th>Días sin comprar</th><th>LTV</th><th></th></tr>
+          ${clientasDelViaje.map(c => { const seg = segmentarClienta(c); return `
+            <tr>
+              <td>${escaparHTML(c.nombre)}</td>
+              <td><span class="seg-badge ${seg.clase}">${seg.label}</span></td>
+              <td>${c.diasUltimaCompra}</td>
+              <td>$${(c.ltv||0).toLocaleString('es-CL')}</td>
+              <td>${c.telefono ? `<button class="btn btn-ghost" onclick="abrirWhatsAppViaje(${c.id})">💬 Avisar</button>` : '<span class="calc-note">sin teléfono</span>'}</td>
+            </tr>
+          `; }).join('')}
+        </table></div>
+      ` : `<div class="calc-note" style="margin-top:.8rem;">Ninguna clienta con ciudad "${escaparHTML(ciudadViajePlanificado)}" registrada todavía — edita sus fichas para agregar la ciudad.</div>`) : ''}
+    </div>
 
     ${dormidas.length ? `
       <div class="reactivacion-box">
@@ -2235,6 +2313,7 @@ function abrirNuevaClienta(){
   document.getElementById('c-nombre').value = '';
   document.getElementById('c-telefono').value = '';
   document.getElementById('c-email').value = '';
+  document.getElementById('c-ciudad').value = '';
   document.getElementById('c-notas').value = '';
   openModal('modal-clienta');
 }
@@ -2248,6 +2327,7 @@ function abrirEditarClienta(id){
   document.getElementById('c-nombre').value = c.nombre;
   document.getElementById('c-telefono').value = c.telefono;
   document.getElementById('c-email').value = c.email;
+  document.getElementById('c-ciudad').value = c.ciudad || '';
   document.getElementById('c-notas').value = c.notas;
   openModal('modal-clienta');
 }
@@ -2257,14 +2337,15 @@ function guardarClienta(){
   const telefono = document.getElementById('c-telefono').value;
   if(!nombre || !telefono){ alert('Completa nombre y teléfono'); return; }
   const email = document.getElementById('c-email').value;
+  const ciudad = document.getElementById('c-ciudad').value;
   const notas = document.getElementById('c-notas').value;
   if(editandoClientaId !== null){
     const c = CRM_DEMO.find(x => x.id === editandoClientaId);
-    if(c){ c.nombre = nombre; c.telefono = telefono; c.email = email; c.notas = notas; }
+    if(c){ c.nombre = nombre; c.telefono = telefono; c.email = email; c.ciudad = ciudad; c.notas = notas; }
   } else {
     CRM_DEMO.unshift({
       id: Date.now(),
-      nombre, telefono, email,
+      nombre, telefono, email, ciudad,
       compras: 0, ltv: 0, diasUltimaCompra: 0,
       notas
     });
@@ -2284,6 +2365,7 @@ function abrirFicha(id){
     <h3>${escaparHTML(c.nombre)} <span class="seg-badge ${seg.clase}">${seg.label}</span></h3>
     <div class="ficha-row"><span>Teléfono</span><span>${escaparHTML(c.telefono)}</span></div>
     <div class="ficha-row"><span>Email</span><span>${escaparHTML(c.email) || '—'}</span></div>
+    <div class="ficha-row"><span>Ciudad</span><span>${escaparHTML(c.ciudad) || '—'}</span></div>
     <div class="ficha-row"><span>Compras totales</span><span>${c.compras}</span></div>
     <div class="ficha-row"><span>LTV</span><span>$${c.ltv.toLocaleString('es-CL')}</span></div>
     <div class="ficha-row"><span>Última compra</span><span>hace ${c.diasUltimaCompra} días</span></div>
@@ -2308,6 +2390,20 @@ function abrirWhatsApp(id){
     regular: `Hola ${c.nombre.split(' ')[0]} 🦋 Tenemos nuevas piezas en ASIRI La Boutique que te podrían encantar.`
   };
   const texto = encodeURIComponent(mensajes[seg.key] || mensajes.regular);
+  const numero = c.telefono.replace(/[^0-9]/g,'');
+  window.open(`https://wa.me/${numero}?text=${texto}`, '_blank');
+}
+
+function planificarViaje(ciudad){
+  ciudadViajePlanificado = (ciudad||'').trim();
+  document.getElementById('view-m2').innerHTML = renderCRM();
+  autoSave();
+}
+
+function abrirWhatsAppViaje(id){
+  const c = CRM_DEMO.find(x => x.id === id);
+  if(!c || !c.telefono) return;
+  const texto = encodeURIComponent(`Hola ${c.nombre.split(' ')[0]} 🦋 Valeria de ASIRI La Boutique estará en ${ciudadViajePlanificado} pronto con las prendas nuevas — ¿quieres que te aparte algo antes de que se agote?`);
   const numero = c.telefono.replace(/[^0-9]/g,'');
   window.open(`https://wa.me/${numero}?text=${texto}`, '_blank');
 }
@@ -2684,6 +2780,71 @@ function renderCatalogoStock(){
   `;
 }
 
+/* Propuesta A (pivote a venta presencial, 19-sep-2026): panel de Viajes/Eventos. Vendidas =
+   llevadas - vueltas (simple, no requiere registrar cada venta individual del viaje aparte).
+   Incluye una comparación ligera contra GASTO_PAUTA_MES (Propuesta E acotada) para que la
+   próxima decisión de presupuesto se tome mirando una pantalla, no de memoria. */
+function renderViajes(){
+  const viajesConCalculo = VIAJES_DEMO.map(v => {
+    const vendidas = Math.max(0, (v.prendasLlevadas||0) - (v.prendasVueltas||0));
+    const tasaVenta = v.prendasLlevadas > 0 ? (vendidas / v.prendasLlevadas * 100) : 0;
+    return {...v, vendidas, tasaVenta};
+  });
+  const totalVendidasViajes = viajesConCalculo.reduce((s,v) => s + v.vendidas, 0);
+
+  return `
+    <div class="panel">
+      <div class="panel-title">🧳 Viajes / Eventos Presenciales <span class="badge-live">MODELO PRESENCIAL</span></div>
+      <div class="calc-note" style="margin-bottom:.6rem;">Vendidas = prendas llevadas − prendas devueltas. Compara el rendimiento de cada viaje contra lo que se gasta en pauta de Shopify en el mismo período — la venta presencial de Concepción (11 al 16-sep) rindió más que $70.000 de pauta sin ventas.</div>
+      <div class="calc-note" style="margin-bottom:.8rem;">💰 Gasto en pauta este mes: <input type="number" step="1000" id="gasto-pauta-mes" value="${GASTO_PAUTA_MES}" onchange="cambiarGastoPautaMes(this.value)" style="width:110px;"> — vs. <b>${totalVendidasViajes} prendas vendidas</b> en ${viajesConCalculo.length} viaje${viajesConCalculo.length===1?'':'s'} presencial${viajesConCalculo.length===1?'':'es'} registrados, sin ese gasto.</div>
+      <div class="table-scroll"><table class="simple compact">
+        <tr><th>Ciudad</th><th>Fechas</th><th>Llevadas</th><th>Vueltas</th><th>Vendidas</th><th>Tasa venta</th></tr>
+        ${viajesConCalculo.map(v => `
+          <tr>
+            <td>${escaparHTML(v.ciudad)}</td>
+            <td>${new Date(v.fechaInicio+'T00:00:00').toLocaleDateString('es-CL',{day:'numeric',month:'short'})}–${new Date(v.fechaFin+'T00:00:00').toLocaleDateString('es-CL',{day:'numeric',month:'short'})}</td>
+            <td>${v.prendasLlevadas}</td>
+            <td>${v.prendasVueltas}</td>
+            <td><b>${v.vendidas}</b></td>
+            <td>${v.tasaVenta.toFixed(0)}%</td>
+          </tr>
+        `).join('')}
+      </table></div>
+      <div style="margin-top:1rem;"><button class="btn btn-primary" onclick="abrirNuevoViaje()">+ Registrar Viaje</button></div>
+    </div>
+  `;
+}
+
+function abrirNuevoViaje(){
+  document.getElementById('v-ciudad').value = '';
+  document.getElementById('v-fecha-inicio').value = '';
+  document.getElementById('v-fecha-fin').value = '';
+  document.getElementById('v-llevadas').value = '';
+  document.getElementById('v-vueltas').value = '';
+  document.getElementById('v-notas').value = '';
+  openModal('modal-viaje');
+}
+
+function guardarViaje(){
+  const ciudad = document.getElementById('v-ciudad').value;
+  const fechaInicio = document.getElementById('v-fecha-inicio').value;
+  const fechaFin = document.getElementById('v-fecha-fin').value;
+  const prendasLlevadas = Number(document.getElementById('v-llevadas').value);
+  const prendasVueltas = Number(document.getElementById('v-vueltas').value);
+  const notas = document.getElementById('v-notas').value;
+  if(!ciudad || !fechaInicio || !fechaFin || !prendasLlevadas){ alert('Completa ciudad, fechas y prendas llevadas'); return; }
+  VIAJES_DEMO.unshift({id:Date.now(), ciudad, fechaInicio, fechaFin, prendasLlevadas, prendasVueltas: prendasVueltas||0, notas});
+  closeModal('modal-viaje');
+  document.getElementById('view-m6').innerHTML = renderCompras();
+  autoSave(true);
+}
+
+function cambiarGastoPautaMes(valor){
+  GASTO_PAUTA_MES = Number(valor) || 0;
+  document.getElementById('view-m6').innerHTML = renderCompras();
+  autoSave();
+}
+
 function renderCompras(){
   return `
     <div class="page-title">📦 Compras · Gestión Mercadería</div>
@@ -2723,6 +2884,8 @@ function renderCompras(){
     </div>
 
     ${renderCatalogoStock()}
+
+    ${renderViajes()}
 
     <div class="panel">
       <div class="panel-title">🧾 Órdenes de Compra</div>
@@ -3711,7 +3874,7 @@ function initViews(){
 function openModal(id){ document.getElementById(id).classList.add('open'); }
 function closeModal(id){ document.getElementById(id).classList.remove('open'); }
 
-function guardarVentaManual(){
+function guardarVentaManual(mantenerAbierto){
   const producto = document.getElementById('f-producto').value;
   const monto = document.getElementById('f-monto').value;
   const canal = document.getElementById('f-canal').value;
@@ -3723,14 +3886,23 @@ function guardarVentaManual(){
   // 2026 (pedido #1001 y varios carritos abandonados eran pruebas propias, no clientas).
   if(!esPrueba) DATA_DEMO.cajaHoy += Number(monto);
   recalcularCajaDelta();
-  closeModal('modal-venta');
-  document.getElementById('f-prueba').checked = false;
   document.getElementById('view-m0').innerHTML = renderHome();
   document.getElementById('view-m5').innerHTML = renderVentas();
   if(document.getElementById('view-m7')) document.getElementById('view-m7').innerHTML = renderFinanzas();
-  irAModulo(moduloActivo === 'm5' ? 'm5' : 'm0');
   autoSave(true);
   sincronizarNubeVentas();
+  // Propuesta D (pivote presencial, 19-sep-2026): "Guardar y agregar otra" deja el modal abierto
+  // y solo limpia producto/monto — para registrar varias ventas seguidas en un viaje sin la
+  // fricción de abrir el modal de nuevo cada vez (riesgo real: ventas que no se cargan a tiempo).
+  if(mantenerAbierto){
+    document.getElementById('f-producto').value = '';
+    document.getElementById('f-monto').value = '';
+    document.getElementById('f-producto').focus();
+  } else {
+    closeModal('modal-venta');
+    document.getElementById('f-prueba').checked = false;
+    irAModulo(moduloActivo === 'm5' ? 'm5' : 'm0');
+  }
 }
 
 /* ---------- Caja del día — delta real "vs ayer" (bug corregido: antes era '+12%' fijo) ----------
@@ -3792,6 +3964,8 @@ function guardarEstadoLocal(){
     saldoInicialCaja: SALDO_INICIAL_CAJA,
     factorUtilidadReal: FACTOR_UTILIDAD_REAL,
     planSeptiembreEstado: PLAN_SEPTIEMBRE_ESTADO,
+    gastoPautaMes: GASTO_PAUTA_MES,
+    viajes: VIAJES_DEMO,
     mesCerrado: MES_CERRADO,
     brief: DATA_DEMO.brief,
     alertas: DATA_DEMO.alertas,
@@ -3833,6 +4007,8 @@ function cargarEstadoLocal(){
     if(typeof estado.saldoInicialCaja === 'number') SALDO_INICIAL_CAJA = estado.saldoInicialCaja;
     if(typeof estado.factorUtilidadReal === 'number') FACTOR_UTILIDAD_REAL = estado.factorUtilidadReal;
     if(estado.planSeptiembreEstado && typeof estado.planSeptiembreEstado === 'object') PLAN_SEPTIEMBRE_ESTADO = estado.planSeptiembreEstado;
+    if(typeof estado.gastoPautaMes === 'number') GASTO_PAUTA_MES = estado.gastoPautaMes;
+    if(Array.isArray(estado.viajes)) VIAJES_DEMO = estado.viajes;
     if(typeof estado.mesCerrado === 'boolean') MES_CERRADO = estado.mesCerrado;
     if(typeof estado.brief === 'string') DATA_DEMO.brief = estado.brief;
     if(Array.isArray(estado.alertas)) DATA_DEMO.alertas = estado.alertas;
