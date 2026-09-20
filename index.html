@@ -560,6 +560,10 @@
   <div class="modal-box">
     <h3>Registrar Venta Manual</h3>
     <div class="field">
+      <label>Fecha de la venta</label>
+      <input type="date" id="f-fecha" oninput="autoSave()">
+    </div>
+    <div class="field">
       <label>Producto</label>
       <input type="text" id="f-producto" placeholder="Ej: Blusa lino rosa" oninput="autoSave()">
     </div>
@@ -782,6 +786,17 @@ function toggleSidebar(force){
    insertan vía innerHTML. Sin esto, un texto con < > podía interpretarse como HTML
    (self-XSS). Se aplica a todo dato TIPEADO por Valeria — nunca a texto generado
    por el propio sistema (ej. respuestas de Claude en M10 que sí llevan <b> intencional). */
+/* Fecha local en formato YYYY-MM-DD (no usar toISOString: desplaza a UTC y puede correr el día).
+   Base de la Propuesta "fecha en ventas" (20-sep-2026): antes toda venta se asumía "de hoy" y
+   no existía forma de cargar ventas de agosto u otros meses anteriores. */
+function fechaLocalStr(d){
+  const dt = d || new Date();
+  return dt.getFullYear() + '-' + String(dt.getMonth()+1).padStart(2,'0') + '-' + String(dt.getDate()).padStart(2,'0');
+}
+function fechaLocalCorta(fechaStr){
+  return new Date(fechaStr+'T00:00:00').toLocaleDateString('es-CL', {day:'2-digit', month:'short', year:'numeric'});
+}
+
 function escaparHTML(valor){
   if(valor === undefined || valor === null) return '';
   return String(valor)
@@ -1895,7 +1910,7 @@ const ACADEMY_CONTENIDO = {
 
 /* Resumen ejecutivo — cruza datos reales de M2 CRM, M5 Ventas, M6 Compras y M7 Finanzas */
 function calcularResumenMensual(){
-  const totalHoy = DATA_DEMO.ventas.filter(v => !v.esPrueba).reduce((s,v) => s + v.monto, 0);
+  const totalHoy = DATA_DEMO.ventas.filter(v => !v.esPrueba && (v.fecha||fechaLocalStr()) === fechaLocalStr()).reduce((s,v) => s + v.monto, 0);
   const hoy = new Date();
   const diaDelMes = hoy.getDate();
   const diasDelMes = new Date(hoy.getFullYear(), hoy.getMonth()+1, 0).getDate();
@@ -2558,12 +2573,15 @@ function recuperarCarrito(i){
    Shopify + MP POS + Manual = total real del día · Proyección mes · Análisis por hora
    ============================================================ */
 function renderVentas(){
+  const hoyStr = fechaLocalStr();
+  // Propuesta "fecha en ventas" (20-sep-2026): ahora se pueden cargar ventas de agosto y meses
+  // anteriores — "la caja del día" y el análisis por hora deben mirar SOLO la fecha real de hoy,
+  // no todo lo que haya en DATA_DEMO.ventas (eso ahora incluye historial, no solo hoy).
+  const ventasHoy = DATA_DEMO.ventas.filter(v => !v.esPrueba && (v.fecha||hoyStr) === hoyStr);
   const porCanal = {shopify:0, pos:0, manual:0};
-  // Bug corregido: las ventas marcadas como "prueba interna" (ver M5 modal) no deben inflar
-  // la caja real ni la proyección del mes — el ERP debe distinguir plata real de pruebas propias.
-  DATA_DEMO.ventas.filter(v => !v.esPrueba).forEach(v => { porCanal[v.canal] = (porCanal[v.canal]||0) + v.monto; });
+  ventasHoy.forEach(v => { porCanal[v.canal] = (porCanal[v.canal]||0) + v.monto; });
   const totalHoy = porCanal.shopify + porCanal.pos + porCanal.manual;
-  const pruebasHoy = DATA_DEMO.ventas.filter(v => v.esPrueba).length;
+  const pruebasHoy = DATA_DEMO.ventas.filter(v => v.esPrueba && (v.fecha||hoyStr) === hoyStr).length;
 
   // Bug corregido: antes estaba fijo en "día 23 de 31 (julio 2026)" sin importar la fecha real —
   // la proyección quedaba congelada en el pasado. Ahora usa la fecha real del dispositivo.
@@ -2573,10 +2591,10 @@ function renderVentas(){
   const nombreMes = hoyDate.toLocaleDateString('es-CL', {month:'long', year:'numeric'});
   const proyeccionMes = Math.round((totalHoy / diaDelMes) * diasDelMes);
 
-  // Análisis por hora — agrupa las ventas demo por bloque horario
+  // Análisis por hora — agrupa las ventas de HOY por bloque horario
   const bloques = ['09-11h','11-13h','13-15h','15-17h','17-19h','19-21h'];
   const montosPorBloque = bloques.map(() => 0);
-  DATA_DEMO.ventas.filter(v => !v.esPrueba).forEach(v => {
+  ventasHoy.forEach(v => {
     const h = Number(v.hora.split(':')[0]);
     const idx = Math.min(Math.floor((h - 9) / 2), bloques.length - 1);
     if(idx >= 0) montosPorBloque[idx] += v.monto;
@@ -2613,20 +2631,47 @@ function renderVentas(){
     </div>
 
     <div class="panel">
-      <div class="panel-title">🧾 Todas las Ventas de Hoy ${pruebasHoy ? `<span class="badge-live" style="background:#94a3b8;">${pruebasHoy} de prueba, excluida${pruebasHoy>1?'s':''}</span>` : ''}</div>
-      <div class="table-scroll"><table class="simple">
-        <tr><th>Hora</th><th>Producto</th><th>Clienta</th><th>Canal</th><th>Monto</th><th></th></tr>
-        ${DATA_DEMO.ventas.map(v => `
-          <tr style="${v.esPrueba ? 'opacity:.55;' : ''}">
-            <td>${v.hora}</td>
-            <td>${escaparHTML(v.producto)}</td>
-            <td>${v.clienteId ? `<a href="#" onclick="abrirFicha(${v.clienteId});return false;">${escaparHTML(v.clienteNombre||'')}</a>` : (escaparHTML(v.clienteNombre||'') || '<span class="calc-note">—</span>')}</td>
-            <td><span class="canal-pill ${v.canal}">${v.canal}</span></td>
-            <td>$${v.monto.toLocaleString('es-CL')}</td>
-            <td>${v.esPrueba ? '<span class="estado-pill pendiente">PRUEBA</span>' : ''}</td>
-          </tr>
-        `).join('')}
-      </table></div>
+      <div class="panel-title">🧾 Todas las Ventas <span class="badge-live">${DATA_DEMO.ventas.length}</span> ${pruebasHoy ? `<span class="badge-live" style="background:#94a3b8;">${pruebasHoy} de prueba hoy, excluida${pruebasHoy>1?'s':''}</span>` : ''}</div>
+      <div class="calc-note" style="margin-bottom:.6rem;">Agrupado por mes — ahora incluye ventas con fecha pasada (agosto y anteriores), no solo las de hoy.</div>
+      ${(() => {
+        const gruposMes = {};
+        DATA_DEMO.ventas.forEach(v => {
+          const f = v.fecha || hoyStr;
+          const mk = f.slice(0,7);
+          if(!gruposMes[mk]) gruposMes[mk] = { items: [], total: 0 };
+          gruposMes[mk].items.push(v);
+          if(!v.esPrueba) gruposMes[mk].total += v.monto;
+        });
+        const mesesOrdenados = Object.keys(gruposMes).sort().reverse();
+        return mesesOrdenados.map((mk, idx) => {
+          const [anio, mesNum] = mk.split('-');
+          const nombreMes = new Date(Number(anio), Number(mesNum)-1, 1).toLocaleDateString('es-CL', {month:'long', year:'numeric'});
+          const g = gruposMes[mk];
+          return `
+            <details class="proveedor-detalle" ${idx===0?'open':''}>
+              <summary>
+                <span class="prov-nombre">${nombreMes.charAt(0).toUpperCase()+nombreMes.slice(1)}</span>
+                <span class="prov-meta">${g.items.length} venta${g.items.length>1?'s':''}</span>
+                <span class="prov-subtotal">$${g.total.toLocaleString('es-CL')}</span>
+              </summary>
+              <div class="table-scroll"><table class="simple compact">
+                <tr><th>Fecha</th><th>Hora</th><th>Producto</th><th>Clienta</th><th>Canal</th><th>Monto</th><th></th></tr>
+                ${g.items.map(v => `
+                  <tr style="${v.esPrueba ? 'opacity:.55;' : ''}">
+                    <td>${fechaLocalCorta(v.fecha||hoyStr)}</td>
+                    <td>${v.hora}</td>
+                    <td>${escaparHTML(v.producto)}</td>
+                    <td>${v.clienteId ? `<a href="#" onclick="abrirFicha(${v.clienteId});return false;">${escaparHTML(v.clienteNombre||'')}</a>` : (escaparHTML(v.clienteNombre||'') || '<span class="calc-note">—</span>')}</td>
+                    <td><span class="canal-pill ${v.canal}">${v.canal}</span></td>
+                    <td>$${v.monto.toLocaleString('es-CL')}</td>
+                    <td>${v.esPrueba ? '<span class="estado-pill pendiente">PRUEBA</span>' : ''}</td>
+                  </tr>
+                `).join('')}
+              </table></div>
+            </details>
+          `;
+        }).join('');
+      })()}
       <div style="margin-top:1rem;"><button class="btn btn-primary" onclick="abrirModalVenta()">+ Registrar Venta</button></div>
     </div>
   `;
@@ -3098,17 +3143,20 @@ function guardarOrdenCompra(){
 
 /* Construye el Libro IyE a partir de ventas reales (M5) y compras reales (M6) */
 function construirLibroIyE(){
-  const fechaHoyCorta = new Date().toLocaleDateString('es-CL', {day:'2-digit', month:'short'});
   // Bug encontrado y corregido 19-sep-2026: esta función no excluía las ventas marcadas como
   // "prueba interna" (esPrueba), a diferencia de M5/M0 que sí lo hacen desde antes — el Libro
   // I&E, el F29 (IVA a pagar) y el Flujo de Caja (ver renderFlujoCaja) estaban inflando ingresos
   // reales con ventas de prueba. Ahora los tres filtran igual.
-  const hoyDate = new Date();
-  const mesKeyHoy = `${hoyDate.getFullYear()}-${String(hoyDate.getMonth()+1).padStart(2,'0')}`;
-  const ingresos = DATA_DEMO.ventas.filter(v => !v.esPrueba).map(v => ({
-    fecha: fechaHoyCorta, mesKey: mesKeyHoy, tipo:'ingreso', doc: v.canal === 'shopify' ? 'Boleta Web' : v.canal === 'pos' ? 'Boleta MP POS' : 'Boleta Manual',
-    concepto: escaparHTML(v.producto), total: v.monto
-  }));
+  // 20-sep-2026: ahora usa la fecha REAL de cada venta (v.fecha) en vez de asumir que todas son
+  // de hoy — necesario porque las ventas se pueden cargar con fecha pasada (agosto y anteriores).
+  const ingresos = DATA_DEMO.ventas.filter(v => !v.esPrueba).map(v => {
+    const f = v.fecha ? new Date(v.fecha+'T00:00:00') : new Date();
+    return {
+      fecha: f.toLocaleDateString('es-CL', {day:'2-digit', month:'short'}), mesKey: `${f.getFullYear()}-${String(f.getMonth()+1).padStart(2,'0')}`,
+      tipo:'ingreso', doc: v.canal === 'shopify' ? 'Boleta Web' : v.canal === 'pos' ? 'Boleta MP POS' : 'Boleta Manual',
+      concepto: escaparHTML(v.producto), total: v.monto
+    };
+  });
   const egresos = ORDENES_DEMO.map(o => {
     const d = new Date(o.fecha);
     return {
@@ -3356,7 +3404,7 @@ function renderFinanzas(){
 
 function renderFlujoCaja(){
   const saldoInicial = SALDO_INICIAL_CAJA;
-  const totalHoy = DATA_DEMO.ventas.filter(v => !v.esPrueba).reduce((s,v) => s + v.monto, 0);
+  const totalHoy = DATA_DEMO.ventas.filter(v => !v.esPrueba && (v.fecha||fechaLocalStr()) === fechaLocalStr()).reduce((s,v) => s + v.monto, 0);
   const ahora = Date.now();
   const ventana30d = 30*24*60*60*1000;
   const ordenesUlt30d = ORDENES_DEMO.filter(o => ahora - o.fecha <= ventana30d);
@@ -3516,8 +3564,8 @@ function generarPDFMensual(){
       <div class="kpi"><span>Compras del Mes</span><b>$${r.comprasTotal.toLocaleString('es-CL')}</b></div>
       <div class="kpi"><span>Resultado Neto</span><b>$${r.resultadoNeto.toLocaleString('es-CL')}</b></div>
       <h3>Ventas Recientes</h3>
-      <table><tr><th>Hora</th><th>Producto</th><th>Canal</th><th>Monto</th></tr>
-      ${DATA_DEMO.ventas.map(v => `<tr><td>${v.hora}</td><td>${escaparHTML(v.producto)}</td><td>${v.canal}</td><td>$${v.monto.toLocaleString('es-CL')}</td></tr>`).join('')}
+      <table><tr><th>Fecha</th><th>Hora</th><th>Producto</th><th>Canal</th><th>Monto</th></tr>
+      ${DATA_DEMO.ventas.map(v => `<tr><td>${fechaLocalCorta(v.fecha||fechaLocalStr())}</td><td>${v.hora}</td><td>${escaparHTML(v.producto)}</td><td>${v.canal}</td><td>$${v.monto.toLocaleString('es-CL')}</td></tr>`).join('')}
       </table>
       <h3>Órdenes de Compra</h3>
       <table><tr><th>Proveedor</th><th>Producto</th><th>Cant.</th><th>Total</th></tr>
@@ -3576,8 +3624,8 @@ function exportarExcel(){
   ]);
 
   const hojaVentas = hojaXml('Ventas', [
-    filaXml([celda('Hora'), celda('Producto'), celda('Canal'), celda('Monto')]),
-    ...DATA_DEMO.ventas.map(v => filaXml([celda(v.hora), celda(v.producto), celda(v.canal), celda(v.monto)]))
+    filaXml([celda('Fecha'), celda('Hora'), celda('Producto'), celda('Canal'), celda('Monto')]),
+    ...DATA_DEMO.ventas.map(v => filaXml([celda(v.fecha||fechaLocalStr()), celda(v.hora), celda(v.producto), celda(v.canal), celda(v.monto)]))
   ]);
 
   const hojaCRM = hojaXml('CRM Clientas', [
@@ -3964,6 +4012,7 @@ function abrirModalVenta(){
   const datalist = document.getElementById('lista-clientas-venta');
   datalist.innerHTML = CRM_DEMO.map(c => `<option value="${escaparHTML(c.nombre)}">`).join('');
   document.getElementById('f-clienta').value = '';
+  document.getElementById('f-fecha').value = fechaLocalStr();
   openModal('modal-venta');
 }
 
@@ -3972,21 +4021,26 @@ function abrirModalVenta(){
    (compras+1, ltv+=monto, diasUltimaCompra=0); si no existe y se escribió un nombre, crea la
    ficha nueva sola (con la ciudad del viaje activo si hay uno planificado). Sin esto, las 30
    ventas pendientes de Concepción quedarían en M5 sin nunca actualizar quién compró qué en el CRM. */
-function vincularVentaConCRM(nombreClienta, monto){
+function vincularVentaConCRM(nombreClienta, monto, fechaVenta){
   const nombre = (nombreClienta||'').trim();
   if(!nombre) return null;
+  // Propuesta "fecha en ventas" (20-sep-2026): con ventas de agosto cargándose hoy, "última
+  // compra" ya no puede asumirse como "hace 0 días" — se calcula contra la fecha real ingresada.
+  const dias = Math.max(0, Math.round((new Date(fechaLocalStr()+'T00:00:00') - new Date((fechaVenta||fechaLocalStr())+'T00:00:00')) / 86400000));
   const existente = CRM_DEMO.find(c => c.nombre.trim().toLowerCase() === nombre.toLowerCase());
   if(existente){
     existente.compras = (existente.compras||0) + 1;
     existente.ltv = (existente.ltv||0) + monto;
-    existente.diasUltimaCompra = 0;
+    // Solo actualiza "última compra" si esta venta es más reciente que lo ya registrado — para
+    // no pisar una compra reciente real con una venta antigua que se está cargando después.
+    if(dias < (existente.diasUltimaCompra ?? Infinity)) existente.diasUltimaCompra = dias;
     return existente.id;
   }
   const nueva = {
     id: Date.now(),
     nombre, telefono: '', email: '',
     ciudad: ciudadViajePlanificado || '',
-    compras: 1, ltv: monto, diasUltimaCompra: 0,
+    compras: 1, ltv: monto, diasUltimaCompra: dias,
     notas: 'Creada automáticamente al registrar una venta en M5.'
   };
   CRM_DEMO.unshift(nueva);
@@ -3999,14 +4053,17 @@ function guardarVentaManual(mantenerAbierto){
   const clienta = document.getElementById('f-clienta').value;
   const canal = document.getElementById('f-canal').value;
   const esPrueba = document.getElementById('f-prueba').checked;
+  const fecha = document.getElementById('f-fecha').value || fechaLocalStr();
   if(!producto || !monto){ alert('Completa producto y monto'); return; }
   let clienteId = null;
-  if(!esPrueba) clienteId = vincularVentaConCRM(clienta, Number(monto));
-  DATA_DEMO.ventas.unshift({hora:new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'}), producto, canal, monto:Number(monto), esPrueba, clienteNombre: clienta||'', clienteId});
+  if(!esPrueba) clienteId = vincularVentaConCRM(clienta, Number(monto), fecha);
+  DATA_DEMO.ventas.unshift({fecha, hora:new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'}), producto, canal, monto:Number(monto), esPrueba, clienteNombre: clienta||'', clienteId});
   // Las ventas de prueba interna (ej. testear el checkout, mostrarle el flujo a alguien) no deben
   // sumar a la caja real ni al KPI de conversión — confirmado como causa de confusión real en agosto
   // 2026 (pedido #1001 y varios carritos abandonados eran pruebas propias, no clientas).
-  if(!esPrueba) DATA_DEMO.cajaHoy += Number(monto);
+  // Recalculada por fecha real (no acumulada con +=): una venta de agosto que se carga hoy NO debe
+  // sumar a la caja de "hoy" — Propuesta "fecha en ventas" (20-sep-2026).
+  recalcularCajaHoy();
   recalcularCajaDelta();
   document.getElementById('view-m0').innerHTML = renderHome();
   document.getElementById('view-m5').innerHTML = renderVentas();
@@ -4034,6 +4091,17 @@ function guardarVentaManual(mantenerAbierto){
 /* ---------- Caja del día — delta real "vs ayer" (bug corregido: antes era '+12%' fijo) ----------
    La base del día se fija en localStorage la primera vez que se abre el ERP cada día
    (ver actualizarCajaBaseDia en INIT). Cada venta nueva recalcula el % contra esa base. */
+/* Recomputa la caja del día desde cero (fecha real === hoy, sin pruebas) en vez de acumular
+   con += — necesario desde que las ventas pueden cargarse con fecha pasada (agosto y meses
+   anteriores); un backfill no debe inflar "la caja de hoy". Ventas guardadas antes de esta
+   función (sin campo `fecha`) se tratan como de hoy, igual que se asumía antes. */
+function recalcularCajaHoy(){
+  const hoy = fechaLocalStr();
+  DATA_DEMO.cajaHoy = DATA_DEMO.ventas
+    .filter(v => !v.esPrueba && (v.fecha || fechaLocalStr()) === hoy)
+    .reduce((s,v) => s + v.monto, 0);
+}
+
 function recalcularCajaDelta(){
   let base = null;
   try{ base = JSON.parse(localStorage.getItem('asiri_caja_base_dia')); }catch(e){ base = null; }
@@ -4118,6 +4186,7 @@ function cargarEstadoLocal(){
     const estado = JSON.parse(raw);
     if(Array.isArray(estado.ventas)) DATA_DEMO.ventas = estado.ventas;
     if(typeof estado.cajaHoy === 'number') DATA_DEMO.cajaHoy = estado.cajaHoy;
+    recalcularCajaHoy(); // recomputa por fecha real, no confía en el valor guardado (puede incluir ventas backfilleadas después de guardarlo)
     if(typeof estado.stockCritico === 'number') DATA_DEMO.stockCritico = estado.stockCritico;
     if(typeof estado.clientasNuevas === 'number') DATA_DEMO.clientasNuevas = estado.clientasNuevas;
     // CRM_DEMO y ORDENES_DEMO solo se restauran si el localStorage es de la misma carga inicial —
@@ -4241,8 +4310,8 @@ function mapRowAOrden(r){
 
 function mapVentaARow(v){
   return {
-    Timestamp: new Date().toISOString(), Producto: v.producto, Monto: v.monto,
-    Canal: v.canal, Cliente: '', 'Metodo Pago': '', 'Es Prueba': v.esPrueba ? 'SI' : 'NO'
+    Timestamp: (v.fecha || fechaLocalStr()) + 'T' + (v.hora||'00:00') + ':00', Producto: v.producto, Monto: v.monto,
+    Canal: v.canal, Cliente: v.clienteNombre || '', 'Metodo Pago': '', 'Es Prueba': v.esPrueba ? 'SI' : 'NO'
   };
 }
 
