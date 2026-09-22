@@ -1796,10 +1796,36 @@ const HISTORICO_VENTAS_MENSUAL = [
   {periodo:"2026-07", mes:"Julio 2026", ventas:163400, compras:155280, gastos:0, margen:8120}
 ];
 
+/* ---------- 3f-bis. Costo de pauta Meta por mes (ago 2025 → sep 2026) ----------
+   Fuente: Ads Manager, cuenta 1408304196910657, columna "Importe gastado" a nivel de cuenta,
+   leída mes por mes el 22-sep-2026 (cada lectura verificada: el rango mostrado coincidía con
+   el mes pedido). Comprobación por segundo camino: el total del periodo completo consultado
+   de una sola vez en Ads Manager dio $1.199.877, igual peso por peso a la suma de estos meses.
+   Antes de agosto 2025 el gasto de la cuenta es $0: agosto 2025 fue el primer mes con pauta.
+   Septiembre 2026 es parcial (1 al 21); los anuncios se apagaron el 15-16 sep.
+   Es gasto devengado de Ads Manager, no la fecha exacta en que Meta cobró la tarjeta. */
+const PAUTA_META_MENSUAL = [
+  {periodo:"2025-08", mes:"Agosto 2025", monto:2354},
+  {periodo:"2025-09", mes:"Septiembre 2025", monto:32796},
+  {periodo:"2025-10", mes:"Octubre 2025", monto:72753},
+  {periodo:"2025-11", mes:"Noviembre 2025", monto:99160},
+  {periodo:"2025-12", mes:"Diciembre 2025", monto:57734},
+  {periodo:"2026-01", mes:"Enero 2026", monto:87016},
+  {periodo:"2026-02", mes:"Febrero 2026", monto:156817},
+  {periodo:"2026-03", mes:"Marzo 2026", monto:124129},
+  {periodo:"2026-04", mes:"Abril 2026", monto:105485},
+  {periodo:"2026-05", mes:"Mayo 2026", monto:114387},
+  {periodo:"2026-06", mes:"Junio 2026", monto:111117},
+  {periodo:"2026-07", mes:"Julio 2026", monto:77326},
+  {periodo:"2026-08", mes:"Agosto 2026", monto:84837},
+  {periodo:"2026-09", mes:"Septiembre 2026 (1-21)", monto:73966}
+];
+function pautaMetaDe(periodo){ const p = PAUTA_META_MENSUAL.find(x => x.periodo === periodo); return p ? p.monto : 0; }
+
 /* ---------- 3f. ESTADO M7 FINANZAS ---------- */
 let TASA_PPM = 0.3; // % sobre ventas netas — ajustar según tasa real asignada por el SII a ASIRI
 let SALDO_INICIAL_CAJA = 850000; // ajustar con saldo bancario real de ASIRI
-let GASTO_PAUTA_MES = 70000; // pauta Shopify de sep-2026 (el partner confirmó $70.000 sin ventas generadas) — ajustar cada mes
+let GASTO_PAUTA_MES = 73966; // pauta Meta de sep-2026 medida en Ads Manager (1 al 21-sep, anuncios apagados desde el 15-16); antes decía $70.000 estimado — ajustar cada mes. Ver PAUTA_META_MENSUAL
 let FACTOR_UTILIDAD_REAL = 0.22; // punto medio del 17-27% verificado con el pedido #1002 (IVA + flete + comisiones Webpay/Shopify) — ajustable a medida que haya más pedidos reales
 let MES_CERRADO = false;
 
@@ -3377,27 +3403,50 @@ function renderFinanzas(){
     ${renderMargenReal()}
 
     <div class="panel">
-      <div class="panel-title">📈 Histórico de Ventas Mensuales <span class="badge-live">v1.3 · Ago 2025 → Jul 2026</span></div>
+      <div class="panel-title">📈 Histórico de Ventas Mensuales <span class="badge-live">v1.4 · Ago 2025 → Jul 2026 · con pauta Meta</span></div>
       <div class="table-scroll"><table class="simple">
-        <tr><th>Mes</th><th>Ventas</th><th>Compras</th><th>Gastos</th><th>Margen</th></tr>
-        ${HISTORICO_VENTAS_MENSUAL.map(m => `
+        <tr><th>Mes</th><th>Ventas</th><th>Compras</th><th>Gastos</th><th>Margen</th><th>Pauta Meta</th><th>Margen tras pauta</th></tr>
+        ${HISTORICO_VENTAS_MENSUAL.map(m => { const pm = pautaMetaDe(m.periodo); const mtp = m.margen - pm; return `
           <tr>
             <td>${escaparHTML(m.mes)}</td>
             <td>$${m.ventas.toLocaleString('es-CL')}</td>
             <td>$${m.compras.toLocaleString('es-CL')}</td>
             <td>$${m.gastos.toLocaleString('es-CL')}</td>
             <td class="${m.margen<0?'alert':''}">$${m.margen.toLocaleString('es-CL')}</td>
+            <td>$${pm.toLocaleString('es-CL')}</td>
+            <td class="${mtp<0?'alert':''}">$${mtp.toLocaleString('es-CL')}</td>
           </tr>
-        `).join('')}
+        `; }).join('')}
         <tr class="total">
           <td>Total período</td>
           <td>$${HISTORICO_VENTAS_MENSUAL.reduce((s,m)=>s+m.ventas,0).toLocaleString('es-CL')}</td>
           <td>$${HISTORICO_VENTAS_MENSUAL.reduce((s,m)=>s+m.compras,0).toLocaleString('es-CL')}</td>
           <td>$${HISTORICO_VENTAS_MENSUAL.reduce((s,m)=>s+m.gastos,0).toLocaleString('es-CL')}</td>
           <td>$${HISTORICO_VENTAS_MENSUAL.reduce((s,m)=>s+m.margen,0).toLocaleString('es-CL')}</td>
+          <td>$${HISTORICO_VENTAS_MENSUAL.reduce((s,m)=>s+pautaMetaDe(m.periodo),0).toLocaleString('es-CL')}</td>
+          <td>$${HISTORICO_VENTAS_MENSUAL.reduce((s,m)=>s+m.margen-pautaMetaDe(m.periodo),0).toLocaleString('es-CL')}</td>
         </tr>
       </table></div>
       <div class="calc-note">Carga inicial de puesta en marcha — historial reconstruido a partir de registros manuales de ASIRI. Columna Compras recalculada según las fechas reales de cada orden en M6 (ver "Compras por Proveedor"); esas fechas son estimadas/distribuidas, no exactas, así que este desglose mensual también es referencial. Las ventas del día de hoy en adelante se registran en M5 Ventas.</div>
+      <div class="calc-note">"Pauta Meta" viene de Ads Manager (22-sep-2026), NO de los registros manuales. La columna "Gastos" sí es manual y no captura la pauta de forma consistente (ej. dic-2025 marca $0 de gastos pero Meta cobró $57.734). Si algún mes "Gastos" ya incluía parte de la pauta, "Margen tras pauta" la estaría restando dos veces en ese mes.</div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">💸 Costo de pauta Meta por mes <span class="badge-live">Ads Manager · Ago 2025 → Sep 2026</span></div>
+      <div class="table-scroll"><table class="simple">
+        <tr><th>Mes</th><th>Pauta Meta</th></tr>
+        ${PAUTA_META_MENSUAL.map(p => `
+          <tr>
+            <td>${escaparHTML(p.mes)}</td>
+            <td>$${p.monto.toLocaleString('es-CL')}</td>
+          </tr>
+        `).join('')}
+        <tr class="total">
+          <td>Total 14 meses</td>
+          <td>$${PAUTA_META_MENSUAL.reduce((s,p)=>s+p.monto,0).toLocaleString('es-CL')}</td>
+        </tr>
+      </table></div>
+      <div class="calc-note">Gasto devengado según Ads Manager (cuenta 1408304196910657), mes por mes. Total verificado por segundo camino: $1.199.877. Antes de agosto 2025 la cuenta no tenía gasto. Septiembre 2026 es parcial (1 al 21).</div>
     </div>
   `;
 }
