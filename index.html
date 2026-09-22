@@ -1803,7 +1803,10 @@ const HISTORICO_VENTAS_MENSUAL = [
    de una sola vez en Ads Manager dio $1.199.877, igual peso por peso a la suma de estos meses.
    Antes de agosto 2025 el gasto de la cuenta es $0: agosto 2025 fue el primer mes con pauta.
    Septiembre 2026 es parcial (1 al 21); los anuncios se apagaron el 15-16 sep.
-   Es gasto devengado de Ads Manager, no la fecha exacta en que Meta cobró la tarjeta. */
+   Es gasto devengado de Ads Manager, no la fecha exacta en que Meta cobró la tarjeta.
+   ⚠️ NO ES CAJA DE ASIRI: la pauta de Meta la paga directamente Vicente, partner de ASIRI,
+   como inversión/auspicio (confirmado el 22-sep-2026). Por eso NO se resta del margen ni de la
+   caja de ASIRI: se muestra aparte, como aporte externo. */
 const PAUTA_META_MENSUAL = [
   {periodo:"2025-08", mes:"Agosto 2025", monto:2354},
   {periodo:"2025-09", mes:"Septiembre 2025", monto:32796},
@@ -1825,7 +1828,7 @@ function pautaMetaDe(periodo){ const p = PAUTA_META_MENSUAL.find(x => x.periodo 
 /* ---------- 3f. ESTADO M7 FINANZAS ---------- */
 let TASA_PPM = 0.3; // % sobre ventas netas — ajustar según tasa real asignada por el SII a ASIRI
 let SALDO_INICIAL_CAJA = 850000; // ajustar con saldo bancario real de ASIRI
-let GASTO_PAUTA_MES = 73966; // pauta Meta de sep-2026 medida en Ads Manager (1 al 21-sep, anuncios apagados desde el 15-16); antes decía $70.000 estimado — ajustar cada mes. Ver PAUTA_META_MENSUAL
+let GASTO_PAUTA_MES = 73966; // pauta Meta de sep-2026 medida en Ads Manager (1 al 21-sep, anuncios apagados desde el 15-16); antes decía $70.000 estimado — ajustar cada mes. Ver PAUTA_META_MENSUAL. La financia Vicente (partner), NO sale de la caja de ASIRI: solo se usa para comparar contra la venta presencial, nunca se resta de caja
 let FACTOR_UTILIDAD_REAL = 0.22; // punto medio del 17-27% verificado con el pedido #1002 (IVA + flete + comisiones Webpay/Shopify) — ajustable a medida que haya más pedidos reales
 let MES_CERRADO = false;
 
@@ -3403,20 +3406,19 @@ function renderFinanzas(){
     ${renderMargenReal()}
 
     <div class="panel">
-      <div class="panel-title">📈 Histórico de Ventas Mensuales <span class="badge-live">v1.4 · Ago 2025 → Jul 2026 · con pauta Meta</span></div>
+      <div class="panel-title">📈 Histórico de Ventas Mensuales <span class="badge-live">v1.5 · Ago 2025 → Jul 2026</span></div>
       <div class="table-scroll"><table class="simple">
-        <tr><th>Mes</th><th>Ventas</th><th>Compras</th><th>Gastos</th><th>Margen</th><th>Pauta Meta</th><th>Margen tras pauta</th></tr>
-        ${HISTORICO_VENTAS_MENSUAL.map(m => { const pm = pautaMetaDe(m.periodo); const mtp = m.margen - pm; return `
+        <tr><th>Mes</th><th>Ventas</th><th>Compras</th><th>Gastos</th><th>Margen</th><th>Pauta Meta · aporte Vicente</th></tr>
+        ${HISTORICO_VENTAS_MENSUAL.map(m => `
           <tr>
             <td>${escaparHTML(m.mes)}</td>
             <td>$${m.ventas.toLocaleString('es-CL')}</td>
             <td>$${m.compras.toLocaleString('es-CL')}</td>
             <td>$${m.gastos.toLocaleString('es-CL')}</td>
             <td class="${m.margen<0?'alert':''}">$${m.margen.toLocaleString('es-CL')}</td>
-            <td>$${pm.toLocaleString('es-CL')}</td>
-            <td class="${mtp<0?'alert':''}">$${mtp.toLocaleString('es-CL')}</td>
+            <td>$${pautaMetaDe(m.periodo).toLocaleString('es-CL')}</td>
           </tr>
-        `; }).join('')}
+        `).join('')}
         <tr class="total">
           <td>Total período</td>
           <td>$${HISTORICO_VENTAS_MENSUAL.reduce((s,m)=>s+m.ventas,0).toLocaleString('es-CL')}</td>
@@ -3424,15 +3426,14 @@ function renderFinanzas(){
           <td>$${HISTORICO_VENTAS_MENSUAL.reduce((s,m)=>s+m.gastos,0).toLocaleString('es-CL')}</td>
           <td>$${HISTORICO_VENTAS_MENSUAL.reduce((s,m)=>s+m.margen,0).toLocaleString('es-CL')}</td>
           <td>$${HISTORICO_VENTAS_MENSUAL.reduce((s,m)=>s+pautaMetaDe(m.periodo),0).toLocaleString('es-CL')}</td>
-          <td>$${HISTORICO_VENTAS_MENSUAL.reduce((s,m)=>s+m.margen-pautaMetaDe(m.periodo),0).toLocaleString('es-CL')}</td>
         </tr>
       </table></div>
       <div class="calc-note">Carga inicial de puesta en marcha — historial reconstruido a partir de registros manuales de ASIRI. Columna Compras recalculada según las fechas reales de cada orden en M6 (ver "Compras por Proveedor"); esas fechas son estimadas/distribuidas, no exactas, así que este desglose mensual también es referencial. Las ventas del día de hoy en adelante se registran en M5 Ventas.</div>
-      <div class="calc-note">"Pauta Meta" viene de Ads Manager (22-sep-2026), NO de los registros manuales. La columna "Gastos" sí es manual y no captura la pauta de forma consistente (ej. dic-2025 marca $0 de gastos pero Meta cobró $57.734). Si algún mes "Gastos" ya incluía parte de la pauta, "Margen tras pauta" la estaría restando dos veces en ese mes.</div>
+      <div class="calc-note">"Pauta Meta · aporte Vicente" NO es caja de ASIRI: la paga directamente Vicente, partner de ASIRI, como inversión/auspicio. Por eso no está en Gastos ni se resta del Margen — el margen de ASIRI es el de la columna Margen. Se muestra al lado solo como referencia de cuánto se invirtió en pauta cada mes. Fuente: Ads Manager (22-sep-2026).</div>
     </div>
 
     <div class="panel">
-      <div class="panel-title">💸 Costo de pauta Meta por mes <span class="badge-live">Ads Manager · Ago 2025 → Sep 2026</span></div>
+      <div class="panel-title">💸 Inversión en pauta Meta — aporte de Vicente <span class="badge-live">Ads Manager · Ago 2025 → Sep 2026</span></div>
       <div class="table-scroll"><table class="simple">
         <tr><th>Mes</th><th>Pauta Meta</th></tr>
         ${PAUTA_META_MENSUAL.map(p => `
@@ -3446,7 +3447,7 @@ function renderFinanzas(){
           <td>$${PAUTA_META_MENSUAL.reduce((s,p)=>s+p.monto,0).toLocaleString('es-CL')}</td>
         </tr>
       </table></div>
-      <div class="calc-note">Gasto devengado según Ads Manager (cuenta 1408304196910657), mes por mes. Total verificado por segundo camino: $1.199.877. Antes de agosto 2025 la cuenta no tenía gasto. Septiembre 2026 es parcial (1 al 21).</div>
+      <div class="calc-note"><b>No sale de la caja de ASIRI:</b> la pauta de Meta la financia directamente Vicente, partner de ASIRI, como inversión/auspicio. Gasto devengado según Ads Manager (cuenta 1408304196910657), mes por mes. Total verificado por segundo camino: $1.199.877. Antes de agosto 2025 la cuenta no tenía gasto. Septiembre 2026 es parcial (1 al 21).</div>
     </div>
   `;
 }
