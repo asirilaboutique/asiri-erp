@@ -4527,6 +4527,18 @@ function mapVentaARow(v){
   };
 }
 
+function mapRowAVenta(r){
+  const ts = String(r.Timestamp || '');
+  const [fecha, horaParte] = ts.includes('T') ? ts.split('T') : [ts.slice(0,10), '00:00:00'];
+  const hora = (horaParte || '00:00:00').slice(0,5);
+  const clienteNombre = r.Cliente || '';
+  return {
+    fecha: fecha || fechaLocalStr(), hora: hora || '00:00',
+    producto: r.Producto || '', monto: Number(r.Monto) || 0, canal: r.Canal || 'manual',
+    esPrueba: r['Es Prueba'] === 'SI', clienteNombre, clienteId: null
+  };
+}
+
 /* POST con mode:'no-cors' — igual que guardarDatos(): Apps Script no responde a preflight
    OPTIONS, así que el único content-type que evita el preflight es text/plain, y no-cors
    nos impide leer la respuesta (por diseño, es "fire and forget"). */
@@ -4566,7 +4578,8 @@ function mapRowAInventarioShopify(r){
 
 async function sincronizarConLaNubeAlInicio(){
   const ordenesLocalesAntes = ORDENES_DEMO.length; // snapshot antes de tocar nada
-  const [filasCrm, filasCompras, filasInventario] = await Promise.all([leerModuloNube('crm'), leerModuloNube('compras'), leerModuloNube('inventario')]);
+  const ventasLocalesAntes = DATA_DEMO.ventas.length;
+  const [filasCrm, filasCompras, filasInventario, filasVentas] = await Promise.all([leerModuloNube('crm'), leerModuloNube('compras'), leerModuloNube('inventario'), leerModuloNube('ventas')]);
   if(filasInventario && filasInventario.length) INVENTARIO_SHOPIFY = filasInventario.map(mapRowAInventarioShopify);
 
   if(filasCrm && filasCrm.length){
@@ -4589,13 +4602,37 @@ async function sincronizarConLaNubeAlInicio(){
     try{ localStorage.setItem('asiri_seed_compras_enviado', '1'); }catch(e){}
   }
 
+  // Mismo patrón que Compras — Ventas nunca se leía de Sheets al abrir el ERP (bug real, confirmado
+  // 23-sep-2026: dos celulares mostraban historiales distintos porque cada uno solo veía su propio
+  // localStorage). Sheets gana si tiene igual o más filas que lo que ya había en este dispositivo;
+  // si tiene menos, este dispositivo empareja hacia arriba en vez de perder ventas locales.
+  if(filasVentas && filasVentas.length >= ventasLocalesAntes){
+    DATA_DEMO.ventas = filasVentas.map(mapRowAVenta);
+    // El Sheet no guarda clienteId (no hay esa columna) — se reconstruye cruzando por nombre contra
+    // el CRM ya sincronizado arriba, así los links "ver ficha de la clienta" no se pierden.
+    DATA_DEMO.ventas.forEach(v => {
+      if(v.clienteNombre){
+        const c = CRM_DEMO.find(c => c.nombre.trim().toLowerCase() === v.clienteNombre.trim().toLowerCase());
+        if(c) v.clienteId = c.id;
+      }
+    });
+    DATA_DEMO.ventas.sort((a,b) => (b.fecha+b.hora).localeCompare(a.fecha+a.hora));
+  } else if(filasVentas && filasVentas.length){
+    sincronizarNubeVentas(); // Sheets desactualizado respecto al dispositivo — lo empareja
+  } else if(!localStorage.getItem('asiri_seed_ventas_enviado')){
+    sincronizarNubeVentas();
+    try{ localStorage.setItem('asiri_seed_ventas_enviado', '1'); }catch(e){}
+  }
+  recalcularCajaHoy();
+  recalcularCajaDelta();
+
   backfillTallasCompras(); // rellena tallas faltantes con TALLAS_CATALOGO, venga de donde venga ORDENES_DEMO
   backfillPrecioVentaCompras(); // idem para precio de venta (margen por compra individual)
 
-  if((filasCrm && filasCrm.length) || (filasCompras && filasCompras.length)){
+  if((filasCrm && filasCrm.length) || (filasCompras && filasCompras.length) || (filasVentas && filasVentas.length)){
     guardarEstadoLocal();
-    ['m2','m6','m0','m9'].forEach(id => { const v = document.getElementById('view-'+id); if(v){
-      const R = {m2:renderCRM, m6:renderCompras, m0:renderHome, m9:renderIntelligence};
+    ['m2','m6','m0','m9','m5','m7'].forEach(id => { const v = document.getElementById('view-'+id); if(v){
+      const R = {m2:renderCRM, m6:renderCompras, m0:renderHome, m9:renderIntelligence, m5:renderVentas, m7:renderFinanzas};
       v.innerHTML = R[id]();
     }});
   }
