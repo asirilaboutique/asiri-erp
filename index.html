@@ -901,6 +901,12 @@ function segmentarClienta(c){
 let filtroCRM = localStorage.getItem('asiri_crm_filtro') || 'all';
 let ciudadViajePlanificado = ''; // Propuesta C (pivote presencial, 19-sep-2026): ciudad activa al planificar un viaje
 
+/* Catálogo REAL de Shopify (23-sep-2026) — llega vía la pestaña "Inventario" de Sheets, que el
+   Apps Script llena llamando a la API Admin de Shopify (nunca desde el navegador — el sitio es
+   público). Solo trae SKU/Producto/Stock/Precio, por eso vive aparte de CATALOGO_STOCK_AGOSTO
+   (que tiene costo/categoría y se sigue usando para margen) — no se pisan entre sí. */
+let INVENTARIO_SHOPIFY = [];
+
 /* ---------- 3c. DIAGNÓSTICO DE CONVERSIÓN — datos reales, consultados en vivo 31-ago-2026 vía ShopifyQL ----------
    Reemplaza la versión anterior (24-jul-2026, 1.439 sesiones y funnel estimado con % de benchmark
    genérico). Consulta real: FROM sessions SHOW sessions, sessions_with_cart_additions,
@@ -2851,6 +2857,10 @@ function renderCatalogoStock(){
     <div class="panel">
       <div class="panel-title">📋 Catálogo de Stock — Agosto 2026 <span class="badge-live">${totalDisponibles} disponibles / ${CATALOGO_STOCK_AGOSTO.length}</span></div>
       <div class="calc-note" style="margin-bottom:.6rem;">Snapshot real que envió Valeria (STOCK AGOSTO 2026.xlsx), organizado por categoría de prenda — la foto más actual de qué queda disponible versus agotado.</div>
+      <div class="calc-note" style="margin-bottom:.8rem; display:flex; align-items:center; gap:.6rem; flex-wrap:wrap;">
+        🛍 Catálogo Shopify (precio/stock en vivo): <b>${INVENTARIO_SHOPIFY.length}</b> variantes${INVENTARIO_SHOPIFY.length ? ' — última sync: ' + (INVENTARIO_SHOPIFY[0].sync ? new Date(INVENTARIO_SHOPIFY[0].sync).toLocaleString('es-CL') : '—') : ' (sin sincronizar aún)'}
+        <button class="btn btn-ghost" id="btn-actualizar-shopify" onclick="actualizarCatalogoDesdeShopify()">🔄 Actualizar catálogo desde Shopify</button>
+      </div>
       ${categorias.map(cat => `
         <details class="proveedor-detalle">
           <summary>
@@ -4078,15 +4088,47 @@ let editandoVentaIndex = null;
    a la API de Shopify desde el navegador (expondría credenciales en un sitio público). Talla
    de referencia si TALLAS_CATALOGO la tiene para ese producto. */
 let precioListaActivo = null;
+function nombresProductosDatalist(){
+  const nombres = new Set([...INVENTARIO_SHOPIFY.map(p => p.producto), ...CATALOGO_STOCK_AGOSTO.map(p => p.producto)]);
+  return [...nombres].map(n => `<option value="${escaparHTML(n)}">`).join('');
+}
+
+/* Botón "Actualizar catálogo desde Shopify" (M6). El POST es no-cors (fire-and-forget, no se
+   puede leer si terminó) así que se espera unos segundos y se vuelve a leer Inventario por GET
+   (sí legible) para refrescar INVENTARIO_SHOPIFY con lo que Apps Script ya alcanzó a guardar. */
+async function actualizarCatalogoDesdeShopify(){
+  const btn = document.getElementById('btn-actualizar-shopify');
+  if(btn){ btn.disabled = true; btn.textContent = '⏳ Sincronizando con Shopify...'; }
+  await enviarAccionNube('refrescar_catalogo_shopify', []);
+  await new Promise(r => setTimeout(r, 6000));
+  const filas = await leerModuloNube('inventario');
+  if(filas && filas.length){
+    INVENTARIO_SHOPIFY = filas.map(mapRowAInventarioShopify);
+    if(btn){ btn.disabled = false; btn.textContent = '🔄 Actualizar catálogo desde Shopify'; }
+    alert('Catálogo actualizado: ' + INVENTARIO_SHOPIFY.length + ' variantes desde Shopify.');
+  } else {
+    if(btn){ btn.disabled = false; btn.textContent = '🔄 Actualizar catálogo desde Shopify'; }
+    alert('No se pudo confirmar la sincronización — revisa que SHOPIFY_SHOP y SHOPIFY_TOKEN estén configurados en Apps Script, o inténtalo de nuevo en unos segundos.');
+  }
+}
+
 function autocompletarPrecioProducto(){
   const nombre = document.getElementById('f-producto').value.trim();
   const campo = document.getElementById('campo-precio-lista');
   const input = document.getElementById('f-precio-lista');
-  const match = CATALOGO_STOCK_AGOSTO.find(p => p.producto.trim().toLowerCase() === nombre.toLowerCase());
-  if(match && match.precioVenta > 0){
-    precioListaActivo = match.precioVenta;
-    const talla = TALLAS_CATALOGO[match.producto];
-    input.value = `$${match.precioVenta.toLocaleString('es-CL')}${talla ? ' · Talla ref.: ' + talla : ''}${!match.disponible ? ' · agotado en catálogo' : ''}`;
+  // Prioridad: catálogo real de Shopify (vivo, vía Inventario) sobre el snapshot local
+  // CATALOGO_STOCK_AGOSTO — el de Shopify puede estar desactualizado si nunca se ha
+  // sincronizado, en cuyo caso queda vacío y cae al snapshot local como respaldo.
+  const matchShopify = INVENTARIO_SHOPIFY.find(p => p.producto.trim().toLowerCase() === nombre.toLowerCase());
+  const matchLocal = CATALOGO_STOCK_AGOSTO.find(p => p.producto.trim().toLowerCase() === nombre.toLowerCase());
+  if(matchShopify && matchShopify.precioVenta > 0){
+    precioListaActivo = matchShopify.precioVenta;
+    input.value = `$${matchShopify.precioVenta.toLocaleString('es-CL')} · Stock Shopify: ${matchShopify.stock}${matchShopify.stock<=0 ? ' (agotado)' : ''} 🛍`;
+    campo.style.display = '';
+  } else if(matchLocal && matchLocal.precioVenta > 0){
+    precioListaActivo = matchLocal.precioVenta;
+    const talla = TALLAS_CATALOGO[matchLocal.producto];
+    input.value = `$${matchLocal.precioVenta.toLocaleString('es-CL')}${talla ? ' · Talla ref.: ' + talla : ''}${!matchLocal.disponible ? ' · agotado en catálogo' : ''}`;
     campo.style.display = '';
   } else {
     precioListaActivo = null;
@@ -4112,7 +4154,7 @@ function abrirModalVenta(){
   document.getElementById('btn-guardar-otra').style.display = '';
   const datalist = document.getElementById('lista-clientas-venta');
   datalist.innerHTML = CRM_DEMO.map(c => `<option value="${escaparHTML(c.nombre)}">`).join('');
-  document.getElementById('lista-productos-venta').innerHTML = CATALOGO_STOCK_AGOSTO.map(p => `<option value="${escaparHTML(p.producto)}">`).join('');
+  document.getElementById('lista-productos-venta').innerHTML = nombresProductosDatalist();
   document.getElementById('f-producto').value = '';
   document.getElementById('f-monto').value = '';
   document.getElementById('f-clienta').value = '';
@@ -4134,7 +4176,7 @@ function editarVenta(i){
   document.getElementById('venta-modal-titulo').textContent = 'Editar Venta';
   document.getElementById('btn-guardar-otra').style.display = 'none';
   document.getElementById('lista-clientas-venta').innerHTML = CRM_DEMO.map(c => `<option value="${escaparHTML(c.nombre)}">`).join('');
-  document.getElementById('lista-productos-venta').innerHTML = CATALOGO_STOCK_AGOSTO.map(p => `<option value="${escaparHTML(p.producto)}">`).join('');
+  document.getElementById('lista-productos-venta').innerHTML = nombresProductosDatalist();
   document.getElementById('f-fecha').value = v.fecha || fechaLocalStr();
   document.getElementById('f-producto').value = v.producto;
   document.getElementById('f-monto').value = v.monto;
@@ -4328,6 +4370,7 @@ function guardarEstadoLocal(){
     planSeptiembreEstado: PLAN_SEPTIEMBRE_ESTADO,
     gastoPautaMes: GASTO_PAUTA_MES,
     viajes: VIAJES_DEMO,
+    inventarioShopify: INVENTARIO_SHOPIFY,
     mesCerrado: MES_CERRADO,
     brief: DATA_DEMO.brief,
     alertas: DATA_DEMO.alertas,
@@ -4372,6 +4415,7 @@ function cargarEstadoLocal(){
     if(estado.planSeptiembreEstado && typeof estado.planSeptiembreEstado === 'object') PLAN_SEPTIEMBRE_ESTADO = estado.planSeptiembreEstado;
     if(typeof estado.gastoPautaMes === 'number') GASTO_PAUTA_MES = estado.gastoPautaMes;
     if(Array.isArray(estado.viajes)) VIAJES_DEMO = estado.viajes;
+    if(Array.isArray(estado.inventarioShopify)) INVENTARIO_SHOPIFY = estado.inventarioShopify;
     if(typeof estado.mesCerrado === 'boolean') MES_CERRADO = estado.mesCerrado;
     if(typeof estado.brief === 'string') DATA_DEMO.brief = estado.brief;
     if(Array.isArray(estado.alertas)) DATA_DEMO.alertas = estado.alertas;
@@ -4516,9 +4560,14 @@ async function leerModuloNube(modulo){
    dispositivo, o porque ya se hizo la siembra inicial), esos datos mandan sobre el
    hardcodeado/localStorage. Si Sheets está vacío, se siembra UNA vez con lo que ya
    tiene el ERP en memoria — así el backend deja de estar vacío sin que Valeria haga nada. */
+function mapRowAInventarioShopify(r){
+  return { sku: r.SKU || '', producto: r.Producto || '', stock: Number(r.Stock) || 0, precioVenta: Number(r.Precio) || 0, sync: r.Sync || '' };
+}
+
 async function sincronizarConLaNubeAlInicio(){
   const ordenesLocalesAntes = ORDENES_DEMO.length; // snapshot antes de tocar nada
-  const [filasCrm, filasCompras] = await Promise.all([leerModuloNube('crm'), leerModuloNube('compras')]);
+  const [filasCrm, filasCompras, filasInventario] = await Promise.all([leerModuloNube('crm'), leerModuloNube('compras'), leerModuloNube('inventario')]);
+  if(filasInventario && filasInventario.length) INVENTARIO_SHOPIFY = filasInventario.map(mapRowAInventarioShopify);
 
   if(filasCrm && filasCrm.length){
     CRM_DEMO = filasCrm.map(mapRowAClienta);
