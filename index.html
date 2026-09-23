@@ -566,11 +566,16 @@
     </div>
     <div class="field">
       <label>Producto</label>
-      <input type="text" id="f-producto" placeholder="Ej: Blusa lino rosa" oninput="autoSave()">
+      <input type="text" id="f-producto" list="lista-productos-venta" placeholder="Ej: Blusa lino rosa" oninput="autocompletarPrecioProducto(); autoSave()">
+      <datalist id="lista-productos-venta"></datalist>
+    </div>
+    <div class="field" id="campo-precio-lista" style="display:none;">
+      <label>Precio de lista (catálogo) <span class="calc-note" style="display:inline;">— referencia, no editable</span></label>
+      <input type="text" id="f-precio-lista" disabled style="background:var(--gris-light); color:var(--gris);">
     </div>
     <div class="field">
-      <label>Monto (CLP)</label>
-      <input type="number" id="f-monto" placeholder="18000" oninput="autoSave()">
+      <label>Precio final vendido (CLP) <span class="calc-note" id="nota-descuento" style="display:inline;"></span></label>
+      <input type="number" id="f-monto" placeholder="18000" oninput="marcarDiferenciaPrecio(); autoSave()">
     </div>
     <div class="field">
       <label>Clienta (opcional — alimenta el CRM automáticamente)</label>
@@ -4067,18 +4072,55 @@ function closeModal(id){ document.getElementById(id).classList.remove('open'); }
 
 let editandoVentaIndex = null;
 
+/* Propuesta plus (23-sep-2026, pedido del partner): al escribir el producto en el modal de
+   venta, buscar coincidencia en CATALOGO_STOCK_AGOSTO (117 productos, ya trae nombre con
+   color/variante y precio de venta) y mostrar el precio de lista como referencia — sin llamar
+   a la API de Shopify desde el navegador (expondría credenciales en un sitio público). Talla
+   de referencia si TALLAS_CATALOGO la tiene para ese producto. */
+let precioListaActivo = null;
+function autocompletarPrecioProducto(){
+  const nombre = document.getElementById('f-producto').value.trim();
+  const campo = document.getElementById('campo-precio-lista');
+  const input = document.getElementById('f-precio-lista');
+  const match = CATALOGO_STOCK_AGOSTO.find(p => p.producto.trim().toLowerCase() === nombre.toLowerCase());
+  if(match && match.precioVenta > 0){
+    precioListaActivo = match.precioVenta;
+    const talla = TALLAS_CATALOGO[match.producto];
+    input.value = `$${match.precioVenta.toLocaleString('es-CL')}${talla ? ' · Talla ref.: ' + talla : ''}${!match.disponible ? ' · agotado en catálogo' : ''}`;
+    campo.style.display = '';
+  } else {
+    precioListaActivo = null;
+    campo.style.display = 'none';
+  }
+  marcarDiferenciaPrecio();
+}
+
+function marcarDiferenciaPrecio(){
+  const nota = document.getElementById('nota-descuento');
+  const monto = Number(document.getElementById('f-monto').value);
+  if(!precioListaActivo || !monto){ nota.textContent = ''; return; }
+  const diff = monto - precioListaActivo;
+  const pct = Math.round((diff / precioListaActivo) * 100);
+  if(pct === 0){ nota.textContent = '(= precio de lista)'; nota.style.color = 'var(--gris)'; }
+  else if(pct < 0){ nota.textContent = `(${pct}% bajo lista)`; nota.style.color = 'var(--rojo)'; }
+  else { nota.textContent = `(+${pct}% sobre lista)`; nota.style.color = 'var(--turquesa)'; }
+}
+
 function abrirModalVenta(){
   editandoVentaIndex = null;
   document.getElementById('venta-modal-titulo').textContent = 'Registrar Venta Manual';
   document.getElementById('btn-guardar-otra').style.display = '';
   const datalist = document.getElementById('lista-clientas-venta');
   datalist.innerHTML = CRM_DEMO.map(c => `<option value="${escaparHTML(c.nombre)}">`).join('');
+  document.getElementById('lista-productos-venta').innerHTML = CATALOGO_STOCK_AGOSTO.map(p => `<option value="${escaparHTML(p.producto)}">`).join('');
   document.getElementById('f-producto').value = '';
   document.getElementById('f-monto').value = '';
   document.getElementById('f-clienta').value = '';
   document.getElementById('f-canal').value = 'manual';
   document.getElementById('f-prueba').checked = false;
   document.getElementById('f-fecha').value = fechaLocalStr();
+  document.getElementById('campo-precio-lista').style.display = 'none';
+  document.getElementById('nota-descuento').textContent = '';
   openModal('modal-venta');
 }
 
@@ -4092,12 +4134,15 @@ function editarVenta(i){
   document.getElementById('venta-modal-titulo').textContent = 'Editar Venta';
   document.getElementById('btn-guardar-otra').style.display = 'none';
   document.getElementById('lista-clientas-venta').innerHTML = CRM_DEMO.map(c => `<option value="${escaparHTML(c.nombre)}">`).join('');
+  document.getElementById('lista-productos-venta').innerHTML = CATALOGO_STOCK_AGOSTO.map(p => `<option value="${escaparHTML(p.producto)}">`).join('');
   document.getElementById('f-fecha').value = v.fecha || fechaLocalStr();
   document.getElementById('f-producto').value = v.producto;
   document.getElementById('f-monto').value = v.monto;
   document.getElementById('f-clienta').value = v.clienteNombre || '';
   document.getElementById('f-canal').value = v.canal;
   document.getElementById('f-prueba').checked = !!v.esPrueba;
+  autocompletarPrecioProducto();
+  marcarDiferenciaPrecio();
   openModal('modal-venta');
 }
 
