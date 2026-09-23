@@ -558,7 +558,7 @@
 <!-- ===== MODAL GENÉRICO (demo autoguardado) ===== -->
 <div class="modal-overlay" id="modal-venta">
   <div class="modal-box">
-    <h3>Registrar Venta Manual</h3>
+    <h3 id="venta-modal-titulo">Registrar Venta Manual</h3>
     <div class="field">
       <label>Fecha de la venta</label>
       <input type="date" id="f-fecha" oninput="autoSave()">
@@ -592,7 +592,7 @@
     </div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal('modal-venta')">Cancelar</button>
-      <button class="btn btn-ghost" onclick="guardarVentaManual(true)" title="Para registrar varias ventas seguidas, ej. en un viaje">Guardar y agregar otra</button>
+      <button class="btn btn-ghost" id="btn-guardar-otra" onclick="guardarVentaManual(true)" title="Para registrar varias ventas seguidas, ej. en un viaje">Guardar y agregar otra</button>
       <button class="btn btn-primary" onclick="guardarVentaManual(false)">Guardar Venta</button>
     </div>
   </div>
@@ -2664,11 +2664,11 @@ function renderVentas(){
       <div class="calc-note" style="margin-bottom:.6rem;">Agrupado por mes — ahora incluye ventas con fecha pasada (agosto y anteriores), no solo las de hoy.</div>
       ${(() => {
         const gruposMes = {};
-        DATA_DEMO.ventas.forEach(v => {
+        DATA_DEMO.ventas.forEach((v,i) => {
           const f = v.fecha || hoyStr;
           const mk = f.slice(0,7);
           if(!gruposMes[mk]) gruposMes[mk] = { items: [], total: 0 };
-          gruposMes[mk].items.push(v);
+          gruposMes[mk].items.push({...v, _i:i});
           if(!v.esPrueba) gruposMes[mk].total += v.monto;
         });
         const mesesOrdenados = Object.keys(gruposMes).sort().reverse();
@@ -2684,7 +2684,7 @@ function renderVentas(){
                 <span class="prov-subtotal">$${g.total.toLocaleString('es-CL')}</span>
               </summary>
               <div class="table-scroll"><table class="simple compact">
-                <tr><th>Fecha</th><th>Hora</th><th>Producto</th><th>Clienta</th><th>Canal</th><th>Monto</th><th></th></tr>
+                <tr><th>Fecha</th><th>Hora</th><th>Producto</th><th>Clienta</th><th>Canal</th><th>Monto</th><th></th><th></th></tr>
                 ${g.items.map(v => `
                   <tr style="${v.esPrueba ? 'opacity:.55;' : ''}">
                     <td>${fechaLocalCorta(v.fecha||hoyStr)}</td>
@@ -2694,6 +2694,12 @@ function renderVentas(){
                     <td><span class="canal-pill ${v.canal}">${v.canal}</span></td>
                     <td>$${v.monto.toLocaleString('es-CL')}</td>
                     <td>${v.esPrueba ? '<span class="estado-pill pendiente">PRUEBA</span>' : ''}</td>
+                    <td>
+                      <div style="display:flex; gap:.35rem; flex-wrap:wrap;">
+                        <button class="btn btn-ghost" style="padding:.35rem .55rem; font-size:.68rem;" onclick="editarVenta(${v._i})">✏️</button>
+                        <button class="btn btn-eliminar" style="padding:.35rem .55rem; font-size:.68rem;" onclick="eliminarVenta(${v._i})">🗑️</button>
+                      </div>
+                    </td>
                   </tr>
                 `).join('')}
               </table></div>
@@ -4058,12 +4064,68 @@ function initViews(){
 function openModal(id){ document.getElementById(id).classList.add('open'); }
 function closeModal(id){ document.getElementById(id).classList.remove('open'); }
 
+let editandoVentaIndex = null;
+
 function abrirModalVenta(){
+  editandoVentaIndex = null;
+  document.getElementById('venta-modal-titulo').textContent = 'Registrar Venta Manual';
+  document.getElementById('btn-guardar-otra').style.display = '';
   const datalist = document.getElementById('lista-clientas-venta');
   datalist.innerHTML = CRM_DEMO.map(c => `<option value="${escaparHTML(c.nombre)}">`).join('');
+  document.getElementById('f-producto').value = '';
+  document.getElementById('f-monto').value = '';
   document.getElementById('f-clienta').value = '';
+  document.getElementById('f-canal').value = 'manual';
+  document.getElementById('f-prueba').checked = false;
   document.getElementById('f-fecha').value = fechaLocalStr();
   openModal('modal-venta');
+}
+
+/* Editar/eliminar venta (23-sep-2026, pedido explícito del partner al cargar las primeras
+   ventas reales: "por si escribo mal o el autocorrector me juega una mala pasada"). Reusa el
+   mismo modal de "Registrar Venta" en modo edición — mismo patrón ya usado en editarOrden(). */
+function editarVenta(i){
+  const v = DATA_DEMO.ventas[i];
+  if(!v) return;
+  editandoVentaIndex = i;
+  document.getElementById('venta-modal-titulo').textContent = 'Editar Venta';
+  document.getElementById('btn-guardar-otra').style.display = 'none';
+  document.getElementById('lista-clientas-venta').innerHTML = CRM_DEMO.map(c => `<option value="${escaparHTML(c.nombre)}">`).join('');
+  document.getElementById('f-fecha').value = v.fecha || fechaLocalStr();
+  document.getElementById('f-producto').value = v.producto;
+  document.getElementById('f-monto').value = v.monto;
+  document.getElementById('f-clienta').value = v.clienteNombre || '';
+  document.getElementById('f-canal').value = v.canal;
+  document.getElementById('f-prueba').checked = !!v.esPrueba;
+  openModal('modal-venta');
+}
+
+/* Deshace el aporte de una venta al CRM (compras-1, ltv-=monto) antes de re-vincularla al
+   guardar una edición, o al eliminarla — para que corregir un typo no deje el CRM duplicado ni
+   inflado. No recalcula `diasUltimaCompra` al eliminar (requeriría reescanear todas las ventas
+   de esa clienta) — limitación conocida y aceptada, de bajo impacto frente al caso real que
+   motivó esto (corregir un dato mal tipeado, no borrar historial). */
+function revertirVentaDeCRM(venta){
+  if(!venta || !venta.clienteId) return;
+  const c = CRM_DEMO.find(x => x.id === venta.clienteId);
+  if(!c) return;
+  c.compras = Math.max(0, (c.compras||0) - 1);
+  c.ltv = Math.max(0, (c.ltv||0) - venta.monto);
+}
+
+function eliminarVenta(i){
+  if(!confirm('¿Eliminar esta venta? Esta acción no se puede deshacer.')) return;
+  revertirVentaDeCRM(DATA_DEMO.ventas[i]);
+  DATA_DEMO.ventas.splice(i,1);
+  recalcularCajaHoy();
+  recalcularCajaDelta();
+  document.getElementById('view-m0').innerHTML = renderHome();
+  document.getElementById('view-m5').innerHTML = renderVentas();
+  if(document.getElementById('view-m2')) document.getElementById('view-m2').innerHTML = renderCRM();
+  if(document.getElementById('view-m7')) document.getElementById('view-m7').innerHTML = renderFinanzas();
+  autoSave(true);
+  sincronizarNubeVentas();
+  sincronizarNubeCRM();
 }
 
 /* Propuesta plus (19-sep-2026, pedido explícito del partner): cada venta manual alimenta el
@@ -4106,8 +4168,18 @@ function guardarVentaManual(mantenerAbierto){
   const fecha = document.getElementById('f-fecha').value || fechaLocalStr();
   if(!producto || !monto){ alert('Completa producto y monto'); return; }
   let clienteId = null;
-  if(!esPrueba) clienteId = vincularVentaConCRM(clienta, Number(monto), fecha);
-  DATA_DEMO.ventas.unshift({fecha, hora:new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'}), producto, canal, monto:Number(monto), esPrueba, clienteNombre: clienta||'', clienteId});
+  if(editandoVentaIndex !== null){
+    // Corrección de una venta ya guardada: deshace su aporte anterior al CRM antes de re-vincular,
+    // así un typo corregido no deja duplicado el conteo de compras/LTV de la clienta.
+    revertirVentaDeCRM(DATA_DEMO.ventas[editandoVentaIndex]);
+    if(!esPrueba) clienteId = vincularVentaConCRM(clienta, Number(monto), fecha);
+    const original = DATA_DEMO.ventas[editandoVentaIndex];
+    DATA_DEMO.ventas[editandoVentaIndex] = {...original, fecha, producto, canal, monto:Number(monto), esPrueba, clienteNombre: clienta||'', clienteId};
+    editandoVentaIndex = null;
+  } else {
+    if(!esPrueba) clienteId = vincularVentaConCRM(clienta, Number(monto), fecha);
+    DATA_DEMO.ventas.unshift({fecha, hora:new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'}), producto, canal, monto:Number(monto), esPrueba, clienteNombre: clienta||'', clienteId});
+  }
   // Las ventas de prueba interna (ej. testear el checkout, mostrarle el flujo a alguien) no deben
   // sumar a la caja real ni al KPI de conversión — confirmado como causa de confusión real en agosto
   // 2026 (pedido #1001 y varios carritos abandonados eran pruebas propias, no clientas).
