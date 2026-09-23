@@ -7,7 +7,7 @@
 // ⚠️ IMPORTANTE: bumpear esta versión (ej. 'asiri-erp-v2') en CADA deploy.
 // Si no cambia, los navegadores con el Service Worker viejo instalado seguirán
 // sirviendo el index.html cacheado y no verán las actualizaciones del ERP.
-const CACHE_NAME = 'asiri-erp-v23';
+const CACHE_NAME = 'asiri-erp-v24';
 
 const ARCHIVOS_CORE = [
   './',
@@ -16,6 +16,9 @@ const ARCHIVOS_CORE = [
   './icon-192.svg',
   './icon-512.svg',
   './icon-maskable.svg',
+  './icon-192.png',
+  './icon-512.png',
+  './icon-maskable.png',
   './asiri-mark-dark.svg',
   './asiri-mark-light.svg'
 ];
