@@ -1844,6 +1844,19 @@ let GASTO_PAUTA_MES = 73966; // pauta Meta de sep-2026 medida en Ads Manager (1 
 let FACTOR_UTILIDAD_REAL = 0.22; // punto medio del 17-27% verificado con el pedido #1002 (IVA + flete + comisiones Webpay/Shopify) — ajustable a medida que haya más pedidos reales
 let MES_CERRADO = false;
 
+// Gastos operativos mensuales recurrentes (suscripciones, contador, herramientas) — cargados
+// desde GASTOS.xlsx el 23-sep-2026, ~$130.000/mes. Se suman como egreso en el Libro de Ingresos
+// y Egresos (construirLibroIyE) igual que las compras de mercadería, así el margen real de M7
+// los descuenta en vez de solo mostrar el costo de la ropa.
+let GASTOS_DEMO = [
+  {fecha:'2026-09-07', categoria:'Shopify (1)', monto:30000, descripcion:'Pagado por Vicente. Nota original de la planilla: "QUE SERA?" — pendiente de identificar exactamente qué cubre este cargo.'},
+  {fecha:'2026-09-02', categoria:'Shopify (2)', monto:23801, descripcion:'Pagado por Valeria.'},
+  {fecha:'2026-09-01', categoria:'Contador', monto:20000, descripcion:'Gasto mensual recurrente — fecha exacta no especificada en la planilla, se usa el 1° del mes.'},
+  {fecha:'2026-09-01', categoria:'CapCut', monto:22990, descripcion:'Gasto mensual recurrente — fecha exacta no especificada en la planilla, se usa el 1° del mes.'},
+  {fecha:'2026-09-01', categoria:'Instagram', monto:9000, descripcion:'Gasto mensual recurrente — fecha exacta no especificada en la planilla, se usa el 1° del mes.'},
+  {fecha:'2026-09-01', categoria:'Claude', monto:24000, descripcion:'Gasto mensual recurrente — fecha exacta no especificada en la planilla, se usa el 1° del mes.'}
+];
+
 /* ---------- 3g. ESTADO M8 INFORMES ---------- */
 let LOOKER_URL = ''; // Valeria pega aquí la URL de su reporte Looker Studio (embed link)
 
@@ -3216,7 +3229,15 @@ function construirLibroIyE(){
       concepto: `${escaparHTML(o.producto)} (${escaparHTML(o.proveedor)})`, total: o.cantidad * o.costo
     };
   });
-  return [...ingresos, ...egresos].map(m => {
+  const gastosOperativos = GASTOS_DEMO.map(g => {
+    const d = new Date(g.fecha + 'T00:00:00');
+    return {
+      fecha: d.toLocaleDateString('es-CL', {day:'2-digit', month:'short'}), mesKey: `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`,
+      tipo:'egreso', doc:'Gasto Operativo',
+      concepto: escaparHTML(g.categoria), total: g.monto
+    };
+  });
+  return [...ingresos, ...egresos, ...gastosOperativos].map(m => {
     const neto = Math.round(m.total / 1.19);
     const iva = m.total - neto;
     return {...m, neto, iva};
@@ -4370,6 +4391,7 @@ function guardarEstadoLocal(){
     planSeptiembreEstado: PLAN_SEPTIEMBRE_ESTADO,
     gastoPautaMes: GASTO_PAUTA_MES,
     viajes: VIAJES_DEMO,
+    gastos: GASTOS_DEMO,
     inventarioShopify: INVENTARIO_SHOPIFY,
     mesCerrado: MES_CERRADO,
     brief: DATA_DEMO.brief,
@@ -4415,6 +4437,7 @@ function cargarEstadoLocal(){
     if(estado.planSeptiembreEstado && typeof estado.planSeptiembreEstado === 'object') PLAN_SEPTIEMBRE_ESTADO = estado.planSeptiembreEstado;
     if(typeof estado.gastoPautaMes === 'number') GASTO_PAUTA_MES = estado.gastoPautaMes;
     if(Array.isArray(estado.viajes)) VIAJES_DEMO = estado.viajes;
+    if(Array.isArray(estado.gastos)) GASTOS_DEMO = estado.gastos;
     if(Array.isArray(estado.inventarioShopify)) INVENTARIO_SHOPIFY = estado.inventarioShopify;
     if(typeof estado.mesCerrado === 'boolean') MES_CERRADO = estado.mesCerrado;
     if(typeof estado.brief === 'string') DATA_DEMO.brief = estado.brief;
@@ -4539,6 +4562,17 @@ function mapRowAVenta(r){
   };
 }
 
+function mapGastoARow(g){
+  return { Fecha: g.fecha, Tipo: 'Gasto', Categoria: g.categoria, Monto: g.monto, IVA: '', Descripcion: g.descripcion || '' };
+}
+
+function mapRowAGasto(r){
+  return {
+    fecha: r.Fecha ? String(r.Fecha).slice(0,10) : fechaLocalStr(),
+    categoria: r.Categoria || '', monto: Number(r.Monto) || 0, descripcion: r.Descripcion || ''
+  };
+}
+
 /* POST con mode:'no-cors' — igual que guardarDatos(): Apps Script no responde a preflight
    OPTIONS, así que el único content-type que evita el preflight es text/plain, y no-cors
    nos impide leer la respuesta (por diseño, es "fire and forget"). */
@@ -4556,6 +4590,7 @@ async function enviarAccionNube(action, rows){
 function sincronizarNubeCRM(){ enviarAccionNube('sync_crm', CRM_DEMO.map(mapClientaARow)); }
 function sincronizarNubeCompras(){ enviarAccionNube('sync_compras', ORDENES_DEMO.map(mapOrdenARow)); }
 function sincronizarNubeVentas(){ enviarAccionNube('sync_ventas', DATA_DEMO.ventas.map(mapVentaARow)); }
+function sincronizarNubeGastos(){ enviarAccionNube('sync_finanzas', GASTOS_DEMO.map(mapGastoARow)); }
 
 /* GET normal (sin no-cors) — a diferencia del POST, las peticiones GET simples de Apps Script
    sí devuelven una respuesta legible por fetch(). Se ejecuta una sola vez al abrir el ERP. */
@@ -4579,7 +4614,8 @@ function mapRowAInventarioShopify(r){
 async function sincronizarConLaNubeAlInicio(){
   const ordenesLocalesAntes = ORDENES_DEMO.length; // snapshot antes de tocar nada
   const ventasLocalesAntes = DATA_DEMO.ventas.length;
-  const [filasCrm, filasCompras, filasInventario, filasVentas] = await Promise.all([leerModuloNube('crm'), leerModuloNube('compras'), leerModuloNube('inventario'), leerModuloNube('ventas')]);
+  const gastosLocalesAntes = GASTOS_DEMO.length;
+  const [filasCrm, filasCompras, filasInventario, filasVentas, filasGastos] = await Promise.all([leerModuloNube('crm'), leerModuloNube('compras'), leerModuloNube('inventario'), leerModuloNube('ventas'), leerModuloNube('finanzas')]);
   if(filasInventario && filasInventario.length) INVENTARIO_SHOPIFY = filasInventario.map(mapRowAInventarioShopify);
 
   if(filasCrm && filasCrm.length){
@@ -4623,13 +4659,24 @@ async function sincronizarConLaNubeAlInicio(){
     sincronizarNubeVentas();
     try{ localStorage.setItem('asiri_seed_ventas_enviado', '1'); }catch(e){}
   }
+
+  // Mismo patrón — Gastos operativos (Shopify, CapCut, Instagram, Claude, Contador) recién
+  // cargados 23-sep-2026, la pestaña Finanzas del Sheet estaba vacía hasta ahora.
+  if(filasGastos && filasGastos.length >= gastosLocalesAntes){
+    GASTOS_DEMO = filasGastos.map(mapRowAGasto);
+  } else if(filasGastos && filasGastos.length){
+    sincronizarNubeGastos(); // Sheets desactualizado respecto al dispositivo — lo empareja
+  } else if(!localStorage.getItem('asiri_seed_gastos_enviado')){
+    sincronizarNubeGastos();
+    try{ localStorage.setItem('asiri_seed_gastos_enviado', '1'); }catch(e){}
+  }
   recalcularCajaHoy();
   recalcularCajaDelta();
 
   backfillTallasCompras(); // rellena tallas faltantes con TALLAS_CATALOGO, venga de donde venga ORDENES_DEMO
   backfillPrecioVentaCompras(); // idem para precio de venta (margen por compra individual)
 
-  if((filasCrm && filasCrm.length) || (filasCompras && filasCompras.length) || (filasVentas && filasVentas.length)){
+  if((filasCrm && filasCrm.length) || (filasCompras && filasCompras.length) || (filasVentas && filasVentas.length) || (filasGastos && filasGastos.length)){
     guardarEstadoLocal();
     ['m2','m6','m0','m9','m5','m7'].forEach(id => { const v = document.getElementById('view-'+id); if(v){
       const R = {m2:renderCRM, m6:renderCompras, m0:renderHome, m9:renderIntelligence, m5:renderVentas, m7:renderFinanzas};
