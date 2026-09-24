@@ -2048,15 +2048,28 @@ function renderHome(){
       <div class="panel">
         <div class="panel-title">🧾 Últimas Ventas</div>
         <div class="table-scroll"><table class="simple">
-          <tr><th>Hora</th><th>Producto</th><th>Canal</th><th>Monto</th></tr>
-          ${DATA_DEMO.ventas.map(v => `
-            <tr>
-              <td>${v.hora}</td>
-              <td>${escaparHTML(v.producto)}</td>
-              <td><span class="canal-pill ${v.canal}">${v.canal}</span></td>
-              <td>$${v.monto.toLocaleString('es-CL')}</td>
-            </tr>
-          `).join('')}
+          <tr><th>Fecha</th><th>Clienta</th><th>Prendas</th><th>Canal</th><th>Monto</th></tr>
+          ${(() => {
+            // Agrupado por venta real (clienta + fecha + hora), no por línea de prenda —
+            // pedido del partner 24-sep-2026: antes mostraba una fila por prenda, ilegible
+            // cuando una sola venta traía 5-6 prendas (ej. Lorena Ramirez, Jessy Alumna).
+            const grupos = {};
+            DATA_DEMO.ventas.slice(0, 60).forEach(v => {
+              const key = `${v.fecha}|${v.hora}|${v.clienteNombre||'—'}`;
+              if(!grupos[key]) grupos[key] = { fecha: v.fecha, hora: v.hora, clienteNombre: v.clienteNombre, clienteId: v.clienteId, canal: v.canal, prendas: 0, monto: 0 };
+              grupos[key].prendas += 1;
+              grupos[key].monto += v.monto;
+            });
+            return Object.values(grupos).sort((a,b) => (b.fecha+b.hora).localeCompare(a.fecha+a.hora)).slice(0, 15).map(g => `
+              <tr>
+                <td>${fechaLocalCorta(g.fecha)}</td>
+                <td>${g.clienteId ? `<a href="#" onclick="abrirFicha(${g.clienteId});return false;">${escaparHTML(g.clienteNombre||'—')}</a>` : (escaparHTML(g.clienteNombre||'') || '<span class="calc-note">—</span>')}</td>
+                <td>${g.prendas} prenda${g.prendas>1?'s':''}</td>
+                <td><span class="canal-pill ${g.canal}">${g.canal}</span></td>
+                <td>$${g.monto.toLocaleString('es-CL')}</td>
+              </tr>
+            `).join('');
+          })()}
         </table></div>
         <div style="margin-top:1rem;"><button class="btn btn-primary" onclick="abrirModalVenta()">+ Registrar Venta</button></div>
       </div>
@@ -4642,22 +4655,28 @@ async function sincronizarConLaNubeAlInicio(){
   // 23-sep-2026: dos celulares mostraban historiales distintos porque cada uno solo veía su propio
   // localStorage). Sheets gana si tiene igual o más filas que lo que ya había en este dispositivo;
   // si tiene menos, este dispositivo empareja hacia arriba en vez de perder ventas locales.
-  if(filasVentas && filasVentas.length >= ventasLocalesAntes){
-    DATA_DEMO.ventas = filasVentas.map(mapRowAVenta);
-    // El Sheet no guarda clienteId (no hay esa columna) — se reconstruye cruzando por nombre contra
-    // el CRM ya sincronizado arriba, así los links "ver ficha de la clienta" no se pierden.
-    DATA_DEMO.ventas.forEach(v => {
-      if(v.clienteNombre){
-        const c = CRM_DEMO.find(c => c.nombre.trim().toLowerCase() === v.clienteNombre.trim().toLowerCase());
-        if(c) v.clienteId = c.id;
-      }
-    });
-    DATA_DEMO.ventas.sort((a,b) => (b.fecha+b.hora).localeCompare(a.fecha+a.hora));
-  } else if(filasVentas && filasVentas.length){
-    sincronizarNubeVentas(); // Sheets desactualizado respecto al dispositivo — lo empareja
-  } else if(!localStorage.getItem('asiri_seed_ventas_enviado')){
-    sincronizarNubeVentas();
-    try{ localStorage.setItem('asiri_seed_ventas_enviado', '1'); }catch(e){}
+  // ⚠️ 24-sep-2026: bug crítico corregido — Ventas NO tiene ningún seed local legítimo (a diferencia
+  // de Compras/Gastos, que sí traen datos hardcodeados). El branch de "sembrar si nunca se envió"
+  // pisaba con un array VACÍO cualquier vez que `leerModuloNube` devolvía null por una falla de red
+  // transitoria en una sesión recién abierta (local también en 0) — esto borró las 65 ventas reales
+  // el 24-sep. Ahora, si Sheets no respondió (filasVentas === null), simplemente no se toca nada:
+  // nunca se empuja un array vacío a la nube por Ventas.
+  if(filasVentas){
+    if(filasVentas.length >= ventasLocalesAntes){
+      DATA_DEMO.ventas = filasVentas.map(mapRowAVenta);
+      // El Sheet no guarda clienteId (no hay esa columna) — se reconstruye cruzando por nombre contra
+      // el CRM ya sincronizado arriba, así los links "ver ficha de la clienta" no se pierden.
+      DATA_DEMO.ventas.forEach(v => {
+        if(v.clienteNombre){
+          const c = CRM_DEMO.find(c => c.nombre.trim().toLowerCase() === v.clienteNombre.trim().toLowerCase());
+          if(c) v.clienteId = c.id;
+        }
+      });
+      DATA_DEMO.ventas.sort((a,b) => (b.fecha+b.hora).localeCompare(a.fecha+a.hora));
+    } else if(filasVentas.length){
+      sincronizarNubeVentas(); // Sheets desactualizado respecto al dispositivo — lo empareja
+    }
+    // filasVentas === [] Y local también vacío: nada que hacer, no hay seed para Ventas.
   }
 
   // Mismo patrón — Gastos operativos (Shopify, CapCut, Instagram, Claude, Contador) recién
