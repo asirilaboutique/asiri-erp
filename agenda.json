@@ -1,0 +1,801 @@
+{
+ "generado": "2026-09-26T14:58:03.670Z",
+ "fuente": "Google Calendar asirilaboutique@gmail.com",
+ "hitos": [
+  {
+   "fecha": "2026-10-05",
+   "titulo": "Parte el Cyber ASIRI"
+  },
+  {
+   "fecha": "2026-10-07",
+   "titulo": "Termina el Cyber"
+  },
+  {
+   "fecha": "2026-10-08",
+   "titulo": "Vuelven los enlaces en Instagram"
+  },
+  {
+   "fecha": "2026-10-12",
+   "titulo": "Feriado"
+  }
+ ],
+ "meta_mes": {
+  "mes": "2026-10",
+  "monto": 1000000
+ },
+ "tareas": [
+  {
+   "id": "cf6rmfcftt1t3g44cdon2t8ou0",
+   "titulo": "📊 Cargar ventas en el ERP",
+   "inicio": "2026-09-28T09:00",
+   "fin": "2026-09-28T10:00",
+   "tipo": "admin",
+   "bloque": false,
+   "checklist": [
+    "Registrar ventas pendientes del fin de semana",
+    "Revisar prendas apartadas sin pagar"
+   ],
+   "material": "https://docs.google.com/document/d/1Mfc2t9o9T54oslyGudcstKRBTeMaJQ-VyC4pwkn30wI",
+   "notas": "",
+   "calendar": "https://www.google.com/calendar/event?eid=Y2Y2cm1mY2Z0dDF0M2c0NGNkb24ydDhvdTAgYXNpcmlsYWJvdXRpcXVlQG0"
+  },
+  {
+   "id": "qan7vb7qknhvp5medvomu9snos",
+   "titulo": "🎬 Grabar Reel 1 · Sweater Lua + Jeans Amanda",
+   "inicio": "2026-09-28T10:00",
+   "fin": "2026-09-28T12:00",
+   "tipo": "grabacion",
+   "bloque": false,
+   "checklist": [
+    "Set con espejo y luz de ventana",
+    "4 tomas según guion (20-25 s)",
+    "Subtítulos"
+   ],
+   "material": "https://docs.google.com/document/d/1AYTGoU1Snjlk3GkIDVnd3RTsLd_NORx_lP1V2D5cNwc",
+   "notas": "",
+   "calendar": "https://www.google.com/calendar/event?eid=cWFuN3ZiN3Frbmh2cDVtZWR2b211OXNub3MgYXNpcmlsYWJvdXRpcXVlQG0"
+  },
+  {
+   "id": "2k4sklr1jfqd7gpt0sdshdii1s",
+   "titulo": "✅ Revisar y aprobar el material de la semana",
+   "inicio": "2026-09-28T14:30",
+   "fin": "2026-09-28T15:30",
+   "tipo": "produccion",
+   "bloque": false,
+   "checklist": [
+    "Leer los 6 documentos de 1_POR APROBAR",
+    "Mover a 2_APROBADO o comentar cambios"
+   ],
+   "material": "https://drive.google.com/drive/folders/12DlojDA9OtPhPez8BGynMDJAY6M44fH3",
+   "notas": "",
+   "calendar": "https://www.google.com/calendar/event?eid=Mms0c2tscjFqZnFkN2dwdDBzZHNoZGlpMXMgYXNpcmlsYWJvdXRpcXVlQG0"
+  },
+  {
+   "id": "mfll9tu2pjrmj400cu9h8rp4pk",
+   "titulo": "💬 Elegir clientas para la preventa",
+   "inicio": "2026-09-28T15:30",
+   "fin": "2026-09-28T17:00",
+   "tipo": "crm",
+   "bloque": false,
+   "checklist": [
+    "Revisar CRM en el ERP",
+    "Separar en 3 grupos: frecuentes / recientes / hace tiempo"
+   ],
+   "material": "https://docs.google.com/document/d/1Y2WUkMn-36NUyTFzf_ccUBz2xJlvCou96frBjOFxWq4",
+   "notas": "",
+   "calendar": "https://www.google.com/calendar/event?eid=bWZsbDl0dTJwanJtajQwMGN1OWg4cnA0cGsgYXNpcmlsYWJvdXRpcXVlQG0"
+  },
+  {
+   "id": "kmtagiedq7ias5h3ohnkijvlm4",
+   "titulo": "📲 Publicar Reel 1",
+   "inicio": "2026-09-28T21:00",
+   "fin": "2026-09-28T21:15",
+   "tipo": "publicacion",
+   "bloque": false,
+   "checklist": [
+    "Texto y hashtags del guion",
+    "Sin enlaces",
+    "Mover el guion a 3_PUBLICADO"
+   ],
+   "material": "https://docs.google.com/document/d/1AYTGoU1Snjlk3GkIDVnd3RTsLd_NORx_lP1V2D5cNwc",
+   "notas": "",
+   "calendar": "https://www.google.com/calendar/event?eid=a210YWdpZWRxN2lhczVoM29obmtpanZsbTQgYXNpcmlsYWJvdXRpcXVlQG0"
+  },
+  {
+   "id": "52aicdla9p10lqf9e6e5tm7tp8",
+   "titulo": "📸 Fotos de los 3 packs Cyber",
+   "inicio": "2026-09-29T09:00",
+   "fin": "2026-09-29T10:30",
+   "tipo": "grabacion",
+   "bloque": false,
+   "checklist": [
+    "Look 1: Sweater Lua + Jeans Amanda",
+    "Look 2: Blusa Tuti + Blazer Bohemia",
+    "Look 3: Tejido Claudia + Jeans Clau",
+    "Subir fotos a la carpeta de la semana"
+   ],
+   "material": "https://docs.google.com/document/d/1Tmprt2uC6VAgAN4kATDiBo376o3xRLwFJO_VamCKlIk",
+   "notas": "",
+   "calendar": "https://www.google.com/calendar/event?eid=NTJhaWNkbGE5cDEwbHFmOWU2ZTV0bTd0cDggYXNpcmlsYWJvdXRpcXVlQG0"
+  },
+  {
+   "id": "bl0g6s40qch5vht8maql7uqi6g",
+   "titulo": "🎬 Grabar Reel 2 · Tejido Claudia",
+   "inicio": "2026-09-29T10:30",
+   "fin": "2026-09-29T12:00",
+   "tipo": "grabacion",
+   "bloque": false,
+   "checklist": [
+    "3 formas: con Jeans Clau, con Palazzo, con cinturón",
+    "Cortes rápidos"
+   ],
+   "material": "https://docs.google.com/document/d/1kdRxN3Pzd9ncLdj4kubP-BAmOjbgWxFXqlasggaSRiY",
+   "notas": "",
+   "calendar": "https://www.google.com/calendar/event?eid=YmwwZzZzNDBxY2g1dmh0OG1hcWw3dXFpNmcgYXNpcmlsYWJvdXRpcXVlQG0"
+  },
+  {
+   "id": "3iatecmuhmfsjm10m6in18jgro",
+   "titulo": "🛍 Revisar colección Cyber en borrador",
+   "inicio": "2026-09-29T14:30",
+   "fin": "2026-09-29T17:00",
+   "tipo": "tienda",
+   "bloque": false,
+   "checklist": [
+    "Aprobar precios de los 3 packs",
+    "Revisar el hero de los 3 looks",
+    "Decidir si hay 4º pack con primavera"
+   ],
+   "material": "https://docs.google.com/document/d/1Tmprt2uC6VAgAN4kATDiBo376o3xRLwFJO_VamCKlIk",
+   "notas": "",
+   "calendar": "https://www.google.com/calendar/event?eid=M2lhdGVjbXVobWZzam0xMG02aW4xOGpncm8gYXNpcmlsYWJvdXRpcXVlQG0"
+  },
+  {
+   "id": "qc6iomlecmpe5hbg565fhk5klg",
+   "titulo": "📦 Recepción de la ropa de primavera",
+   "inicio": "2026-09-30T09:00",
+   "fin": "2026-09-30T10:30",
+   "tipo": "admin",
+   "bloque": false,
+   "checklist": [
+    "Si llegó: registrar compra en el ERP (M6)",
+    "Si no llegó: usar este tiempo para fotos de stock actual"
+   ],
+   "material": "",
+   "notas": "",
+   "calendar": "https://www.google.com/calendar/event?eid=cWM2aW9tbGVjbXBlNWhiZzU2NWZoazVrbGcgYXNpcmlsYWJvdXRpcXVlQG0"
+  },
+  {
+   "id": "j6fjr94rfk3i7l9hfsvj2ugshs",
+   "titulo": "🎬 Grabar Reel 3 · Blazer Bohemia + Blusa Tuti",
+   "inicio": "2026-09-30T10:30",
+   "fin": "2026-09-30T12:00",
+   "tipo": "grabacion",
+   "bloque": false,
+   "checklist": [
+    "4 tomas según guion",
+    "Tono seguro, sin exagerar"
+   ],
+   "material": "https://docs.google.com/document/d/1Py2Akec9czqo2fLlJxf3lUv35mQ-eAusci2E7W1aD74",
+   "notas": "",
+   "calendar": "https://www.google.com/calendar/event?eid=ajZmanI5NHJmazNpN2w5aGZzdmoydWdzaHMgYXNpcmlsYWJvdXRpcXVlQG0"
+  },
+  {
+   "id": "oe83fesbd1eltv16bbh0s6ehf4",
+   "titulo": "💬 Enviar preventa por WhatsApp",
+   "inicio": "2026-09-30T14:30",
+   "fin": "2026-09-30T17:00",
+   "tipo": "crm",
+   "bloque": false,
+   "checklist": [
+    "Uno por uno, con el nombre",
+    "Mensaje A, B o C según el grupo",
+    "Anotar quién responde"
+   ],
+   "material": "https://docs.google.com/document/d/1Y2WUkMn-36NUyTFzf_ccUBz2xJlvCou96frBjOFxWq4",
+   "notas": "",
+   "calendar": "https://www.google.com/calendar/event?eid=b2U4M2Zlc2JkMWVsdHYxNmJiaDBzNmVoZjQgYXNpcmlsYWJvdXRpcXVlQG0"
+  },
+  {
+   "id": "p9be27bs93gt219bbqoacpl86c",
+   "titulo": "📲 Publicar Reel 2",
+   "inicio": "2026-09-30T21:00",
+   "fin": "2026-09-30T21:15",
+   "tipo": "publicacion",
+   "bloque": false,
+   "checklist": [
+    "Texto del guion · sin enlaces",
+    "Mover a 3_PUBLICADO"
+   ],
+   "material": "https://docs.google.com/document/d/1kdRxN3Pzd9ncLdj4kubP-BAmOjbgWxFXqlasggaSRiY",
+   "notas": "",
+   "calendar": "https://www.google.com/calendar/event?eid=cDliZTI3YnM5M2d0MjE5YmJxb2FjcGw4NmMgYXNpcmlsYWJvdXRpcXVlQG0"
+  },
+  {
+   "id": "0lvsqketfdns918boldu5qgflo",
+   "titulo": "🎬 Grabar historias \"Se viene el Look completo\"",
+   "inicio": "2026-10-01T09:00",
+   "fin": "2026-10-01T10:30",
+   "tipo": "grabacion",
+   "bloque": false,
+   "checklist": [
+    "Grabar las 6 historias de jue a dom de una vez"
+   ],
+   "material": "https://docs.google.com/document/d/1AKtO12aPxHSawf6LVa88ykyBdl9oWpdA_z8OT9_O_Zk",
+   "notas": "",
+   "calendar": "https://www.google.com/calendar/event?eid=MGx2c3FrZXRmZG5zOTE4Ym9sZHU1cWdmbG8gYXNpcmlsYWJvdXRpcXVlQG0"
+  },
+  {
+   "id": "im14t0vshj68ac8lo47a3egqhk",
+   "titulo": "📸 Fotos de la ropa de primavera",
+   "inicio": "2026-10-01T10:30",
+   "fin": "2026-10-01T12:00",
+   "tipo": "grabacion",
+   "bloque": false,
+   "checklist": [
+    "Foto de cada prenda nueva (frente + detalle)",
+    "Subir a la carpeta de la semana"
+   ],
+   "material": "",
+   "notas": "Si no llegó la primavera: fotos de los packs en el perchero.",
+   "calendar": "https://www.google.com/calendar/event?eid=aW0xNHQwdnNoajY4YWM4bG80N2EzZWdxaGsgYXNpcmlsYWJvdXRpcXVlQG0"
+  },
+  {
+   "id": "k43abesjm5ffjcfb4vodbdhj4c",
+   "titulo": "💬 Responder DMs y apartados",
+   "inicio": "2026-10-01T14:30",
+   "fin": "2026-10-01T16:00",
+   "tipo": "crm",
+   "bloque": false,
+   "checklist": [
+    "Responder a las clientas de la preventa",
+    "Apartar lo que pidan",
+    "Registrar ventas en el ERP"
+   ],
+   "material": "",
+   "notas": "",
+   "calendar": "https://www.google.com/calendar/event?eid=azQzYWJlc2ptNWZmamNmYjR2b2RiZGhqNGMgYXNpcmlsYWJvdXRpcXVlQG0"
+  },
+  {
+   "id": "snrevl6kg7r8bigi71lsngbg58",
+   "titulo": "📲 Subir historias de calentamiento",
+   "inicio": "2026-10-01T16:00",
+   "fin": "2026-10-01T17:00",
+   "tipo": "publicacion",
+   "bloque": false,
+   "checklist": [
+    "Historias del jueves (2) con la encuesta"
+   ],
+   "material": "https://docs.google.com/document/d/1AKtO12aPxHSawf6LVa88ykyBdl9oWpdA_z8OT9_O_Zk",
+   "notas": "",
+   "calendar": "https://www.google.com/calendar/event?eid=c25yZXZsNmtnN3I4YmlnaTcxbHNuZ2JnNTggYXNpcmlsYWJvdXRpcXVlQG0"
+  },
+  {
+   "id": "as1203d3q3tr7b0cn7aq68tbik",
+   "titulo": "📲 Publicar Reel 3",
+   "inicio": "2026-10-01T21:00",
+   "fin": "2026-10-01T21:15",
+   "tipo": "publicacion",
+   "bloque": false,
+   "checklist": [
+    "Texto del guion · sin enlaces · sin precio Cyber",
+    "Mover a 3_PUBLICADO"
+   ],
+   "material": "https://docs.google.com/document/d/1Py2Akec9czqo2fLlJxf3lUv35mQ-eAusci2E7W1aD74",
+   "notas": "",
+   "calendar": "https://www.google.com/calendar/event?eid=YXMxMjAzZDNxM3RyN2IwY243YXE2OHRiaWsgYXNpcmlsYWJvdXRpcXVlQG0"
+  },
+  {
+   "id": "fup3phdqjabhefao3unn27jotc",
+   "titulo": "📈 Informe semanal con Claude",
+   "inicio": "2026-10-02T09:00",
+   "fin": "2026-10-02T10:30",
+   "tipo": "medicion",
+   "bloque": false,
+   "checklist": [
+    "Encender el Nitro y abrir Claude Code",
+    "Decir: \"ASIRI AGENCIA, informe semanal\""
+   ],
+   "material": "",
+   "notas": "Claude revisa ventas del ERP, alcance de IG (Windsor) y lo publicado.",
+   "calendar": "https://www.google.com/calendar/event?eid=ZnVwM3BoZHFqYWJoZWZhbzN1bm4yN2pvdGMgYXNpcmlsYWJvdXRpcXVlQG0"
+  },
+  {
+   "id": "7690nfg0eq4782pa0u8fnptm2s",
+   "titulo": "📲 Historias cuenta regresiva Cyber",
+   "inicio": "2026-10-02T10:30",
+   "fin": "2026-10-02T12:00",
+   "tipo": "publicacion",
+   "bloque": false,
+   "checklist": [
+    "Historias del viernes con el sticker de cuenta regresiva",
+    "Dejar listas las de sábado y domingo"
+   ],
+   "material": "https://docs.google.com/document/d/1AKtO12aPxHSawf6LVa88ykyBdl9oWpdA_z8OT9_O_Zk",
+   "notas": "",
+   "calendar": "https://www.google.com/calendar/event?eid=NzY5MG5mZzBlcTQ3ODJwYTB1OGZucHRtMnMgYXNpcmlsYWJvdXRpcXVlQG0"
+  },
+  {
+   "id": "bnv14mihsn446g48g62hacff1s",
+   "titulo": "🦋 SESIÓN DE AFINADO · semana Cyber",
+   "inicio": "2026-10-02T14:30",
+   "fin": "2026-10-02T17:00",
+   "tipo": "medicion",
+   "bloque": false,
+   "checklist": [
+    "Encender el Nitro y abrir Claude Code",
+    "Decir: \"ASIRI AGENCIA, sesión de afinado\""
+   ],
+   "material": "",
+   "notas": "Claude propone la semana del Cyber (5-9 oct) tarea por tarea. Al confirmar, los [BLOQUE] grises se convierten en tareas específicas.",
+   "calendar": "https://www.google.com/calendar/event?eid=Ym52MTRtaWhzbjQ0Nmc0OGc2MmhhY2ZmMXMgYXNpcmlsYWJvdXRpcXVlQG0"
+  },
+  {
+   "id": "cmvskr36942mcmamc22apq8tro_20261005T120000Z",
+   "titulo": "[BLOQUE] ERP y ordenar la semana",
+   "inicio": "2026-10-05T09:00",
+   "fin": "2026-10-05T12:00",
+   "tipo": "bloque",
+   "bloque": true,
+   "checklist": [],
+   "material": "",
+   "notas": "Bloque general. Se convierte en tareas específicas en la sesión de afinado del viernes anterior. 5-9 oct: CYBER (5-7) · 8-oct vuelven los enlaces 13-16 oct: evaluación del Cyber (12 feriado) 19-23 oct: reposición de lo que más rotó 26-30 oct: cierre del mes contra la meta de $1M",
+   "calendar": "https://www.google.com/calendar/event?eid=Y212c2tyMzY5NDJtY21hbWMyMmFwcTh0cm9fMjAyNjEwMDVUMTIwMDAwWiBhc2lyaWxhYm91dGlxdWVAbQ"
+  },
+  {
+   "id": "ad4ulkt0n4bha1f864lt3o77qg_20261005T173000Z",
+   "titulo": "[BLOQUE] Producción: guiones, textos y portadas",
+   "inicio": "2026-10-05T14:30",
+   "fin": "2026-10-05T17:00",
+   "tipo": "bloque",
+   "bloque": true,
+   "checklist": [],
+   "material": "",
+   "notas": "Bloque general. Se convierte en tareas específicas en la sesión de afinado del viernes anterior.",
+   "calendar": "https://www.google.com/calendar/event?eid=YWQ0dWxrdDBuNGJoYTFmODY0bHQzbzc3cWdfMjAyNjEwMDVUMTczMDAwWiBhc2lyaWxhYm91dGlxdWVAbQ"
+  },
+  {
+   "id": "vf6gv20fg7vcq0bgt5tuau9p4g_20261006T120000Z",
+   "titulo": "[BLOQUE] Grabación en ASIRI Quarters",
+   "inicio": "2026-10-06T09:00",
+   "fin": "2026-10-06T12:00",
+   "tipo": "bloque",
+   "bloque": true,
+   "checklist": [],
+   "material": "",
+   "notas": "Bloque general. Se convierte en tareas específicas en la sesión de afinado del viernes anterior.",
+   "calendar": "https://www.google.com/calendar/event?eid=dmY2Z3YyMGZnN3ZjcTBiZ3Q1dHVhdTlwNGdfMjAyNjEwMDZUMTIwMDAwWiBhc2lyaWxhYm91dGlxdWVAbQ"
+  },
+  {
+   "id": "qbaqa8puou6kh1tmjrqp3gqrok_20261006T173000Z",
+   "titulo": "[BLOQUE] Edición y dejar listo lo de las 21:00",
+   "inicio": "2026-10-06T14:30",
+   "fin": "2026-10-06T17:00",
+   "tipo": "bloque",
+   "bloque": true,
+   "checklist": [],
+   "material": "",
+   "notas": "Bloque general. Se convierte en tareas específicas en la sesión de afinado del viernes anterior.",
+   "calendar": "https://www.google.com/calendar/event?eid=cWJhcWE4cHVvdTZraDF0bWpycXAzZ3Fyb2tfMjAyNjEwMDZUMTczMDAwWiBhc2lyaWxhYm91dGlxdWVAbQ"
+  },
+  {
+   "id": "c5qjea2tsq4n82eurrk2ifan8o_20261007T120000Z",
+   "titulo": "[BLOQUE] Grabación y fotos de prendas",
+   "inicio": "2026-10-07T09:00",
+   "fin": "2026-10-07T12:00",
+   "tipo": "bloque",
+   "bloque": true,
+   "checklist": [],
+   "material": "",
+   "notas": "Bloque general. Se convierte en tareas específicas en la sesión de afinado del viernes anterior.",
+   "calendar": "https://www.google.com/calendar/event?eid=YzVxamVhMnRzcTRuODJldXJyazJpZmFuOG9fMjAyNjEwMDdUMTIwMDAwWiBhc2lyaWxhYm91dGlxdWVAbQ"
+  },
+  {
+   "id": "t3t89evd0asbmfp4mei176cp88_20261007T173000Z",
+   "titulo": "[BLOQUE] CRM: mensajes a clientas",
+   "inicio": "2026-10-07T14:30",
+   "fin": "2026-10-07T17:00",
+   "tipo": "bloque",
+   "bloque": true,
+   "checklist": [],
+   "material": "",
+   "notas": "Bloque general. Se convierte en tareas específicas en la sesión de afinado del viernes anterior.",
+   "calendar": "https://www.google.com/calendar/event?eid=dDN0ODlldmQwYXNibWZwNG1laTE3NmNwODhfMjAyNjEwMDdUMTczMDAwWiBhc2lyaWxhYm91dGlxdWVAbQ"
+  },
+  {
+   "id": "vakfjas9a1102re92nkas9o7tg_20261008T120000Z",
+   "titulo": "[BLOQUE] Grabación y contenido extra",
+   "inicio": "2026-10-08T09:00",
+   "fin": "2026-10-08T12:00",
+   "tipo": "bloque",
+   "bloque": true,
+   "checklist": [],
+   "material": "",
+   "notas": "Bloque general. Se convierte en tareas específicas en la sesión de afinado del viernes anterior.",
+   "calendar": "https://www.google.com/calendar/event?eid=dmFrZmphczlhMTEwMnJlOTJua2FzOW83dGdfMjAyNjEwMDhUMTIwMDAwWiBhc2lyaWxhYm91dGlxdWVAbQ"
+  },
+  {
+   "id": "ias6sn89loricerg8n5plhtnrs_20261008T173000Z",
+   "titulo": "[BLOQUE] Tienda: Shopify, colecciones y fichas",
+   "inicio": "2026-10-08T14:30",
+   "fin": "2026-10-08T17:00",
+   "tipo": "bloque",
+   "bloque": true,
+   "checklist": [],
+   "material": "",
+   "notas": "Bloque general. Se convierte en tareas específicas en la sesión de afinado del viernes anterior.",
+   "calendar": "https://www.google.com/calendar/event?eid=aWFzNnNuODlsb3JpY2VyZzhuNXBsaHRucnNfMjAyNjEwMDhUMTczMDAwWiBhc2lyaWxhYm91dGlxdWVAbQ"
+  },
+  {
+   "id": "v38erfi716tu5gjofbvsff4po4_20261009T120000Z",
+   "titulo": "[BLOQUE] Medición e informe semanal",
+   "inicio": "2026-10-09T09:00",
+   "fin": "2026-10-09T12:00",
+   "tipo": "bloque",
+   "bloque": true,
+   "checklist": [],
+   "material": "",
+   "notas": "Bloque general. Se convierte en tareas específicas en la sesión de afinado del viernes anterior.",
+   "calendar": "https://www.google.com/calendar/event?eid=djM4ZXJmaTcxNnR1NWdqb2ZidnNmZjRwbzRfMjAyNjEwMDlUMTIwMDAwWiBhc2lyaWxhYm91dGlxdWVAbQ"
+  },
+  {
+   "id": "14pv5mi02o3fgjjvherbuk8hes_20261009T173000Z",
+   "titulo": "🦋 [BLOQUE] Sesión de afinado de la semana siguiente",
+   "inicio": "2026-10-09T14:30",
+   "fin": "2026-10-09T17:00",
+   "tipo": "bloque",
+   "bloque": true,
+   "checklist": [
+    "Encender el Nitro y abrir Claude Code",
+    "Decir: \"ASIRI AGENCIA, sesión de afinado\""
+   ],
+   "material": "",
+   "notas": "",
+   "calendar": "https://www.google.com/calendar/event?eid=MTRwdjVtaTAybzNmZ2pqdmhlcmJ1azhoZXNfMjAyNjEwMDlUMTczMDAwWiBhc2lyaWxhYm91dGlxdWVAbQ"
+  },
+  {
+   "id": "vf6gv20fg7vcq0bgt5tuau9p4g_20261013T120000Z",
+   "titulo": "[BLOQUE] Grabación en ASIRI Quarters",
+   "inicio": "2026-10-13T09:00",
+   "fin": "2026-10-13T12:00",
+   "tipo": "bloque",
+   "bloque": true,
+   "checklist": [],
+   "material": "",
+   "notas": "Bloque general. Se convierte en tareas específicas en la sesión de afinado del viernes anterior.",
+   "calendar": "https://www.google.com/calendar/event?eid=dmY2Z3YyMGZnN3ZjcTBiZ3Q1dHVhdTlwNGdfMjAyNjEwMTNUMTIwMDAwWiBhc2lyaWxhYm91dGlxdWVAbQ"
+  },
+  {
+   "id": "qbaqa8puou6kh1tmjrqp3gqrok_20261013T173000Z",
+   "titulo": "[BLOQUE] Edición y dejar listo lo de las 21:00",
+   "inicio": "2026-10-13T14:30",
+   "fin": "2026-10-13T17:00",
+   "tipo": "bloque",
+   "bloque": true,
+   "checklist": [],
+   "material": "",
+   "notas": "Bloque general. Se convierte en tareas específicas en la sesión de afinado del viernes anterior.",
+   "calendar": "https://www.google.com/calendar/event?eid=cWJhcWE4cHVvdTZraDF0bWpycXAzZ3Fyb2tfMjAyNjEwMTNUMTczMDAwWiBhc2lyaWxhYm91dGlxdWVAbQ"
+  },
+  {
+   "id": "c5qjea2tsq4n82eurrk2ifan8o_20261014T120000Z",
+   "titulo": "[BLOQUE] Grabación y fotos de prendas",
+   "inicio": "2026-10-14T09:00",
+   "fin": "2026-10-14T12:00",
+   "tipo": "bloque",
+   "bloque": true,
+   "checklist": [],
+   "material": "",
+   "notas": "Bloque general. Se convierte en tareas específicas en la sesión de afinado del viernes anterior.",
+   "calendar": "https://www.google.com/calendar/event?eid=YzVxamVhMnRzcTRuODJldXJyazJpZmFuOG9fMjAyNjEwMTRUMTIwMDAwWiBhc2lyaWxhYm91dGlxdWVAbQ"
+  },
+  {
+   "id": "t3t89evd0asbmfp4mei176cp88_20261014T173000Z",
+   "titulo": "[BLOQUE] CRM: mensajes a clientas",
+   "inicio": "2026-10-14T14:30",
+   "fin": "2026-10-14T17:00",
+   "tipo": "bloque",
+   "bloque": true,
+   "checklist": [],
+   "material": "",
+   "notas": "Bloque general. Se convierte en tareas específicas en la sesión de afinado del viernes anterior.",
+   "calendar": "https://www.google.com/calendar/event?eid=dDN0ODlldmQwYXNibWZwNG1laTE3NmNwODhfMjAyNjEwMTRUMTczMDAwWiBhc2lyaWxhYm91dGlxdWVAbQ"
+  },
+  {
+   "id": "vakfjas9a1102re92nkas9o7tg_20261015T120000Z",
+   "titulo": "[BLOQUE] Grabación y contenido extra",
+   "inicio": "2026-10-15T09:00",
+   "fin": "2026-10-15T12:00",
+   "tipo": "bloque",
+   "bloque": true,
+   "checklist": [],
+   "material": "",
+   "notas": "Bloque general. Se convierte en tareas específicas en la sesión de afinado del viernes anterior.",
+   "calendar": "https://www.google.com/calendar/event?eid=dmFrZmphczlhMTEwMnJlOTJua2FzOW83dGdfMjAyNjEwMTVUMTIwMDAwWiBhc2lyaWxhYm91dGlxdWVAbQ"
+  },
+  {
+   "id": "ias6sn89loricerg8n5plhtnrs_20261015T173000Z",
+   "titulo": "[BLOQUE] Tienda: Shopify, colecciones y fichas",
+   "inicio": "2026-10-15T14:30",
+   "fin": "2026-10-15T17:00",
+   "tipo": "bloque",
+   "bloque": true,
+   "checklist": [],
+   "material": "",
+   "notas": "Bloque general. Se convierte en tareas específicas en la sesión de afinado del viernes anterior.",
+   "calendar": "https://www.google.com/calendar/event?eid=aWFzNnNuODlsb3JpY2VyZzhuNXBsaHRucnNfMjAyNjEwMTVUMTczMDAwWiBhc2lyaWxhYm91dGlxdWVAbQ"
+  },
+  {
+   "id": "v38erfi716tu5gjofbvsff4po4_20261016T120000Z",
+   "titulo": "[BLOQUE] Medición e informe semanal",
+   "inicio": "2026-10-16T09:00",
+   "fin": "2026-10-16T12:00",
+   "tipo": "bloque",
+   "bloque": true,
+   "checklist": [],
+   "material": "",
+   "notas": "Bloque general. Se convierte en tareas específicas en la sesión de afinado del viernes anterior.",
+   "calendar": "https://www.google.com/calendar/event?eid=djM4ZXJmaTcxNnR1NWdqb2ZidnNmZjRwbzRfMjAyNjEwMTZUMTIwMDAwWiBhc2lyaWxhYm91dGlxdWVAbQ"
+  },
+  {
+   "id": "14pv5mi02o3fgjjvherbuk8hes_20261016T173000Z",
+   "titulo": "🦋 [BLOQUE] Sesión de afinado de la semana siguiente",
+   "inicio": "2026-10-16T14:30",
+   "fin": "2026-10-16T17:00",
+   "tipo": "bloque",
+   "bloque": true,
+   "checklist": [
+    "Encender el Nitro y abrir Claude Code",
+    "Decir: \"ASIRI AGENCIA, sesión de afinado\""
+   ],
+   "material": "",
+   "notas": "",
+   "calendar": "https://www.google.com/calendar/event?eid=MTRwdjVtaTAybzNmZ2pqdmhlcmJ1azhoZXNfMjAyNjEwMTZUMTczMDAwWiBhc2lyaWxhYm91dGlxdWVAbQ"
+  },
+  {
+   "id": "cmvskr36942mcmamc22apq8tro_20261019T120000Z",
+   "titulo": "[BLOQUE] ERP y ordenar la semana",
+   "inicio": "2026-10-19T09:00",
+   "fin": "2026-10-19T12:00",
+   "tipo": "bloque",
+   "bloque": true,
+   "checklist": [],
+   "material": "",
+   "notas": "Bloque general. Se convierte en tareas específicas en la sesión de afinado del viernes anterior. 5-9 oct: CYBER (5-7) · 8-oct vuelven los enlaces 13-16 oct: evaluación del Cyber (12 feriado) 19-23 oct: reposición de lo que más rotó 26-30 oct: cierre del mes contra la meta de $1M",
+   "calendar": "https://www.google.com/calendar/event?eid=Y212c2tyMzY5NDJtY21hbWMyMmFwcTh0cm9fMjAyNjEwMTlUMTIwMDAwWiBhc2lyaWxhYm91dGlxdWVAbQ"
+  },
+  {
+   "id": "ad4ulkt0n4bha1f864lt3o77qg_20261019T173000Z",
+   "titulo": "[BLOQUE] Producción: guiones, textos y portadas",
+   "inicio": "2026-10-19T14:30",
+   "fin": "2026-10-19T17:00",
+   "tipo": "bloque",
+   "bloque": true,
+   "checklist": [],
+   "material": "",
+   "notas": "Bloque general. Se convierte en tareas específicas en la sesión de afinado del viernes anterior.",
+   "calendar": "https://www.google.com/calendar/event?eid=YWQ0dWxrdDBuNGJoYTFmODY0bHQzbzc3cWdfMjAyNjEwMTlUMTczMDAwWiBhc2lyaWxhYm91dGlxdWVAbQ"
+  },
+  {
+   "id": "vf6gv20fg7vcq0bgt5tuau9p4g_20261020T120000Z",
+   "titulo": "[BLOQUE] Grabación en ASIRI Quarters",
+   "inicio": "2026-10-20T09:00",
+   "fin": "2026-10-20T12:00",
+   "tipo": "bloque",
+   "bloque": true,
+   "checklist": [],
+   "material": "",
+   "notas": "Bloque general. Se convierte en tareas específicas en la sesión de afinado del viernes anterior.",
+   "calendar": "https://www.google.com/calendar/event?eid=dmY2Z3YyMGZnN3ZjcTBiZ3Q1dHVhdTlwNGdfMjAyNjEwMjBUMTIwMDAwWiBhc2lyaWxhYm91dGlxdWVAbQ"
+  },
+  {
+   "id": "qbaqa8puou6kh1tmjrqp3gqrok_20261020T173000Z",
+   "titulo": "[BLOQUE] Edición y dejar listo lo de las 21:00",
+   "inicio": "2026-10-20T14:30",
+   "fin": "2026-10-20T17:00",
+   "tipo": "bloque",
+   "bloque": true,
+   "checklist": [],
+   "material": "",
+   "notas": "Bloque general. Se convierte en tareas específicas en la sesión de afinado del viernes anterior.",
+   "calendar": "https://www.google.com/calendar/event?eid=cWJhcWE4cHVvdTZraDF0bWpycXAzZ3Fyb2tfMjAyNjEwMjBUMTczMDAwWiBhc2lyaWxhYm91dGlxdWVAbQ"
+  },
+  {
+   "id": "c5qjea2tsq4n82eurrk2ifan8o_20261021T120000Z",
+   "titulo": "[BLOQUE] Grabación y fotos de prendas",
+   "inicio": "2026-10-21T09:00",
+   "fin": "2026-10-21T12:00",
+   "tipo": "bloque",
+   "bloque": true,
+   "checklist": [],
+   "material": "",
+   "notas": "Bloque general. Se convierte en tareas específicas en la sesión de afinado del viernes anterior.",
+   "calendar": "https://www.google.com/calendar/event?eid=YzVxamVhMnRzcTRuODJldXJyazJpZmFuOG9fMjAyNjEwMjFUMTIwMDAwWiBhc2lyaWxhYm91dGlxdWVAbQ"
+  },
+  {
+   "id": "t3t89evd0asbmfp4mei176cp88_20261021T173000Z",
+   "titulo": "[BLOQUE] CRM: mensajes a clientas",
+   "inicio": "2026-10-21T14:30",
+   "fin": "2026-10-21T17:00",
+   "tipo": "bloque",
+   "bloque": true,
+   "checklist": [],
+   "material": "",
+   "notas": "Bloque general. Se convierte en tareas específicas en la sesión de afinado del viernes anterior.",
+   "calendar": "https://www.google.com/calendar/event?eid=dDN0ODlldmQwYXNibWZwNG1laTE3NmNwODhfMjAyNjEwMjFUMTczMDAwWiBhc2lyaWxhYm91dGlxdWVAbQ"
+  },
+  {
+   "id": "vakfjas9a1102re92nkas9o7tg_20261022T120000Z",
+   "titulo": "[BLOQUE] Grabación y contenido extra",
+   "inicio": "2026-10-22T09:00",
+   "fin": "2026-10-22T12:00",
+   "tipo": "bloque",
+   "bloque": true,
+   "checklist": [],
+   "material": "",
+   "notas": "Bloque general. Se convierte en tareas específicas en la sesión de afinado del viernes anterior.",
+   "calendar": "https://www.google.com/calendar/event?eid=dmFrZmphczlhMTEwMnJlOTJua2FzOW83dGdfMjAyNjEwMjJUMTIwMDAwWiBhc2lyaWxhYm91dGlxdWVAbQ"
+  },
+  {
+   "id": "ias6sn89loricerg8n5plhtnrs_20261022T173000Z",
+   "titulo": "[BLOQUE] Tienda: Shopify, colecciones y fichas",
+   "inicio": "2026-10-22T14:30",
+   "fin": "2026-10-22T17:00",
+   "tipo": "bloque",
+   "bloque": true,
+   "checklist": [],
+   "material": "",
+   "notas": "Bloque general. Se convierte en tareas específicas en la sesión de afinado del viernes anterior.",
+   "calendar": "https://www.google.com/calendar/event?eid=aWFzNnNuODlsb3JpY2VyZzhuNXBsaHRucnNfMjAyNjEwMjJUMTczMDAwWiBhc2lyaWxhYm91dGlxdWVAbQ"
+  },
+  {
+   "id": "v38erfi716tu5gjofbvsff4po4_20261023T120000Z",
+   "titulo": "[BLOQUE] Medición e informe semanal",
+   "inicio": "2026-10-23T09:00",
+   "fin": "2026-10-23T12:00",
+   "tipo": "bloque",
+   "bloque": true,
+   "checklist": [],
+   "material": "",
+   "notas": "Bloque general. Se convierte en tareas específicas en la sesión de afinado del viernes anterior.",
+   "calendar": "https://www.google.com/calendar/event?eid=djM4ZXJmaTcxNnR1NWdqb2ZidnNmZjRwbzRfMjAyNjEwMjNUMTIwMDAwWiBhc2lyaWxhYm91dGlxdWVAbQ"
+  },
+  {
+   "id": "14pv5mi02o3fgjjvherbuk8hes_20261023T173000Z",
+   "titulo": "🦋 [BLOQUE] Sesión de afinado de la semana siguiente",
+   "inicio": "2026-10-23T14:30",
+   "fin": "2026-10-23T17:00",
+   "tipo": "bloque",
+   "bloque": true,
+   "checklist": [
+    "Encender el Nitro y abrir Claude Code",
+    "Decir: \"ASIRI AGENCIA, sesión de afinado\""
+   ],
+   "material": "",
+   "notas": "",
+   "calendar": "https://www.google.com/calendar/event?eid=MTRwdjVtaTAybzNmZ2pqdmhlcmJ1azhoZXNfMjAyNjEwMjNUMTczMDAwWiBhc2lyaWxhYm91dGlxdWVAbQ"
+  },
+  {
+   "id": "cmvskr36942mcmamc22apq8tro_20261026T120000Z",
+   "titulo": "[BLOQUE] ERP y ordenar la semana",
+   "inicio": "2026-10-26T09:00",
+   "fin": "2026-10-26T12:00",
+   "tipo": "bloque",
+   "bloque": true,
+   "checklist": [],
+   "material": "",
+   "notas": "Bloque general. Se convierte en tareas específicas en la sesión de afinado del viernes anterior. 5-9 oct: CYBER (5-7) · 8-oct vuelven los enlaces 13-16 oct: evaluación del Cyber (12 feriado) 19-23 oct: reposición de lo que más rotó 26-30 oct: cierre del mes contra la meta de $1M",
+   "calendar": "https://www.google.com/calendar/event?eid=Y212c2tyMzY5NDJtY21hbWMyMmFwcTh0cm9fMjAyNjEwMjZUMTIwMDAwWiBhc2lyaWxhYm91dGlxdWVAbQ"
+  },
+  {
+   "id": "ad4ulkt0n4bha1f864lt3o77qg_20261026T173000Z",
+   "titulo": "[BLOQUE] Producción: guiones, textos y portadas",
+   "inicio": "2026-10-26T14:30",
+   "fin": "2026-10-26T17:00",
+   "tipo": "bloque",
+   "bloque": true,
+   "checklist": [],
+   "material": "",
+   "notas": "Bloque general. Se convierte en tareas específicas en la sesión de afinado del viernes anterior.",
+   "calendar": "https://www.google.com/calendar/event?eid=YWQ0dWxrdDBuNGJoYTFmODY0bHQzbzc3cWdfMjAyNjEwMjZUMTczMDAwWiBhc2lyaWxhYm91dGlxdWVAbQ"
+  },
+  {
+   "id": "vf6gv20fg7vcq0bgt5tuau9p4g_20261027T120000Z",
+   "titulo": "[BLOQUE] Grabación en ASIRI Quarters",
+   "inicio": "2026-10-27T09:00",
+   "fin": "2026-10-27T12:00",
+   "tipo": "bloque",
+   "bloque": true,
+   "checklist": [],
+   "material": "",
+   "notas": "Bloque general. Se convierte en tareas específicas en la sesión de afinado del viernes anterior.",
+   "calendar": "https://www.google.com/calendar/event?eid=dmY2Z3YyMGZnN3ZjcTBiZ3Q1dHVhdTlwNGdfMjAyNjEwMjdUMTIwMDAwWiBhc2lyaWxhYm91dGlxdWVAbQ"
+  },
+  {
+   "id": "qbaqa8puou6kh1tmjrqp3gqrok_20261027T173000Z",
+   "titulo": "[BLOQUE] Edición y dejar listo lo de las 21:00",
+   "inicio": "2026-10-27T14:30",
+   "fin": "2026-10-27T17:00",
+   "tipo": "bloque",
+   "bloque": true,
+   "checklist": [],
+   "material": "",
+   "notas": "Bloque general. Se convierte en tareas específicas en la sesión de afinado del viernes anterior.",
+   "calendar": "https://www.google.com/calendar/event?eid=cWJhcWE4cHVvdTZraDF0bWpycXAzZ3Fyb2tfMjAyNjEwMjdUMTczMDAwWiBhc2lyaWxhYm91dGlxdWVAbQ"
+  },
+  {
+   "id": "c5qjea2tsq4n82eurrk2ifan8o_20261028T120000Z",
+   "titulo": "[BLOQUE] Grabación y fotos de prendas",
+   "inicio": "2026-10-28T09:00",
+   "fin": "2026-10-28T12:00",
+   "tipo": "bloque",
+   "bloque": true,
+   "checklist": [],
+   "material": "",
+   "notas": "Bloque general. Se convierte en tareas específicas en la sesión de afinado del viernes anterior.",
+   "calendar": "https://www.google.com/calendar/event?eid=YzVxamVhMnRzcTRuODJldXJyazJpZmFuOG9fMjAyNjEwMjhUMTIwMDAwWiBhc2lyaWxhYm91dGlxdWVAbQ"
+  },
+  {
+   "id": "t3t89evd0asbmfp4mei176cp88_20261028T173000Z",
+   "titulo": "[BLOQUE] CRM: mensajes a clientas",
+   "inicio": "2026-10-28T14:30",
+   "fin": "2026-10-28T17:00",
+   "tipo": "bloque",
+   "bloque": true,
+   "checklist": [],
+   "material": "",
+   "notas": "Bloque general. Se convierte en tareas específicas en la sesión de afinado del viernes anterior.",
+   "calendar": "https://www.google.com/calendar/event?eid=dDN0ODlldmQwYXNibWZwNG1laTE3NmNwODhfMjAyNjEwMjhUMTczMDAwWiBhc2lyaWxhYm91dGlxdWVAbQ"
+  },
+  {
+   "id": "vakfjas9a1102re92nkas9o7tg_20261029T120000Z",
+   "titulo": "[BLOQUE] Grabación y contenido extra",
+   "inicio": "2026-10-29T09:00",
+   "fin": "2026-10-29T12:00",
+   "tipo": "bloque",
+   "bloque": true,
+   "checklist": [],
+   "material": "",
+   "notas": "Bloque general. Se convierte en tareas específicas en la sesión de afinado del viernes anterior.",
+   "calendar": "https://www.google.com/calendar/event?eid=dmFrZmphczlhMTEwMnJlOTJua2FzOW83dGdfMjAyNjEwMjlUMTIwMDAwWiBhc2lyaWxhYm91dGlxdWVAbQ"
+  },
+  {
+   "id": "ias6sn89loricerg8n5plhtnrs_20261029T173000Z",
+   "titulo": "[BLOQUE] Tienda: Shopify, colecciones y fichas",
+   "inicio": "2026-10-29T14:30",
+   "fin": "2026-10-29T17:00",
+   "tipo": "bloque",
+   "bloque": true,
+   "checklist": [],
+   "material": "",
+   "notas": "Bloque general. Se convierte en tareas específicas en la sesión de afinado del viernes anterior.",
+   "calendar": "https://www.google.com/calendar/event?eid=aWFzNnNuODlsb3JpY2VyZzhuNXBsaHRucnNfMjAyNjEwMjlUMTczMDAwWiBhc2lyaWxhYm91dGlxdWVAbQ"
+  },
+  {
+   "id": "v38erfi716tu5gjofbvsff4po4_20261030T120000Z",
+   "titulo": "[BLOQUE] Medición e informe semanal",
+   "inicio": "2026-10-30T09:00",
+   "fin": "2026-10-30T12:00",
+   "tipo": "bloque",
+   "bloque": true,
+   "checklist": [],
+   "material": "",
+   "notas": "Bloque general. Se convierte en tareas específicas en la sesión de afinado del viernes anterior.",
+   "calendar": "https://www.google.com/calendar/event?eid=djM4ZXJmaTcxNnR1NWdqb2ZidnNmZjRwbzRfMjAyNjEwMzBUMTIwMDAwWiBhc2lyaWxhYm91dGlxdWVAbQ"
+  },
+  {
+   "id": "14pv5mi02o3fgjjvherbuk8hes_20261030T173000Z",
+   "titulo": "🦋 [BLOQUE] Sesión de afinado de la semana siguiente",
+   "inicio": "2026-10-30T14:30",
+   "fin": "2026-10-30T17:00",
+   "tipo": "bloque",
+   "bloque": true,
+   "checklist": [
+    "Encender el Nitro y abrir Claude Code",
+    "Decir: \"ASIRI AGENCIA, sesión de afinado\""
+   ],
+   "material": "",
+   "notas": "",
+   "calendar": "https://www.google.com/calendar/event?eid=MTRwdjVtaTAybzNmZ2pqdmhlcmJ1azhoZXNfMjAyNjEwMzBUMTczMDAwWiBhc2lyaWxhYm91dGlxdWVAbQ"
+  }
+ ]
+}

@@ -518,6 +518,38 @@
     .funnel-label{width:100px; font-size:.7rem;}
     .studio-wrap{height:400px;}
   }
+
+  /* M12 ASIRI Agenda */
+  .ag-tabs{display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:1rem;}
+  .ag-barra{height:6px; background:var(--gris-light); border-radius:4px; margin-top:.5rem; overflow:hidden;}
+  .ag-barra span{display:block; height:100%; background:linear-gradient(90deg,var(--turquesa),var(--rosado));}
+  .ag-mini{font-size:.7rem; color:var(--gris); margin-top:.3rem;}
+  .ag-pulso .kpi-value{font-size:1.25rem;}
+  .ag-foco-label{font-size:.7rem; font-weight:700; letter-spacing:.1em; color:var(--rosado); margin-bottom:.4rem;}
+  .ag-card{background:white; border-radius:14px; padding:.9rem 1rem; margin-bottom:.7rem; border-left:5px solid var(--c); box-shadow:0 1px 4px rgba(0,0,0,.06);}
+  .ag-card.grande{padding:1.3rem; border-left-width:8px;}
+  .ag-card.grande .ag-tit{font-size:1.2rem;}
+  .ag-card.bloque{background:#F3F4F6; box-shadow:none;}
+  .ag-card.hecha{opacity:.55;}
+  .ag-card.hecha .ag-tit{text-decoration:line-through;}
+  .ag-head{display:flex; justify-content:space-between; font-size:.72rem; color:var(--gris); margin-bottom:.25rem;}
+  .ag-hora{font-family:'JetBrains Mono',monospace; font-weight:700; color:var(--negro);}
+  .ag-tipo{color:var(--c); font-weight:700; text-transform:uppercase; letter-spacing:.05em;}
+  .ag-pos{background:var(--rosado-light); color:var(--rosado); padding:0 .4rem; border-radius:6px; font-family:Poppins,sans-serif; font-weight:600;}
+  .ag-tit{font-weight:600; font-size:.95rem; margin-bottom:.4rem;}
+  .ag-notas{font-size:.8rem; color:var(--gris); margin-bottom:.5rem;}
+  .ag-check label{display:flex; gap:.5rem; align-items:flex-start; font-size:.82rem; padding:.25rem 0; cursor:pointer;}
+  .ag-check input{margin-top:.2rem; accent-color:var(--turquesa); width:18px; height:18px; flex-shrink:0;}
+  .ag-acc{display:flex; gap:.5rem; flex-wrap:wrap; align-items:center; margin-top:.6rem;}
+  .ag-acc .btn{text-decoration:none; padding:.5rem .9rem;}
+  .ag-cal{font-size:.72rem; color:var(--gris); margin-left:auto;}
+  .ag-dia{margin-bottom:1.2rem;} .ag-dia-t{font-weight:700; text-transform:capitalize; margin-bottom:.5rem;}
+  .ag-dia.hoy .ag-dia-t{color:var(--rosado);}
+  .ag-hito{padding:.3rem 0; font-size:.85rem; text-transform:none;}
+  .ag-sem{background:white; border-radius:12px; padding:.8rem 1rem; margin-bottom:.6rem; display:flex; flex-direction:column; gap:.2rem;}
+  .ag-sem span{font-size:.78rem; color:var(--gris);}
+  #ag-toast{position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(80px); background:var(--negro); color:white; padding:.7rem 1.1rem; border-radius:12px; font-size:.82rem; z-index:9999; transition:transform .25s; max-width:calc(100% - 32px);}
+  #ag-toast.on{transform:translateX(-50%) translateY(0);}
 </style>
 </head>
 <body>
@@ -736,6 +768,7 @@
 /* ---------- 1. DEFINICIÓN DE MÓDULOS ---------- */
 const MODULOS = [
   {id:'m0', num:'M0', icon:'🏠', nombre:'Home', soon:false},
+  {id:'m12', num:'M12', icon:'🗓', nombre:'Agenda', soon:false},
   {id:'m1', num:'M1', icon:'🧮', nombre:'Calculadora', soon:false},
   {id:'m2', num:'M2', icon:'💎', nombre:'CRM', soon:false},
   {id:'m3', num:'M3', icon:'📣', nombre:'Ads', soon:false},
@@ -4112,10 +4145,217 @@ function renderPlaceholder(m){
   `;
 }
 
+
+/* ============================================================
+   M12 — ASIRI AGENDA (26-sep-2026)
+   Lee agenda.json (lo genera ASIRI AGENCIA desde Google Calendar en la sesión de
+   afinado del viernes). El estado de Valeria (checklist, listo, pospuesto) queda en
+   localStorage. Avisos: Google Calendar es el oficial; la app agrega avisos con
+   botones mientras está abierta o en segundo plano reciente.
+   ============================================================ */
+let AGENDA = null;
+let AGENDA_VISTA = 'hoy';
+const AGENDA_TIPOS = {
+  grabacion:{c:'#DB3B7C', n:'Grabación'}, produccion:{c:'#00A3A3', n:'Producción'},
+  crm:{c:'#059669', n:'CRM'}, tienda:{c:'#3B5BDB', n:'Tienda'}, medicion:{c:'#C9A84C', n:'Medición'},
+  publicacion:{c:'#7C3AED', n:'Publicación'}, admin:{c:'#E8590C', n:'Admin'}, bloque:{c:'#9CA3AF', n:'Bloque general'}
+};
+function agendaEstado(){ try{ return JSON.parse(localStorage.getItem('asiri_agenda_estado')||'{}'); }catch(e){ return {}; } }
+function agendaGuardar(est){ try{ localStorage.setItem('asiri_agenda_estado', JSON.stringify(est)); }catch(e){} }
+function agendaFmt(d){ return fechaLocalStr(d)+'T'+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
+function agendaAhoraStr(){ return agendaFmt(new Date()); }
+function agendaSumarMin(str, min){ const d=new Date(str); d.setMinutes(d.getMinutes()+min); return agendaFmt(d); }
+/* Inicio efectivo: si Valeria pospuso, manda el pospuesto */
+function agendaInicio(t, est){ return (est[t.id] && est[t.id].pospuesto) || t.inicio; }
+
+async function cargarAgenda(){
+  try{
+    const r = await fetch('./agenda.json?t=' + Date.now(), {cache:'no-store'});
+    if(r.ok){ AGENDA = await r.json(); try{ localStorage.setItem('asiri_agenda_cache', JSON.stringify(AGENDA)); }catch(e){} }
+  }catch(e){}
+  if(!AGENDA){ try{ AGENDA = JSON.parse(localStorage.getItem('asiri_agenda_cache')||'null'); }catch(e){} }
+  refrescarAgenda();
+  if(AGENDA && window.__agendaPend){ const [a,id] = window.__agendaPend; window.__agendaPend = null; agendaAccionDesdeAviso(a,id); }
+  agendaAvisar(false);
+}
+function refrescarAgenda(){ const v=document.getElementById('view-m12'); if(v) v.innerHTML = renderAgenda(); }
+
+function agendaVentasMes(mes){
+  return (DATA_DEMO.ventas||[]).filter(v => !v.esPrueba && (v.fecha||'').startsWith(mes)).reduce((s,v)=>s+(Number(v.monto)||0),0);
+}
+function agendaLunes(f){ const d=new Date(f+'T12:00'); d.setDate(d.getDate()-((d.getDay()+6)%7)); return fechaLocalStr(d); }
+function agendaNombreDia(f){ return new Date(f+'T12:00').toLocaleDateString('es-CL',{weekday:'long', day:'numeric', month:'short'}); }
+
+function renderAgenda(){
+  if(!AGENDA) return `<div class="page-title">🗓 ASIRI Agenda</div><div class="placeholder-box"><span class="pi">🗓</span><p>Cargando la agenda… Sin internet se muestra la última versión guardada.</p></div>`;
+  const est = agendaEstado();
+  const hoy = fechaLocalStr();
+  const ahora = agendaAhoraStr();
+  const tareas = AGENDA.tareas.map(t => ({...t, ini: agendaInicio(t, est)})).sort((a,b)=>a.ini.localeCompare(b.ini));
+  const cyber = (AGENDA.hitos||[]).find(h=>h.titulo.includes('Parte el Cyber'));
+  const diasCyber = cyber ? Math.round((new Date(cyber.fecha+'T12:00') - new Date(hoy+'T12:00'))/864e5) : null;
+  const mes = AGENDA.meta_mes ? AGENDA.meta_mes.mes : hoy.slice(0,7);
+  const ventasMes = agendaVentasMes(mes);
+  const metaMes = AGENDA.meta_mes ? AGENDA.meta_mes.monto : 0;
+  // Semana de referencia: la actual; si no tiene tareas (ej. fin de semana previo), la próxima que tenga
+  let lunes = agendaLunes(hoy);
+  const finDe = l => { const d=new Date(l+'T12:00'); d.setDate(d.getDate()+6); return fechaLocalStr(d); };
+  if(!tareas.some(t => !t.bloque && t.ini.slice(0,10) >= lunes && t.ini.slice(0,10) <= finDe(lunes))){
+    const prox = tareas.find(t => t.ini.slice(0,10) > hoy); if(prox) lunes = agendaLunes(prox.ini.slice(0,10));
+  }
+  const domingo = finDe(lunes);
+  const semana = tareas.filter(t => !t.bloque && t.ini.slice(0,10) >= lunes && t.ini.slice(0,10) <= domingo);
+  const hechas = semana.filter(t => est[t.id] && est[t.id].hecho).length;
+  const pct = (a,b) => b ? Math.min(100, Math.round(a/b*100)) : 0;
+
+  const pulso = `
+    <div class="kpi-grid ag-pulso">
+      <div class="kpi-card"><div class="kpi-label">Cyber ASIRI · 5-7 oct</div><div class="kpi-value">${diasCyber===null?'—':diasCyber>1?'faltan '+diasCyber+' días':diasCyber===1?'¡mañana!':diasCyber>=-2?'¡en curso!':'terminó'}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Semana del ${agendaNombreDia(lunes)}</div><div class="kpi-value">${hechas}/${semana.length} listas</div><div class="ag-barra"><span style="width:${pct(hechas,semana.length)}%"></span></div></div>
+      <div class="kpi-card"><div class="kpi-label">Ventas de ${new Date(mes+'-15T12:00').toLocaleDateString('es-CL',{month:'long'})} (ERP)</div><div class="kpi-value">$${ventasMes.toLocaleString('es-CL')}</div><div class="ag-barra"><span style="width:${pct(ventasMes,metaMes)}%"></span></div><div class="ag-mini">meta $${metaMes.toLocaleString('es-CL')} · ${pct(ventasMes,metaMes)}%</div></div>
+    </div>`;
+
+  const avisosOn = typeof Notification!=='undefined' && Notification.permission==='granted';
+  const tabs = `<div class="ag-tabs">
+    <button class="tab-btn ${AGENDA_VISTA==='hoy'?'active':''}" onclick="AGENDA_VISTA='hoy';refrescarAgenda()">Hoy</button>
+    <button class="tab-btn ${AGENDA_VISTA==='semana'?'active':''}" onclick="AGENDA_VISTA='semana';refrescarAgenda()">Semana</button>
+    <button class="tab-btn ${AGENDA_VISTA==='mes'?'active':''}" onclick="AGENDA_VISTA='mes';refrescarAgenda()">Mes</button>
+    <button class="tab-btn" onclick="activarAvisosAgenda()">${avisosOn?'🔔 Avisos activos':'🔕 Activar avisos'}</button>
+  </div>`;
+
+  let cuerpo = '';
+  if(AGENDA_VISTA==='hoy'){
+    const pendiente = t => !(est[t.id] && est[t.id].hecho);
+    const actual = tareas.find(t => t.ini.slice(0,10)===hoy && t.ini <= ahora && agendaSumarMin(t.ini, agendaDuracion(t)) > ahora && pendiente(t));
+    const siguiente = tareas.find(t => t.ini > ahora && pendiente(t) && !t.bloque) || tareas.find(t => t.ini > ahora && pendiente(t));
+    const foco = actual || siguiente;
+    cuerpo = foco ? `<div class="ag-foco-label">${actual?'AHORA':'LO QUE VIENE · '+agendaNombreDia(foco.ini.slice(0,10))}</div>${agendaTarjeta(foco, est, true)}` :
+      `<div class="placeholder-box"><span class="pi">🦋</span><p>No hay tareas pendientes. La próxima semana se arma el viernes en la sesión de afinado.</p></div>`;
+    const resto = tareas.filter(t => t.ini.slice(0,10)===hoy && (!foco || t.id!==foco.id));
+    if(resto.length) cuerpo += `<div class="panel-title" style="margin-top:1rem;">Resto de hoy</div>` + resto.map(t=>agendaTarjeta(t, est, false)).join('');
+  } else if(AGENDA_VISTA==='semana'){
+    const dias = {};
+    tareas.filter(t => t.ini.slice(0,10) >= lunes && t.ini.slice(0,10) <= domingo).forEach(t => (dias[t.ini.slice(0,10)] = dias[t.ini.slice(0,10)]||[]).push(t));
+    cuerpo = Object.keys(dias).length ? Object.entries(dias).map(([f,ts]) => `<div class="ag-dia ${f===hoy?'hoy':''}"><div class="ag-dia-t">${agendaNombreDia(f)}</div>${ts.map(t=>agendaTarjeta(t, est, false)).join('')}</div>`).join('')
+      : `<div class="placeholder-box"><span class="pi">🗓</span><p>Sin tareas esta semana.</p></div>`;
+  } else {
+    const hitos = (AGENDA.hitos||[]).map(h=>`<div class="ag-hito">📍 <b>${agendaNombreDia(h.fecha)}</b> · ${escapeHtmlAgenda(h.titulo)}</div>`).join('');
+    const porSemana = {};
+    tareas.forEach(t => { const k = agendaLunes(t.ini.slice(0,10)); (porSemana[k]=porSemana[k]||[]).push(t); });
+    cuerpo = `<div class="panel">${hitos}</div>` + Object.entries(porSemana).map(([k,ts]) => {
+      const b = ts.filter(t=>t.bloque).length, e = ts.length-b, ok = ts.filter(t=>est[t.id]&&est[t.id].hecho).length;
+      return `<div class="ag-sem"><b>Semana del ${agendaNombreDia(k)}</b><span>${e} tareas específicas · ${b} bloques generales · ${ok} listas</span><div class="ag-barra"><span style="width:${pct(e,ts.length)}%"></span></div></div>`;
+    }).join('') + `<div class="calc-note">Gris = bloque general, se afina el viernes anterior. Color = tarea específica ya confirmada.</div>`;
+  }
+
+  return `
+    <div class="page-title">🗓 ASIRI Agenda</div>
+    <div class="page-sub">Plan de ASIRI AGENCIA · bloques 09:00-12:00 y 14:30-17:00 · actualizado ${new Date(AGENDA.generado).toLocaleString('es-CL',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</div>
+    ${pulso}${tabs}${cuerpo}`;
+}
+function agendaDuracion(t){ return Math.max(15, Math.round((new Date(t.fin) - new Date(t.inicio))/60000)); }
+
+function agendaTarjeta(t, est, grande){
+  const e = est[t.id] || {};
+  const tipo = AGENDA_TIPOS[t.bloque?'bloque':t.tipo] || AGENDA_TIPOS.bloque;
+  const checks = e.checks || [];
+  const fin = agendaSumarMin(t.ini, agendaDuracion(t)).slice(11,16);
+  const hora = t.ini.slice(11,16) + '–' + fin + (e.pospuesto ? ' <span class="ag-pos">pospuesta</span>' : '');
+  return `<div class="ag-card ${grande?'grande':''} ${e.hecho?'hecha':''} ${t.bloque?'bloque':''}" style="--c:${tipo.c}">
+    <div class="ag-head"><span class="ag-hora">${hora}</span><span class="ag-tipo">${tipo.n}</span></div>
+    <div class="ag-tit">${escapeHtmlAgenda(t.titulo)}</div>
+    ${t.notas && grande ? `<div class="ag-notas">${escapeHtmlAgenda(t.notas)}</div>`:''}
+    ${t.checklist.length ? `<div class="ag-check">${t.checklist.map((c,i)=>`<label><input type="checkbox" ${checks.includes(i)?'checked':''} onchange="agendaCheck('${t.id}',${i},this.checked)"> ${escapeHtmlAgenda(c)}</label>`).join('')}</div>`:''}
+    <div class="ag-acc">
+      ${t.material?`<a class="btn btn-ghost" href="${escapeHtmlAgenda(t.material)}" target="_blank" rel="noopener">📂 Material</a>`:''}
+      ${!t.bloque && !e.hecho ? `<button class="btn btn-ghost" onclick="agendaPosponer('${t.id}')">⏰ +1 h</button>`:''}
+      ${!t.bloque ? `<button class="btn ${e.hecho?'btn-ghost':'btn-primary'}" onclick="agendaListo('${t.id}')">${e.hecho?'↩ Deshacer':'✅ Listo'}</button>`:''}
+      <a class="ag-cal" href="${escapeHtmlAgenda(t.calendar)}" target="_blank" rel="noopener">Ver en Calendar</a>
+    </div>
+  </div>`;
+}
+function escapeHtmlAgenda(s){ return String(s||'').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
+
+function agendaCheck(id, i, on){
+  const est = agendaEstado(); const e = est[id] = est[id]||{}; e.checks = (e.checks||[]).filter(x=>x!==i); if(on) e.checks.push(i);
+  agendaGuardar(est);
+}
+function agendaListo(id){
+  const est = agendaEstado(); const e = est[id] = est[id]||{}; e.hecho = !e.hecho; e.hechoEn = e.hecho ? new Date().toISOString() : null;
+  agendaGuardar(est); refrescarAgenda();
+}
+/* Posponer inteligente: +60 min; si cae en colación (12:00-14:30) salta a 14:30;
+   si pasa de las 17:00 salta al día hábil siguiente 09:00. Las tareas de las 21:00 solo suman 1 h. */
+function agendaPosponer(id){
+  if(!AGENDA) return null;
+  const t = AGENDA.tareas.find(x=>x.id===id); if(!t) return null;
+  const est = agendaEstado(); const e = est[id] = est[id]||{};
+  const actual = agendaInicio(t, est), ahora = agendaAhoraStr();
+  const base = ahora > actual ? ahora : actual;
+  e.pospuesto = agendaSiguienteHueco(agendaSumarMin(base, 60), t.inicio.slice(11,13) >= '18');
+  e.avisado = false;
+  agendaGuardar(est); refrescarAgenda();
+  const msg = '⏰ Pospuesta para ' + agendaNombreDia(e.pospuesto.slice(0,10)) + ' ' + e.pospuesto.slice(11,16);
+  agendaToast(msg);
+  return e.pospuesto;
+}
+function agendaSiguienteHueco(str, nocturna){
+  if(nocturna) return str;
+  let fecha = str.slice(0,10), hm = str.slice(11,16);
+  if(hm >= '12:00' && hm < '14:30') hm = '14:30';
+  else if(hm >= '17:00' || hm < '09:00'){
+    const d = new Date(fecha+'T12:00'); if(hm >= '17:00') d.setDate(d.getDate()+1);
+    const feriados = ((AGENDA && AGENDA.hitos) || []).filter(x => /feriado/i.test(x.titulo)).map(x => x.fecha);
+    while(d.getDay()===0 || d.getDay()===6 || feriados.includes(fechaLocalStr(d))) d.setDate(d.getDate()+1);
+    fecha = fechaLocalStr(d); hm = '09:00';
+  }
+  return fecha+'T'+hm;
+}
+
+/* ---------- Avisos con botones (mientras la app está abierta o en segundo plano) ---------- */
+async function activarAvisosAgenda(){
+  if(typeof Notification === 'undefined'){ alert('Este navegador no permite avisos. Los avisos del Google Calendar siguen funcionando.'); return; }
+  const p = await Notification.requestPermission();
+  refrescarAgenda();
+  if(p === 'granted') agendaAvisar(true);
+}
+async function agendaAvisar(prueba){
+  if(!AGENDA || typeof Notification==='undefined' || Notification.permission!=='granted' || !('serviceWorker' in navigator)) return;
+  const reg = await navigator.serviceWorker.ready;
+  if(prueba){ reg.showNotification('🦋 ASIRI Agenda', {body:'Avisos activados. Te aviso cuando empiece cada tarea.', icon:'./icon-192.png', tag:'ag-prueba'}); return; }
+  const est = agendaEstado(); const ahora = agendaAhoraStr();
+  AGENDA.tareas.forEach(t => {
+    if(t.bloque) return;
+    const e = est[t.id] || {}; const ini = agendaInicio(t, est);
+    if(!e.hecho && !e.avisado && ini <= ahora && agendaSumarMin(ini, 15) > ahora){
+      reg.showNotification(t.titulo, {body:(t.checklist[0]||'Es hora de esta tarea'), icon:'./icon-192.png', tag:'ag-'+t.id, requireInteraction:true,
+        actions:[{action:'posponer', title:'⏰ Posponer 1 h'},{action:'listo', title:'✅ Listo'}], data:{id:t.id}});
+      (est[t.id] = est[t.id]||{}).avisado = true; agendaGuardar(est);
+    }
+  });
+}
+/* Respuesta de los botones del aviso (los reenvía el service worker) */
+function agendaAccionDesdeAviso(accion, id){
+  if(accion==='posponer') agendaPosponer(id);
+  else if(accion==='listo'){ const est=agendaEstado(); if(!(est[id]&&est[id].hecho)) agendaListo(id); }
+  irAModulo('m12');
+}
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.addEventListener('message', ev => { if(ev.data && ev.data.tipo==='agenda') agendaAccionDesdeAviso(ev.data.accion, ev.data.id); });
+}
+(function agendaDesdeUrl(){
+  const q = new URLSearchParams(location.search); const a = q.get('agenda'), id = q.get('id');
+  if(a && id){ window.__agendaPend = [a, id]; try{ history.replaceState(null, '', location.pathname); }catch(e){} } // se limpia la URL para que recargar no repita la acción
+})();
+setInterval(() => { agendaAvisar(false); if(moduloActivo==='m12') refrescarAgenda(); }, 60000);
+document.addEventListener('visibilitychange', () => { if(!document.hidden){ agendaAvisar(false); if(moduloActivo==='m12') refrescarAgenda(); } });
+
+function agendaToast(msg){ let el=document.getElementById('ag-toast'); if(!el){ el=document.createElement('div'); el.id='ag-toast'; document.body.appendChild(el);} el.textContent=msg; el.classList.add('on'); clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('on'),4000); }
+
 /* ---------- 6. INICIALIZAR VISTAS ---------- */
 function initViews(){
   const content = document.getElementById('content');
-  const RENDERERS = { m0: renderHome, m1: renderCalculadora, m2: renderCRM, m3: renderAds, m4: renderShopify, m5: renderVentas, m6: renderCompras, m7: renderFinanzas, m8: renderInformes, m9: renderIntelligence, m10: renderStudio, m11: renderAcademy };
+  const RENDERERS = { m0: renderHome, m1: renderCalculadora, m2: renderCRM, m3: renderAds, m4: renderShopify, m5: renderVentas, m6: renderCompras, m7: renderFinanzas, m8: renderInformes, m9: renderIntelligence, m10: renderStudio, m11: renderAcademy, m12: renderAgenda };
   const wrappers = MODULOS.map(m => {
     const inner = RENDERERS[m.id] ? RENDERERS[m.id]() : renderPlaceholder(m);
     return `<div class="view ${m.id==='m0'?'active':''}" id="view-${m.id}">${inner}</div>`;
@@ -4809,6 +5049,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initViews();
   actualizarEstadoConexion();
   setIndicator('saved');
+  cargarAgenda(); // M12 — agenda.json generado por ASIRI AGENCIA
   sincronizarConLaNubeAlInicio(); // Capa 0 — lee CRM/Compras reales de Sheets (o los siembra si están vacíos)
 });
 </script>

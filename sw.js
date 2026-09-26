@@ -7,7 +7,7 @@
 // ⚠️ IMPORTANTE: bumpear esta versión (ej. 'asiri-erp-v2') en CADA deploy.
 // Si no cambia, los navegadores con el Service Worker viejo instalado seguirán
 // sirviendo el index.html cacheado y no verán las actualizaciones del ERP.
-const CACHE_NAME = 'asiri-erp-v30';
+const CACHE_NAME = 'asiri-erp-v31';
 
 const ARCHIVOS_CORE = [
   './',
@@ -53,6 +53,12 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // M12 Agenda: agenda.json siempre de la red (la genera ASIRI AGENCIA cada viernes); el ERP guarda su propia copia offline
+  if (request.url.includes('agenda.json')) {
+    event.respondWith(fetch(request).catch(() => new Response('null', { status: 503, headers: { 'Content-Type': 'application/json' } })));
+    return;
+  }
+
   event.respondWith(
     caches.match(request).then((cached) => {
       if (cached) return cached;
@@ -66,4 +72,17 @@ self.addEventListener('fetch', (event) => {
         .catch(() => caches.match('./index.html'));
     })
   );
+});
+
+// M12 Agenda: botones del aviso (Posponer 1 h / Listo). Si la app está abierta se le avisa;
+// si no, se abre con la acción en la URL para que la aplique al cargar.
+self.addEventListener('notificationclick', (event) => {
+  const n = event.notification; const id = n.data && n.data.id; n.close();
+  const accion = event.action || 'abrir';
+  event.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((lista) => {
+    const cliente = lista.find((c) => c.url.includes(self.registration.scope));
+    if (cliente) { if (id) cliente.postMessage({ tipo: 'agenda', accion, id }); return cliente.focus(); }
+    const url = id && accion !== 'abrir' ? './?agenda=' + accion + '&id=' + encodeURIComponent(id) : './';
+    return self.clients.openWindow(url);
+  }));
 });
