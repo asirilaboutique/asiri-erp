@@ -4,10 +4,10 @@
    Módulos offline críticos: M0 Home, M1 Calculadora, M2 CRM, M5 Ventas
    ============================================================ */
 
-// ⚠️ IMPORTANTE: bumpear esta versión (ej. 'asiri-erp-v3') en CADA deploy.
+// ⚠️ IMPORTANTE: bumpear esta versión (ej. 'asiri-erp-v2') en CADA deploy.
 // Si no cambia, los navegadores con el Service Worker viejo instalado seguirán
 // sirviendo el index.html cacheado y no verán las actualizaciones del ERP.
-const CACHE_NAME = 'asiri-erp-v36';
+const CACHE_NAME = 'asiri-erp-v37';
 
 const ARCHIVOS_CORE = [
   './',
